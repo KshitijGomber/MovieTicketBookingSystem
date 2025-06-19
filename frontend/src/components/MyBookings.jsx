@@ -1,40 +1,24 @@
-import React, { useState } from 'react';
-import { Typography, Paper, List, ListItem, ListItemText, Button, Alert, CircularProgress } from '@mui/material';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBookings, cancelBooking } from '../api/bookings';
+import React from 'react';
+import { Typography, Paper, Alert, CircularProgress } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { getBookings } from '../api/bookings';
 
 const MyBookings = () => {
-  const queryClient = useQueryClient();
   const { data: bookings, isLoading, isError } = useQuery({
     queryKey: ['bookings'],
     queryFn: getBookings,
-  });
-  const cancelMutation = useMutation({
-    mutationFn: cancelBooking,
-    onSuccess: () => queryClient.invalidateQueries(['bookings']),
+    retry: false, // Don't retry if it fails
   });
 
   if (isLoading) return <CircularProgress />;
-  if (isError) return <Alert severity="error">Failed to load bookings.</Alert>;
-
+  
+  // Since the bookings API isn't fully implemented yet, show a message
   return (
     <Paper sx={{ p: 4, maxWidth: 500, mx: 'auto', mt: 6 }}>
       <Typography variant="h5" gutterBottom>My Bookings</Typography>
-      {(!bookings || bookings.length === 0) && <Alert severity="info">No bookings found.</Alert>}
-      <List>
-        {bookings && bookings.map(b => (
-          <ListItem key={b._id} secondaryAction={
-            <Button variant="outlined" color="error" onClick={() => cancelMutation.mutate(b._id)} disabled={cancelMutation.isLoading}>
-              Cancel
-            </Button>
-          }>
-            <ListItemText
-              primary={`${b.show.movie} (${b.show.time})`}
-              secondary={`Seat: ${b.seat}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <Alert severity="info">
+        Booking functionality is coming soon! You'll be able to view and manage your bookings here.
+      </Alert>
     </Paper>
   );
 };

@@ -31,15 +31,16 @@ const ShowDetails = () => {
 
   const handleBookNow = () => {
     if (selectedSeat) {
-      navigate(`/booking/${show.id}`, { state: { seat: selectedSeat } });
+      navigate(`/booking/${show._id}`, { state: { seat: selectedSeat } });
     }
   };
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>{show.movie}</Typography>
-      <Typography variant="subtitle1">Showtime: {show.time}</Typography>
+      <Typography variant="h4" gutterBottom>{show.title}</Typography>
+      <Typography variant="subtitle1">Showtimes: {show.showTimes.join(', ')}</Typography>
       <Typography variant="subtitle2" gutterBottom>Available Seats: {show.availableSeats}</Typography>
+      <Typography variant="body1" sx={{ mb: 2 }}>{show.description}</Typography>
       <Box sx={{ my: 3 }}>
         <Typography variant="h6">Seat Map</Typography>
         <Grid container spacing={1}>
