@@ -1,5 +1,5 @@
-import { Routes, Route, Link } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Container, Alert } from '@mui/material';
+import { Routes, Route, Link as RouterLink } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Button, Container, Alert, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { useState, useEffect } from 'react'
 import './App.css'
 import ShowList from './components/ShowList';
@@ -9,6 +9,7 @@ import MyBookings from './components/MyBookings';
 import LoginButton from './components/Auth/LoginButton';
 import LogoutButton from './components/Auth/LogoutButton';
 import { useAuth0 } from '@auth0/auth0-react';
+import { AccountCircle } from '@mui/icons-material';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated }) => {
@@ -27,6 +28,15 @@ const ProtectedRoute = ({ children, isAuthenticated }) => {
 
 function App() {
   const { user, isAuthenticated, isLoading } = useAuth0();
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   // Store Auth0 user info in localStorage for the booking API
   useEffect(() => {
@@ -41,28 +51,77 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  const getFirstName = () => {
+    if (!user) return '';
+    return user.given_name || user.nickname || user.name.split(' ')[0];
+  };
+
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Movie Ticket Booking
-          </Typography>
-          <Button color="inherit" component={Link} to="/">Shows</Button>
-          {isAuthenticated && (
-            <Button color="inherit" component={Link} to="/my-bookings">My Bookings</Button>
-          )}
-          {isAuthenticated ? (
-            <>
-              <Typography sx={{ mx: 2 }}>{user.email || user.name}</Typography>
-              <LogoutButton />
-            </>
-          ) : (
-            <LoginButton />
-          )}
-        </Toolbar>
+      <AppBar position="fixed" sx={{ 
+        zIndex: (theme) => theme.zIndex.drawer + 1, 
+        backgroundColor: 'rgba(245, 245, 245, 0.8)', 
+        backdropFilter: 'blur(10px)',
+        color: '#333' 
+      }}>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters>
+            <RouterLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <img src="/logo.png" alt="BookYourMovie Logo" style={{ height: 40, marginRight: 16 }} />
+              <Typography
+                variant="h6"
+                noWrap
+                sx={{
+                  mr: 2,
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  letterSpacing: '.1rem',
+                  color: '#E50914',
+                  textDecoration: 'none',
+                }}
+              >
+                BookYourMovie
+              </Typography>
+            </RouterLink>
+
+            <Box sx={{ flexGrow: 1 }} />
+            
+            {isAuthenticated ? (
+              <div>
+                <Button
+                  onClick={handleMenu}
+                  color="inherit"
+                  sx={{ textTransform: 'none' }}
+                  endIcon={<AccountCircle />}
+                >
+                  Hi, {getFirstName()}
+                </Button>
+                <Menu
+                  id="menu-appbar"
+                  anchorEl={anchorEl}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={Boolean(anchorEl)}
+                  onClose={handleClose}
+                >
+                  <MenuItem component={RouterLink} to="/my-bookings" onClick={handleClose}>My Bookings</MenuItem>
+                  <LogoutButton variant="menuitem" />
+                </Menu>
+              </div>
+            ) : (
+              <LoginButton />
+            )}
+          </Toolbar>
+        </Container>
       </AppBar>
-      <Container sx={{ mt: 4 }}>
+      <Container sx={{ mt: '80px' }}>
         <Routes>
           <Route path="/" element={<ShowList />} />
           <Route path="/show/:showId" element={<ShowDetails />} />

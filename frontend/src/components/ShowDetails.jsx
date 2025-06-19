@@ -118,7 +118,12 @@ const ShowDetails = () => {
     <Box>
       <Typography variant="h4" gutterBottom>{show.title}</Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>{show.description}</Typography>
-      <Typography variant="subtitle1" gutterBottom>Available Seats: {TOTAL_SEATS - bookedSeats.length}</Typography>
+      
+      {selectedShowTime && (
+        <Typography variant="subtitle1" gutterBottom>
+          Available Seats: {TOTAL_SEATS - bookedSeats.length}
+        </Typography>
+      )}
       
       <FormControl fullWidth sx={{ mb: 3 }}>
         <InputLabel>Select Showtime</InputLabel>
@@ -147,15 +152,15 @@ const ShowDetails = () => {
           <Box sx={{ my: 3 }}>
             <Typography variant="h6">Seat Map for {selectedShowTime}</Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Green: Available | Red: Booked | Blue: Selected | Yellow: Your Selection
+              Green: Available | Red: Booked | Yellow: Your Selection
             </Typography>
             
             {selectedSeats.length > 0 && (
-              <Paper sx={{ p: 2, mb: 2, bgcolor: 'primary.light' }}>
-                <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+              <Paper sx={{ p: 2, mb: 2, bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
                   Selected Seats: {selectedSeats.join(', ')}
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2">
                   Total: ${selectedSeats.length * 10} (${10} per seat)
                 </Typography>
               </Paper>
@@ -172,7 +177,13 @@ const ShowDetails = () => {
                     }
                     disabled={!seat.available}
                     size="small"
-                    sx={{ minWidth: 36 }}
+                    sx={{ 
+                      minWidth: 36,
+                      '&.Mui-disabled': {
+                        backgroundColor: !seat.available ? 'red' : undefined,
+                        color: !seat.available ? 'white' : undefined
+                      }
+                    }}
                     onClick={() => handleSeatClick(seat)}
                   >
                     {seat.number}
