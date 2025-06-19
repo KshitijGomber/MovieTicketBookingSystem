@@ -1,24 +1,93 @@
-import React from 'react';
-import { Typography, Paper, Alert, CircularProgress } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { getBookings } from '../api/bookings';
+import React, { useState } from 'react';
+import { Typography, Paper, List, ListItem, ListItemText, Button, Alert, CircularProgress, Snackbar } from '@mui/material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getBookings, cancelBooking } from '../api/bookings';
 
 const MyBookings = () => {
+  const queryClient = useQueryClient();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
   const { data: bookings, isLoading, isError } = useQuery({
     queryKey: ['bookings'],
     queryFn: getBookings,
-    retry: false, // Don't retry if it fails
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      setSnackbar({ open: true, message: 'Booking cancelled successfully!', severity: 'success' });
+      queryClient.invalidateQueries(['bookings']);
+    },
+    onError: (error) => {
+      setSnackbar({ open: true, message: error.message, severity: 'error' });
+    },
   });
 
   if (isLoading) return <CircularProgress />;
-  
-  // Since the bookings API isn't fully implemented yet, show a message
+  if (isError) return <Alert severity="error">Failed to load bookings.</Alert>;
+
+  const activeBookings = bookings?.filter(b => b.status === 'booked') || [];
+
   return (
-    <Paper sx={{ p: 4, maxWidth: 500, mx: 'auto', mt: 6 }}>
+    <Paper sx={{ p: 4, maxWidth: 600, mx: 'auto', mt: 6 }}>
       <Typography variant="h5" gutterBottom>My Bookings</Typography>
-      <Alert severity="info">
-        Booking functionality is coming soon! You'll be able to view and manage your bookings here.
-      </Alert>
+      
+      {activeBookings.length === 0 ? (
+        <Alert severity="info">No active bookings found.</Alert>
+      ) : (
+        <List>
+          {activeBookings.map(booking => (
+            <ListItem 
+              key={booking._id} 
+              sx={{ 
+                border: '1px solid #e0e0e0', 
+                borderRadius: 1, 
+                mb: 1,
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' }
+              }}
+            >
+              <ListItemText
+                primary={booking.show.title}
+                secondary={
+                  <>
+                    <Typography component="span" variant="body2" color="text.primary">
+                      Showtime: {booking.showTime} | Seat: {booking.seat}
+                    </Typography>
+                    <br />
+                    <Typography component="span" variant="body2" color="text.secondary">
+                      Booked on: {new Date(booking.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </>
+                }
+                sx={{ flex: 1 }}
+              />
+              <Button 
+                variant="outlined" 
+                color="error" 
+                onClick={() => cancelMutation.mutate(booking._id)} 
+                disabled={cancelMutation.isLoading}
+                sx={{ mt: { xs: 1, sm: 0 } }}
+              >
+                {cancelMutation.isLoading ? 'Cancelling...' : 'Cancel'}
+              </Button>
+            </ListItem>
+          ))}
+        </List>
+      )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

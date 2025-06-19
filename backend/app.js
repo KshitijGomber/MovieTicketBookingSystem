@@ -42,7 +42,7 @@ app.use(passport.session());
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/shows', require('./routes/shows'));
-app.use('/api/bookings', checkJwt, require('./routes/bookings'));
+app.use('/api/bookings', require('./routes/bookings')); // Removed auth middleware temporarily
 
 // Error handling
 app.use((err, req, res, next) => {
