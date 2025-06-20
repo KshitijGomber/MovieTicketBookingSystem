@@ -1,11 +1,21 @@
+![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Node.js](https://img.shields.io/badge/Backend-Node.js-yellowgreen)
+<p align="center">
+  <img src="./frontend/public/logo.png" alt="BookYourMovie Logo" width="180"/>
+</p>
+
+
 # BookYourMovie: Movie Ticket Booking System
 
 BookYourMovie is a full-stack web application that allows users to browse movies, view showtimes, and book seats. It features a modern, responsive user interface and a robust backend to manage movie data and user bookings. The application is built using the MERN stack and integrates with Auth0 for secure user authentication.
 
 
-## Demo 
+## 🎬 Demo
 
-![Demo Video](https://www.youtube.com/watch?v=0t-NsifUsuM)
+[![Watch Demo](https://img.youtube.com/vi/0t-NsifUsuM/0.jpg)](https://www.youtube.com/watch?v=0t-NsifUsuM)
+
+
 ## Features
 
 -   **Browse Movies**: View a list of currently playing movies with posters and genres.
