@@ -5,7 +5,7 @@ BookYourMovie is a full-stack web application that allows users to browse movies
 
 ## Demo 
 
-![Demo](https://youtu.be/0t-NsifUsuM)
+![Demo Video](https://www.youtube.com/watch?v=0t-NsifUsuM)
 ## Features
 
 -   **Browse Movies**: View a list of currently playing movies with posters and genres.
