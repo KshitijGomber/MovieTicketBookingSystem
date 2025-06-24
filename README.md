@@ -10,6 +10,10 @@
 
 BookYourMovie is a full-stack web application that allows users to browse movies, view showtimes, and book seats. It features a modern, responsive user interface and a robust backend to manage movie data and user bookings. The application is built using the MERN stack and integrates with Auth0 for secure user authentication.
 
+## 🚀 Live Demo
+
+- **Frontend:** [https://movie-ticket-booking-system-two.vercel.app](https://movie-ticket-booking-system-two.vercel.app)
+- **Backend API:** [https://movieticketbookingsystem-7suc.onrender.com/api/shows](https://movieticketbookingsystem-7suc.onrender.com/api/shows)
 
 ## 🎬 Demo
 
@@ -43,7 +47,6 @@ For user authentication, the application integrates with **Auth0**, a third-part
 ![Architecture Diagram](./architecture.png)
 
 
-
 ### Frontend (Client-Side)
 
 The frontend is what the user sees and interacts with in their browser. It was built using React and a rich ecosystem of libraries to create a modern, interactive experience.
@@ -73,6 +76,7 @@ The frontend is what the user sees and interacts with in their browser. It was b
 -   **Build Tool: Vite**
     -   **Functionality**: A modern frontend build tool that provides a fast development server with features like Hot Module Replacement (HMR) and bundles the code for production.
 
+
 ### Backend (Server-Side)
 
 The backend is the engine of the application. It handles business logic, communicates with the database, and provides data to the frontend through an API.
@@ -92,6 +96,25 @@ The backend is the engine of the application. It handles business logic, communi
     -   **Functionality**:
         -   **MongoDB**: A NoSQL database that stores data in flexible, JSON-like documents. It's well-suited for the evolving needs of this application.
         -   **Mongoose**: An Object Data Modeling (ODM) library that provides a straightforward, schema-based solution to model application data. It's used to define schemas for `Show` and `Booking` and to interact with the MongoDB database.
+
+
+## 🌐 Environment Variables
+
+### Backend (`backend/.env` or Render dashboard)
+
+MONGODB_URI=your_mongodb_atlas_connection_string
+FRONTEND_URL=https://movie-ticket-booking-system-two.vercel.app
+AUTH0_AUDIENCE=your_auth0_audience
+AUTH0_CLIENT_ID=your_auth0_client_id
+AUTH0_CLIENT_SECRET=your_auth0_client_secret
+AUTH0_ISSUER_BASE_URL=your_auth0_issuer_url
+### Frontend (`frontend/.env` or Vercel dashboard)
+
+VITE_API_URL=https://movieticketbookingsystem-7suc.onrender.com/api
+VITE_AUTH0_DOMAIN=your_auth0_domain
+VITE_AUTH0_CLIENT_ID=your_auth0_client_id
+VITE_AUTH0_AUDIENCE=your_auth0_audience
+
 
 ## API Endpoints
 
@@ -171,6 +194,46 @@ npm run dev
 ```
 
 The application should now be running, with the frontend accessible at `http://localhost:5173` (or another port if 5173 is busy) and the backend at `http://localhost:3000`.
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+- Set the project root to `frontend`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Set environment variables in the Vercel dashboard
+
+### Backend (Render)
+- Root directory: `backend`
+- Build command: `npm install`
+- Start command: `node app.js`
+- Set environment variables in the Render dashboard
+
+### MongoDB Atlas
+- Create a free cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- Whitelist Render’s IPs or use `0.0.0.0/0` for testing
+- Use the provided connection string in your backend `.env`
+
+
+## 🛠️ Common Deployment Issues
+
+- **CORS Errors:**  
+  Ensure `FRONTEND_URL` in backend env does NOT have a trailing slash and matches your deployed frontend exactly.
+
+- **SPA Routing 404s on Vercel:**  
+  Add a `vercel.json` file with:
+  ```json
+  {
+    "rewrites": [
+      { "source": "/(.*)", "destination": "/" }
+    ]
+  }
+  ```
+
+- **Auth0 Callback Errors:**  
+  Make sure your Auth0 dashboard has the correct callback, logout, and web origin URLs for your deployed frontend.
+
+
 
 ## Usage
 
@@ -274,6 +337,15 @@ curl http://localhost:3000/api/shows
 3. Make your changes
 4. Test thoroughly
 5. Submit a pull request
+
+## 🙏 Acknowledgements
+
+- [Vercel](https://vercel.com/)
+- [Render](https://render.com/)
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- [Auth0](https://auth0.com/)
+- [Material-UI](https://mui.com/)
+
 
 ## License
 
