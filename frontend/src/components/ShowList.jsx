@@ -12,9 +12,11 @@ import {
 } from '@mui/material';
 
 const TOTAL_SEATS = 30;
+const API_URL = import.meta.env.VITE_API_URL;
 
 const fetchBookedSeats = async (showId, showTime) => {
-  const res = await fetch(`http://localhost:3000/api/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`);
+  // const res = await fetch(`http://localhost:3000/api/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`);
+  const res = await fetch(`${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`);
   if (!res.ok) throw new Error('Failed to fetch booked seats');
   const data = await res.json();
   return data.bookedSeats.length;
@@ -24,7 +26,7 @@ const ShowList = () => {
   const { data: shows, isLoading, error } = useQuery({
     queryKey: ['shows'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:3000/api/shows');
+      const response = await fetch(`${API_URL}/shows`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
