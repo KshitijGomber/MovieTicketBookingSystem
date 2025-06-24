@@ -12,8 +12,12 @@ const checkJwt = require('./middleware/auth');
 const app = express();
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/movie_ticket_booking')
-  .then(() => console.log('MongoDB connected'))
+if (!process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI environment variable is not set!');
+}
+
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected to Atlas Cloud'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 // CORS configuration
