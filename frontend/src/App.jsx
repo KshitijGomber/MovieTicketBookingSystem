@@ -28,6 +28,7 @@ const ProtectedRoute = ({ children, isAuthenticated }) => {
 
 function App() {
   const { user, isAuthenticated, isLoading } = useAuth0();
+  console.log("🔥 VITE_API_URL:", import.meta.env.VITE_API_URL);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenu = (event) => {
