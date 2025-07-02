@@ -25,8 +25,8 @@ BookYourMovie is a full-stack web application that allows users to browse movies
 -   **Browse Movies**: View a list of currently playing movies with posters and genres.
 -   **View Show Details**: Get more information about a movie, including its description and available showtimes.
 -   **Seat Selection**: An interactive seat map allows users to select one or more available seats.
--   **User Authentication**: Secure login and registration are handled by Auth0. Users must be logged in to book tickets.
--   **Personalized Experience**: The navigation bar greets users by their first name and provides a dropdown menu for accessing their bookings and logging out.
+-   **User Authentication**: Secure login and registration with email/password or Google OAuth.
+-   **Personalized Experience**: The navigation bar greets users by their name and provides a dropdown menu for accessing their bookings and logging out.
 -   **My Bookings**: Users can view a list of all their past and upcoming bookings.
 -   **Cancel Bookings**: Users have the option to cancel their bookings.
 -   **Dynamic Seat Availability**: The available seat count is calculated in real-time and displayed for each showtime.
@@ -68,10 +68,12 @@ The frontend is what the user sees and interacts with in their browser. It was b
 -   **Data Fetching & Server State: React Query (`@tanstack/react-query`)**
     -   **Functionality**: Simplifies fetching, caching, and updating data from the backend. It manages loading and error states automatically and helps keep the UI in sync with the server data. For example, it's used to fetch the list of shows and the details for a specific movie.
 
--   **Authentication: Auth0 React SDK (`@auth0/auth0-react`)**
-    -   **Functionality**: Integrates the frontend with Auth0 for secure user authentication. It provides:
-        -   Hooks like `useAuth0()` to get user information (e.g., name, email) and authentication status.
-        -   Methods like `loginWithRedirect()` and `logout()` to manage the login and logout processes.
+-   **Authentication: JWT & Google OAuth**
+    -   **Functionality**: Custom authentication system with JWT and Google OAuth integration:
+        -   Email/Password authentication with secure password hashing
+        -   Google OAuth 2.0 for social login
+        -   JWT-based session management
+        -   Protected routes and API endpoints
 
 -   **Build Tool: Vite**
     -   **Functionality**: A modern frontend build tool that provides a fast development server with features like Hot Module Replacement (HMR) and bundles the code for production.
@@ -100,20 +102,33 @@ The backend is the engine of the application. It handles business logic, communi
 
 ## 🌐 Environment Variables
 
-### Backend (`backend/.env` or Render dashboard)
+### Backend (`.env`)
 
-MONGODB_URI=your_mongodb_atlas_connection_string
-FRONTEND_URL=https://movie-ticket-booking-system-two.vercel.app
-AUTH0_AUDIENCE=your_auth0_audience
-AUTH0_CLIENT_ID=your_auth0_client_id
-AUTH0_CLIENT_SECRET=your_auth0_client_secret
-AUTH0_ISSUER_BASE_URL=your_auth0_issuer_url
-### Frontend (`frontend/.env` or Vercel dashboard)
+```
+# Database
+MONGODB_URI=your_mongodb_connection_string
 
-VITE_API_URL=https://movieticketbookingsystem-7suc.onrender.com/api
-VITE_AUTH0_DOMAIN=your_auth0_domain
-VITE_AUTH0_CLIENT_ID=your_auth0_client_id
-VITE_AUTH0_AUDIENCE=your_auth0_audience
+# JWT
+JWT_SECRET=your_jwt_secret_key
+
+# Frontend URL (without trailing slash)
+FRONTEND_URL=http://localhost:5173
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Server
+PORT=3000
+NODE_ENV=development
+```
+
+### Frontend (`.env`)
+
+```
+# API URL (without /api)
+VITE_API_URL=http://localhost:3000
+```
 
 
 ## API Endpoints
@@ -143,21 +158,31 @@ cd movie_ticket_booking_system
 
 ### 2. Configure Environment Variables
 
-You will need to create two `.env` files: one for the frontend and one for the backend.
+You will need to create `.env` files for both the frontend and backend using the provided `.env.example` files as templates.
 
-**Backend (`backend/.env`):**
-```
-MONGO_URI=your_mongodb_connection_string
+**Backend:**
+```bash
+cd backend
+cp .env.example .env
+# Edit the .env file with your configuration
 ```
 
-**Frontend (`frontend/.env.local`):**
+**Frontend:**
+```bash
+cd frontend
+cp .env.example .env
+# Edit the .env file with your configuration
 ```
-VITE_AUTH0_DOMAIN=your_auth0_domain
-VITE_AUTH0_CLIENT_ID=your_auth0_client_id
-VITE_AUTH0_AUDIENCE=your_auth0_audience
-VITE_API_BASE_URL=http://localhost:3000/api
-```
-*Replace the placeholder values with your actual credentials.*
+
+#### Google OAuth Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Navigate to "APIs & Services" > "Credentials"
+4. Click "Create Credentials" > "OAuth client ID"
+5. Configure the consent screen if prompted
+6. For "Authorized JavaScript origins", add: `http://localhost:5173`
+7. For "Authorized redirect URIs", add: `http://localhost:3000/api/auth/google/callback`
+8. Copy the Client ID and Client Secret to your backend `.env` file
 
 ### 3. Install Dependencies
 
