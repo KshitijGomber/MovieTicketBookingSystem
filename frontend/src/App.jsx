@@ -11,6 +11,8 @@ import LogoutButton from './components/Auth/LogoutButton';
 import { AccountCircle } from '@mui/icons-material';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './context/AuthContext';
+import Signin from './components/Auth/Signin';
+
 
 function App() {
   const { user, token } = useAuth();
@@ -114,6 +116,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="/signin" element={<Signin />} />
         </Routes>
       </Container>
     </>
