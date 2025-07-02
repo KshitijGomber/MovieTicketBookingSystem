@@ -4,7 +4,8 @@ const Booking = require('../models/Booking');
 const Show = require('../models/Show');
 const User = require('../models/User');
 const checkJwt = require('../middleware/auth');
-const { sendBookingConfirmationEmail } = require('../utils/emailService');
+const { sendBookingConfirmationEmail, sendBookingCancellationEmail } = require('../utils/emailService');
+const { processPayment, processRefund } = require('../utils/paymentService');
 
 // Protect all booking routes
 router.use(checkJwt);
@@ -24,7 +25,7 @@ router.get('/', async (req, res) => {
 // POST /api/bookings - Create a new booking
 router.post('/', async (req, res) => {
   try {
-    const { showId, seat, showTime } = req.body;
+    const { showId, seat, showTime, paymentMethod = 'card' } = req.body;
     const userId = req.user.id;
     
     if (!showId || !seat || !showTime) {
@@ -60,13 +61,37 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Create the booking
+    // Process payment
+    const paymentAmount = show.price || 0;
+    const paymentResult = await processPayment({
+      amount: paymentAmount,
+      currency: 'INR',
+      paymentMethod,
+      description: `Booking for ${show.title} - Seat ${seat}`
+    });
+
+    if (!paymentResult.success) {
+      return res.status(400).json({ 
+        message: 'Payment failed',
+        error: paymentResult.error
+      });
+    }
+
+    // Create the booking with payment reference
     const booking = new Booking({
       user: userId,
       show: showId,
       seat: seat,
       showTime: showTime,
-      status: 'booked'
+      status: 'booked',
+      payment: {
+        id: paymentResult.paymentId,
+        amount: paymentAmount,
+        status: paymentResult.status,
+        method: paymentMethod,
+        receiptUrl: paymentResult.receiptUrl
+      },
+      bookingReference: `BK${Date.now().toString().slice(-8)}`
     });
 
     await booking.save();
@@ -78,8 +103,10 @@ router.post('/', async (req, res) => {
         movieName: show.title,
         showTime: showTime,
         seats: [seat],
-        totalAmount: show.price || 0,
-        bookingId: booking._id.toString()
+        totalAmount: paymentAmount,
+        bookingId: booking.bookingReference,
+        theatreName: show.theatre || 'Cineplex',
+        paymentId: paymentResult.paymentId
       });
     } catch (emailError) {
       console.error('Failed to send booking confirmation email:', emailError);
@@ -103,7 +130,7 @@ router.post('/:id/cancel', async (req, res) => {
     const booking = await Booking.findOne({ 
       _id: req.params.id, 
       user: userId 
-    }).populate('show');
+    }).populate('show').populate('user', 'email name');
     
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -113,11 +140,52 @@ router.post('/:id/cancel', async (req, res) => {
       return res.status(400).json({ message: 'Booking is already cancelled' });
     }
 
-    // Cancel the booking
+    // Process refund if payment was made
+    let refundResult = null;
+    if (booking.payment && booking.payment.status === 'succeeded') {
+      refundResult = await processRefund({
+        paymentId: booking.payment.id,
+        amount: booking.payment.amount,
+        reason: 'cancellation'
+      });
+
+      if (!refundResult.success) {
+        console.error('Refund failed:', refundResult.error);
+        // Continue with cancellation even if refund fails, but log it
+      }
+    }
+
+    // Update booking status
     booking.status = 'cancelled';
+    if (refundResult) {
+      booking.refund = {
+        id: refundResult.refundId,
+        amount: refundResult.amount,
+        status: refundResult.status,
+        processedAt: new Date()
+      };
+    }
     await booking.save();
 
-    res.json({ message: 'Booking cancelled successfully', booking });
+    // Send cancellation email
+    try {
+      await sendBookingCancellationEmail({
+        to: booking.user.email,
+        movieName: booking.show.title,
+        bookingId: booking.bookingReference || booking._id.toString(),
+        refundAmount: refundResult?.amount || 0,
+        showTime: booking.showTime
+      });
+    } catch (emailError) {
+      console.error('Failed to send cancellation email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({ 
+      message: 'Booking cancelled successfully', 
+      booking,
+      refund: refundResult
+    });
   } catch (error) {
     console.error('Error cancelling booking:', error);
     res.status(500).json({ message: 'Error cancelling booking' });

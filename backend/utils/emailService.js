@@ -67,30 +67,134 @@ const sendPasswordResetEmail = async (to, token) => {
  * @param {string} options.bookingId - Booking reference ID
  * @returns {Promise}
  */
-const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, totalAmount, bookingId }) => {
+const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, totalAmount, bookingId, theatreName = 'Cineplex', paymentId }) => {
+  const formattedTime = new Date(showTime).toLocaleString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
   const mailOptions = {
-    from: `"Movie Ticket Booking" <${process.env.SMTP_USER}>`,
+    from: `"${process.env.APP_NAME || 'Movie Ticket Booking'}" <${process.env.SMTP_USER}>`,
     to,
-    subject: `Booking Confirmation - ${bookingId}`,
+    subject: `🎟️ Booking Confirmed - ${bookingId}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>🎬 Booking Confirmed!</h2>
-        <p>Thank you for booking with us. Here are your booking details:</p>
-        
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3>${movieName}</h3>
-          <p><strong>Booking ID:</strong> ${bookingId}</p>
-          <p><strong>Show Time:</strong> ${new Date(showTime).toLocaleString()}</p>
-          <p><strong>Seats:</strong> ${seats.join(', ')}</p>
-          <p><strong>Total Amount:</strong> ₹${totalAmount.toFixed(2)}</p>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <h1 style="color: #2c3e50; margin-bottom: 5px;">Booking Confirmed!</h1>
+          <p style="color: #7f8c8d; margin-top: 0;">${formattedTime}</p>
         </div>
         
-        <p>Please arrive at least 30 minutes before the showtime.</p>
-        <p>Show this email at the ticket counter to collect your tickets.</p>
+        <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin: 20px 0;">
+          <h2 style="color: #2c3e50; margin-top: 0;">${movieName}</h2>
+          <div style="display: flex; justify-content: space-between; margin: 20px 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <div>
+              <p style="color: #7f8c8d; margin: 5px 0;">Theatre</p>
+              <p style="margin: 5px 0; font-weight: 500;">${theatreName}</p>
+            </div>
+            <div>
+              <p style="color: #7f8c8d; margin: 5px 0;">Date & Time</p>
+              <p style="margin: 5px 0; font-weight: 500;">${formattedTime}</p>
+            </div>
+          </div>
+          
+          <div style="margin: 20px 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <p style="color: #7f8c8d; margin: 5px 0 10px 0;">Seats</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${seats.map(seat => `<span style="background: #e8f4fd; color: #1976d2; padding: 5px 10px; border-radius: 4px; display: inline-block;">${seat}</span>`).join('')}
+            </div>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+              <span>Subtotal</span>
+              <span>₹${(totalAmount * 0.8).toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+              <span>GST (18%)</span>
+              <span>₹${(totalAmount * 0.18).toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0; font-weight: bold; font-size: 1.1em;">
+              <span>Total Amount</span>
+              <span>₹${totalAmount.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div style="background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <p style="margin: 0; font-weight: 500;">Payment Status: <span style="color: #388e3c;">Paid Successfully</span></p>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em;">Transaction ID: ${paymentId || 'N/A'}</p>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em;">Booking Reference: ${bookingId}</p>
+          </div>
+        </div>
         
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666;">
-          <p>If you have any questions, please contact our support team.</p>
-          <p>Enjoy your movie!</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <p style="color: #7f8c8d; font-size: 0.9em;">
+            Please show this email at the theatre ticket counter to collect your physical tickets.
+            We recommend arriving at least 30 minutes before the showtime.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #7f8c8d; font-size: 0.9em;">
+          <p>If you have any questions, please contact our support team at support@movietickets.com</p>
+          <p>© ${new Date().getFullYear()} ${process.env.APP_NAME || 'Movie Ticket Booking'}. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+/**
+ * Send a booking cancellation email
+ * @param {Object} options - Booking details
+ * @param {string} options.to - Recipient email
+ * @param {string} options.movieName - Name of the movie
+ * @param {string} options.bookingId - Booking reference ID
+ * @param {number} options.refundAmount - Amount to be refunded
+ * @returns {Promise}
+ */
+const sendBookingCancellationEmail = async ({ to, movieName, bookingId, refundAmount }) => {
+  const mailOptions = {
+    from: `"${process.env.APP_NAME || 'Movie Ticket Booking'}" <${process.env.SMTP_USER}>`,
+    to,
+    subject: `❌ Booking Cancelled - ${bookingId}`,
+    html: `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <div style="background: #fff5f5; padding: 30px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <h1 style="color: #c62828; margin-bottom: 5px;">Booking Cancelled</h1>
+          <p style="color: #e57373; margin-top: 0;">Your booking has been successfully cancelled</p>
+        </div>
+        
+        <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin: 20px 0;">
+          <h2 style="color: #2c3e50; margin-top: 0;">${movieName}</h2>
+          <p style="color: #7f8c8d;">Booking Reference: <strong>${bookingId}</strong></p>
+          
+          <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #f57c00; margin-top: 0;">Refund Details</h3>
+            <p>Amount to be refunded: <strong>₹${refundAmount.toFixed(2)}</strong></p>
+            <p style="font-size: 0.9em; color: #7f8c8d;">
+              The refund will be processed to your original payment method within 5-7 business days.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0 10px 0;">
+            <p>We're sorry to see you go. Hope to see you again soon!</p>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" 
+               style="display: inline-block; background: #1976d2; color: white; 
+                      padding: 10px 25px; text-decoration: none; border-radius: 4px; 
+                      margin-top: 15px; font-weight: 500;">
+              Book Another Movie
+            </a>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #7f8c8d; font-size: 0.9em;">
+          <p>If you didn't request this cancellation, please contact our support team immediately.</p>
+          <p>© ${new Date().getFullYear()} ${process.env.APP_NAME || 'Movie Ticket Booking'}. All rights reserved.</p>
         </div>
       </div>
     `,
@@ -102,5 +206,6 @@ const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, to
 module.exports = {
   sendPasswordResetEmail,
   sendBookingConfirmationEmail,
+  sendBookingCancellationEmail,
   transporter
 };
