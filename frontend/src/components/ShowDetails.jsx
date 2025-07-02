@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchShow } from '../api/shows';
-import { getBookedSeats, createBooking } from '../api/bookings';
+import { getBookedSeats } from '../api/bookings';
 import { 
   Typography, 
   Button, 
@@ -81,41 +81,23 @@ const ShowDetails = () => {
 
   const handleBookNow = () => {
     if (!token) {
-      navigate('/signin');
+      navigate('/signin', { state: { from: `/show/${show._id}` } });
       return;
     }
     
     if (selectedSeats.length === 0 || !selectedShowTime) {
-      setSnackbar({ open: true, message: 'Please select at least one seat and showtime', severity: 'warning' });
+      setSnackbar({ 
+        open: true, 
+        message: 'Please select at least one seat and showtime', 
+        severity: 'warning' 
+      });
       return;
     }
-
-    // Create multiple bookings for selected seats
-    const bookingPromises = selectedSeats.map(seat => 
-      createBooking({
-        showId: show._id,
-        seat: seat,
-        showTime: selectedShowTime,
-      })
-    );
-
-    Promise.all(bookingPromises)
-      .then(() => {
-        setSnackbar({ open: true, message: `Successfully booked ${selectedSeats.length} seat(s)!`, severity: 'success' });
-        queryClient.invalidateQueries(['show', showId]);
-        queryClient.invalidateQueries(['bookedSeats', showId, selectedShowTime]);
-        
-        // Navigate to booking confirmation page
-        const seatsParam = selectedSeats.join(',');
-        const showTimeParam = encodeURIComponent(selectedShowTime);
-        navigate(`/booking/${showId}?seats=${seatsParam}&showTime=${showTimeParam}`);
-      })
-      .catch((error) => {
-        setSnackbar({ open: true, message: error.message, severity: 'error' });
-        if (error.message && (error.message.includes('401') || error.message.toLowerCase().includes('token')) ) {
-          navigate('/signin');
-        }
-      });
+    
+    // Navigate to payment page with selected seats and showtime
+    const seatsParam = selectedSeats.join(',');
+    const showTimeParam = encodeURIComponent(selectedShowTime);
+    navigate(`/payment/${show._id}?seats=${seatsParam}&showTime=${showTimeParam}`);
   };
 
   const isShowFull = bookedSeats.length >= TOTAL_SEATS;

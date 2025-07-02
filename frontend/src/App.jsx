@@ -1,10 +1,11 @@
-import { Routes, Route, Link as RouterLink } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Container, Alert, Box, IconButton, Menu, MenuItem } from '@mui/material';
+import { Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Button, Container, Box, Menu, MenuItem } from '@mui/material';
 import { useState } from 'react';
 import './App.css';
 import ShowList from './components/ShowList';
 import ShowDetails from './components/ShowDetails';
-import BookingForm from './components/BookingForm';
+import Payment from './components/Payment';
+import BookingConfirmation from './components/BookingConfirmation';
 import MyBookings from './components/MyBookings';
 import LoginButton from './components/Auth/LoginButton';
 import LogoutButton from './components/Auth/LogoutButton';
@@ -99,18 +100,41 @@ function App() {
           </Toolbar>
         </Container>
       </AppBar>
-      <Container sx={{ mt: '80px' }}>
+      <Container maxWidth="xl" sx={{ mt: 8, mb: 4 }}>
         <Routes>
           <Route path="/" element={<ShowList />} />
           <Route path="/show/:showId" element={<ShowDetails />} />
+          
+          {/* Payment Flow */}
           <Route 
-            path="/booking/:showId" 
+            path="/payment/:showId" 
             element={
               <ProtectedRoute>
-                <BookingForm />
+                <Payment />
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/booking/confirmation" 
+            element={
+              <ProtectedRoute>
+                <BookingConfirmation />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Old booking form (kept for backward compatibility) */}
+          <Route 
+            path="/booking/:showId" 
+            element={
+              token ? (
+                <Navigate to={`/payment/showId`} replace />
+              ) : (
+                <Navigate to="/signin" state={{ from: window.location.pathname }} replace />
+              )
+            } 
+          />
+          
           <Route 
             path="/my-bookings" 
             element={
@@ -119,10 +143,15 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Auth Routes */}
+          <Route path="/signin" element={token ? <Navigate to="/" replace /> : <Signin />} />
+          <Route path="/signup" element={token ? <Navigate to="/" replace /> : <Signup />} />
+          <Route path="/forgot-password" element={token ? <Navigate to="/" replace /> : <ForgotPassword />} />
+          <Route path="/reset-password" element={token ? <Navigate to="/" replace /> : <ResetPassword />} />
+          
+          {/* Fallback route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Container>
     </>
