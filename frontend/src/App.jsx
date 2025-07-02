@@ -12,6 +12,8 @@ import { AccountCircle } from '@mui/icons-material';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './context/AuthContext';
 import Signin from './components/Auth/Signin';
+import Signup from './components/Auth/Signup';
+import ForgotPassword from './components/Auth/ForgotPassword';
 
 
 function App() {
@@ -117,6 +119,8 @@ function App() {
             } 
           />
           <Route path="/signin" element={<Signin />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </Container>
     </>

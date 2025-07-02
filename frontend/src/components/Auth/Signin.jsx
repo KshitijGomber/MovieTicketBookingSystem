@@ -144,8 +144,13 @@ const Signin = () => {
         <Box sx={{ mt: 3, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             Don't have an account?{' '}
-            <Link component={RouterLink} to="/signup" color="primary">
+            <Link component={RouterLink} to="/signup" color="primary" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
               Sign up
+            </Link>
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mt={1}>
+            <Link component={RouterLink} to="/forgot-password" color="primary" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              Forgot password?
             </Link>
           </Typography>
         </Box>
