@@ -1,34 +1,19 @@
 import { Routes, Route, Link as RouterLink } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Alert, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import { useState, useEffect } from 'react'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
 import ShowList from './components/ShowList';
 import ShowDetails from './components/ShowDetails';
 import BookingForm from './components/BookingForm';
 import MyBookings from './components/MyBookings';
 import LoginButton from './components/Auth/LoginButton';
 import LogoutButton from './components/Auth/LogoutButton';
-import { useAuth0 } from '@auth0/auth0-react';
 import { AccountCircle } from '@mui/icons-material';
-
-// Protected Route Component
-const ProtectedRoute = ({ children, isAuthenticated }) => {
-  if (!isAuthenticated) {
-    return (
-      <Container sx={{ mt: 4 }}>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Please log in to access this page.
-        </Alert>
-        <LoginButton />
-      </Container>
-    );
-  }
-  return children;
-};
+import { useAuth } from './context/AuthContext';
+import { ProtectedRoute } from './context/AuthContext';
 
 function App() {
-  const { user, isAuthenticated, isLoading } = useAuth0();
-  console.log("🔥 VITE_API_URL:", import.meta.env.VITE_API_URL);
+  const { user, token } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenu = (event) => {
@@ -39,22 +24,9 @@ function App() {
     setAnchorEl(null);
   };
 
-  // Store Auth0 user info in localStorage for the booking API
-  useEffect(() => {
-    if (user && isAuthenticated) {
-      localStorage.setItem('auth0_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('auth0_user');
-    }
-  }, [user, isAuthenticated]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   const getFirstName = () => {
     if (!user) return '';
-    return user.given_name || user.nickname || user.name.split(' ')[0];
+    return user.username || user.name || user.email || '';
   };
 
   return (
@@ -87,7 +59,7 @@ function App() {
 
             <Box sx={{ flexGrow: 1 }} />
             
-            {isAuthenticated ? (
+            {token ? (
               <div>
                 <Button
                   onClick={handleMenu}
@@ -129,7 +101,7 @@ function App() {
           <Route 
             path="/booking/:showId" 
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute>
                 <BookingForm />
               </ProtectedRoute>
             } 
@@ -137,7 +109,7 @@ function App() {
           <Route 
             path="/my-bookings" 
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute>
                 <MyBookings />
               </ProtectedRoute>
             } 
@@ -145,7 +117,7 @@ function App() {
         </Routes>
       </Container>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

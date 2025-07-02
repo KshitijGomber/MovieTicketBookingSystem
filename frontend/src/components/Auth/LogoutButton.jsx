@@ -1,16 +1,12 @@
 import React from "react";
-import { useAuth0 } from "@auth0/auth0-react";
 import { Button, MenuItem } from "@mui/material";
+import { useAuth } from "../../context/AuthContext";
 
 const LogoutButton = ({ variant = 'button' }) => {
-  const { logout } = useAuth0();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    // Clear session storage to reset user session
-    sessionStorage.removeItem('session_user_id');
-    localStorage.removeItem('auth0_user');
-    
-    logout({ logoutParams: { returnTo: window.location.origin } });
+    logout();
   };
 
   if (variant === 'menuitem') {

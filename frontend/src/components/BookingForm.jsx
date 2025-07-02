@@ -14,11 +14,19 @@ import {
   ListItem,
   ListItemText
 } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
 
 const BookingForm = () => {
   const { showId } = useParams();
   const navigate = useNavigate();
   const [bookingDetails, setBookingDetails] = useState(null);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/signin');
+    }
+  }, [token, navigate]);
 
   const { data: show, isLoading, isError } = useQuery({
     queryKey: ['show', showId],

@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Typography, Paper, List, ListItem, ListItemText, Button, Alert, CircularProgress, Snackbar } from '@mui/material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBookings, cancelBooking } from '../api/bookings';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const MyBookings = () => {
   const queryClient = useQueryClient();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  const [authError, setAuthError] = useState(false);
 
-  const { data: bookings, isLoading, isError } = useQuery({
+  const { data: bookings, isLoading, isError, error } = useQuery({
     queryKey: ['bookings'],
     queryFn: getBookings,
+    retry: false,
+    onError: (err) => {
+      if (err.message && (err.message.includes('401') || err.message.toLowerCase().includes('token')) ) {
+        setAuthError(true);
+      }
+    }
   });
 
   const cancelMutation = useMutation({
@@ -20,11 +31,20 @@ const MyBookings = () => {
     },
     onError: (error) => {
       setSnackbar({ open: true, message: error.message, severity: 'error' });
+      if (error.message && (error.message.includes('401') || error.message.toLowerCase().includes('token')) ) {
+        setAuthError(true);
+      }
     },
   });
 
+  useEffect(() => {
+    if (!token || authError) {
+      navigate('/signin');
+    }
+  }, [token, authError, navigate]);
+
   if (isLoading) return <CircularProgress />;
-  if (isError) return <Alert severity="error">Failed to load bookings.</Alert>;
+  if (isError && !authError) return <Alert severity="error">Failed to load bookings.</Alert>;
 
   const activeBookings = bookings?.filter(b => b.status === 'booked') || [];
 

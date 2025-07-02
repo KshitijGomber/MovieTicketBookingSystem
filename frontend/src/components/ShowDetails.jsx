@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth0 } from '@auth0/auth0-react';
 import { fetchShow } from '../api/shows';
 import { getBookedSeats, createBooking } from '../api/bookings';
 import { 
@@ -19,6 +18,7 @@ import {
   Chip,
   Paper
 } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
 
 const TOTAL_SEATS = 30;
 
@@ -26,7 +26,7 @@ const ShowDetails = () => {
   const { showId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const { token, user } = useAuth();
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [selectedShowTime, setSelectedShowTime] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -52,6 +52,9 @@ const ShowDetails = () => {
     },
     onError: (error) => {
       setSnackbar({ open: true, message: error.message, severity: 'error' });
+      if (error.message && (error.message.includes('401') || error.message.toLowerCase().includes('token')) ) {
+        navigate('/signin');
+      }
     },
   });
 
@@ -77,8 +80,8 @@ const ShowDetails = () => {
   };
 
   const handleBookNow = () => {
-    if (!isAuthenticated) {
-      loginWithRedirect();
+    if (!token) {
+      navigate('/signin');
       return;
     }
     
@@ -109,6 +112,9 @@ const ShowDetails = () => {
       })
       .catch((error) => {
         setSnackbar({ open: true, message: error.message, severity: 'error' });
+        if (error.message && (error.message.includes('401') || error.message.toLowerCase().includes('token')) ) {
+          navigate('/signin');
+        }
       });
   };
 
@@ -193,29 +199,19 @@ const ShowDetails = () => {
             </Grid>
           </Box>
           
-          {!isAuthenticated && (
+          {!token && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Please log in to book tickets.
             </Alert>
           )}
-          
-          <Button
-            variant="contained"
-            color="primary"
+          <Button 
+            variant="contained" 
+            color="primary" 
+            sx={{ mt: 2 }} 
             onClick={handleBookNow}
-            disabled={selectedSeats.length === 0 || bookingMutation.isLoading}
-            sx={{ mr: 2 }}
+            disabled={selectedSeats.length === 0 || !selectedShowTime || !token}
           >
-            {bookingMutation.isLoading ? 'Booking...' : 
-             !isAuthenticated ? 'Login to Book' : 
-             `Book ${selectedSeats.length} Seat${selectedSeats.length !== 1 ? 's' : ''}`}
-          </Button>
-          
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/')}
-          >
-            Back to Shows
+            Book Now
           </Button>
         </>
       )}
