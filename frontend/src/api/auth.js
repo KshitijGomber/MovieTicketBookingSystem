@@ -49,15 +49,43 @@ export function handleGoogleAuthResponse() {
   window.history.replaceState({}, document.title, cleanUrl);
   
   if (error) {
-    throw new Error('Google authentication failed');
+    throw new Error(error);
   }
   
-  if (token && email) {
-    return {
-      token,
-      user: { name, email }
-    };
+  if (token && name && email) {
+    return { token, user: { name, email } };
   }
   
   return null;
+}
+
+export async function forgotPassword(email) {
+  return fetchWithAuth(`${API_URL}/password-reset/forgot-password`, {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword({ token, password }) {
+  return fetchWithAuth(`${API_URL}/password-reset/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
+export async function validateResetToken(token) {
+  const response = await fetch(`${API_URL}/password-reset/validate-reset-token/${token}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.message || 'Invalid or expired token');
+  }
+  
+  return data;
 }

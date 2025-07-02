@@ -64,9 +64,15 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/shows', require('./routes/shows'));
-app.use('/api/bookings', require('./routes/bookings')); // Removed auth middleware temporarily
+const authRoutes = require('./routes/auth');
+const showRoutes = require('./routes/shows');
+const bookingRoutes = require('./routes/bookings');
+const passwordResetRoutes = require('./routes/passwordReset');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/shows', showRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {

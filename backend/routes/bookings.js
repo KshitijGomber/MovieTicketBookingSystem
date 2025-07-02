@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const Show = require('../models/Show');
+const User = require('../models/User');
 const checkJwt = require('../middleware/auth');
+const { sendBookingConfirmationEmail } = require('../utils/emailService');
 
 // Protect all booking routes
 router.use(checkJwt);
@@ -52,16 +54,37 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Invalid showtime' });
     }
 
+    // Get user details for email
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     // Create the booking
     const booking = new Booking({
+      user: userId,
       show: showId,
       seat: seat,
       showTime: showTime,
-      status: 'booked',
-      user: userId
+      status: 'booked'
     });
 
     await booking.save();
+
+    // Send booking confirmation email
+    try {
+      await sendBookingConfirmationEmail({
+        to: user.email,
+        movieName: show.title,
+        showTime: showTime,
+        seats: [seat],
+        totalAmount: show.price || 0,
+        bookingId: booking._id.toString()
+      });
+    } catch (emailError) {
+      console.error('Failed to send booking confirmation email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     // Populate the show details before sending response
     await booking.populate('show');

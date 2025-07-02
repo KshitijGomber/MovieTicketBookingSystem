@@ -2,13 +2,15 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, unique: true, sparse: true },
-  name: { type: String },
+  username: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String },
-  googleId: { type: String, sparse: true },
+  googleId: { type: String },
   isVerified: { type: Boolean, default: false },
-  profilePicture: { type: String }
+  profilePicture: { type: String },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
 }, { timestamps: true });
 
 // Hash password before saving if password is modified
