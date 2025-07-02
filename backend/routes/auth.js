@@ -37,33 +37,67 @@ router.post('/signup', async (req, res) => {
 });
 
 // Google OAuth routes
-router.get('/google',
-  passport.authenticate('google', { 
+router.get('/google', (req, res, next) => {
+  const { redirect_uri } = req.query;
+  const state = redirect_uri ? Buffer.from(JSON.stringify({ redirect_uri })).toString('base64') : undefined;
+  
+  const auth = passport.authenticate('google', { 
     scope: ['profile', 'email'],
-    session: false
-  })
-);
+    session: false,
+    state,
+    accessType: 'offline',
+    prompt: 'consent'
+  });
+  
+  auth(req, res, next);
+});
 
 router.get('/google/callback',
-  passport.authenticate('google', { 
-    failureRedirect: '/login',
-    session: false 
-  }),
-  async (req, res) => {
-    try {
+  (req, res, next) => {
+    passport.authenticate('google', { 
+      failureRedirect: `${process.env.FRONTEND_URL}/signin?error=oauth_failed`,
+      session: false 
+    }, (err, user, info) => {
+      if (err) {
+        console.error('OAuth error:', err);
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=oauth_error`);
+      }
+      if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=oauth_failed`);
+      }
+      
       // Generate JWT
       const token = jwt.sign(
-        { id: req.user._id, name: req.user.name, email: req.user.email },
+        { 
+          id: user._id, 
+          name: user.name, 
+          email: user.email,
+          picture: user.profilePicture
+        },
         process.env.JWT_SECRET,
-        { expiresIn: '1d' }
+        { expiresIn: '7d' }
       );
       
+      // Get redirect URI from state
+      let redirectUrl = `${process.env.FRONTEND_URL}/signin`;
+      try {
+        const state = req.query.state ? JSON.parse(Buffer.from(req.query.state, 'base64').toString()) : {};
+        if (state.redirect_uri) {
+          redirectUrl = state.redirect_uri;
+        }
+      } catch (e) {
+        console.error('Error parsing state:', e);
+      }
+      
+      // Add token to redirect URL
+      const url = new URL(redirectUrl);
+      url.searchParams.set('token', token);
+      url.searchParams.set('name', encodeURIComponent(user.name));
+      url.searchParams.set('email', encodeURIComponent(user.email));
+      
       // Redirect back to frontend with token
-      res.redirect(`${process.env.FRONTEND_URL}/signin?token=${token}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}`);
-    } catch (err) {
-      console.error('Error in Google OAuth callback:', err);
-      res.redirect(`${process.env.FRONTEND_URL}/signin?error=oauth_failed`);
-    }
+      res.redirect(url.toString());
+    })(req, res, next);
   }
 );
 

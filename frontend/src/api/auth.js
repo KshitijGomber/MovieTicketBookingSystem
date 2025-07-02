@@ -34,14 +34,21 @@ export async function signin({ email, password }) {
 }
 
 export function getGoogleAuthUrl() {
-  return `${API_URL}/auth/google`;
+  // Get the current origin (e.g., http://localhost:3000 or your production URL)
+  const redirectUri = `${window.location.origin}${window.location.pathname}`;
+  
+  // Encode the redirect URI to be used as a URL parameter
+  const encodedRedirectUri = encodeURIComponent(redirectUri);
+  
+  // Return the Google OAuth URL with the redirect_uri parameter
+  return `${API_URL}/auth/google?redirect_uri=${encodedRedirectUri}`;
 }
 
 export function handleGoogleAuthResponse() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
-  const name = params.get('name');
-  const email = params.get('email');
+  const name = params.get('name') ? decodeURIComponent(params.get('name')) : null;
+  const email = params.get('email') ? decodeURIComponent(params.get('email')) : null;
   const error = params.get('error');
   
   // Clean up the URL
@@ -52,8 +59,15 @@ export function handleGoogleAuthResponse() {
     throw new Error(error);
   }
   
-  if (token && name && email) {
-    return { token, user: { name, email } };
+  if (token) {
+    return { 
+      token, 
+      user: { 
+        name, 
+        email,
+        // Other user info will be extracted from the token
+      } 
+    };
   }
   
   return null;

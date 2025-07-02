@@ -27,16 +27,62 @@ const Signin = () => {
 
   useEffect(() => {
     // Handle Google OAuth redirect
-    try {
-      const response = handleGoogleAuthResponse();
-      if (response) {
-        login(response.user, response.token);
-        navigate('/');
+    const handleGoogleAuth = async () => {
+      try {
+        // Check for error in URL params first
+        const params = new URLSearchParams(window.location.search);
+        const error = params.get('error');
+        
+        if (error) {
+          setError(
+            error === 'oauth_failed' 
+              ? 'Failed to sign in with Google. Please try again.'
+              : 'An error occurred during sign in.'
+          );
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return;
+        }
+        
+        const response = await handleGoogleAuthResponse();
+        if (response && response.token) {
+          // Store the token in localStorage
+          localStorage.setItem('token', response.token);
+          
+          try {
+            // Get user info from the token
+            const base64Url = response.token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const userInfo = JSON.parse(atob(base64));
+            
+            // Update auth context
+            login({
+              id: userInfo.id,
+              name: userInfo.name,
+              email: userInfo.email,
+              picture: userInfo.picture
+            }, response.token);
+            
+            // Redirect to home or intended URL
+            const from = location.state?.from?.pathname || '/';
+            navigate(from, { replace: true });
+          } catch (parseError) {
+            console.error('Error parsing user info:', parseError);
+            setError('Failed to process user information. Please try again.');
+          }
+        }
+      } catch (err) {
+        console.error('Google auth error:', err);
+        setError(err.message || 'Failed to sign in with Google');
       }
-    } catch (err) {
-      setError(err.message);
+    };
+
+    // Only run this effect if we have a token in the URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('token') || params.has('error')) {
+      handleGoogleAuth();
     }
-  }, [login, navigate]);
+  }, [login, navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
