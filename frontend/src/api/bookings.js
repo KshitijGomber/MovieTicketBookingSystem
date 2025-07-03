@@ -99,11 +99,30 @@ export async function cancelBooking(id) {
  * @param {string} showTime - Show time
  * @returns {Promise<Object>} Booked seats data
  */
+// export async function getBookedSeats(showId, showTime) {
+//   const res = await fetch(
+//     `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`,
+//     {
+//       headers: getAuthHeader(),
+//     }
+//   );
+  
+//   if (!res.ok) {
+//     const error = await res.json();
+//     throw new Error(error.message || 'Failed to fetch booked seats');
+//   }
+  
+//   return res.json();
+// }
+
 export async function getBookedSeats(showId, showTime) {
   const res = await fetch(
     `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`,
     {
-      headers: getAuthHeader(),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
     }
   );
   
