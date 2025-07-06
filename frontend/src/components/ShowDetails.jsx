@@ -263,50 +263,44 @@ const ShowDetails = () => {
           refetchBookedSeats();
         }
 
-        // Prepare navigation state
+        // Prepare navigation state with all necessary booking details
         const navigationState = {
           booking: {
-            ...bookingDataFromServer,
-            // Ensure we have all required fields with fallbacks
-            _id: bookingDataFromServer._id || `temp_${Date.now()}`,
-            bookingReference: bookingDataFromServer.bookingReference || `BR-${Date.now()}`,
+            _id: bookingDataFromServer._id,
+            bookingReference: bookingDataFromServer.bookingReference,
             status: bookingDataFromServer.status || 'confirmed',
-            show: bookingDataFromServer.show || {
-              _id: show?._id,
-              title: show?.title,
-              image: show?.image,
-              duration: show?.duration
+            show: {
+              _id: show._id,
+              title: show.title,
+              image: show.image,
+              duration: show.duration
             },
-            user: bookingDataFromServer.user || {
+            showTime: selectedShowTime,
+            seats: selectedSeats.map(seat => ({
+              seatNumber: seat,
+              price: show.price
+            })),
+            totalAmount: parseFloat(totalAmount.toFixed(2)),
+            payment: {
+              transactionId: paymentResult.transactionId,
+              amount: parseFloat(totalAmount.toFixed(2)),
+              status: 'completed',
+              method: 'card',
+              date: new Date().toISOString()
+            },
+            createdAt: new Date().toISOString(),
+            user: {
               name: user?.name || user?.username || 'Guest',
               email: user?.email
             }
-          },
-          show: {
-            _id: show?._id,
-            title: show?.title,
-            duration: show?.duration,
-            image: show?.image
-          },
-          showTime: selectedShowTime,
-          seats: selectedSeats,
-          total: parseFloat(totalAmount.toFixed(2)),
-          paymentDetails: {
-            transactionId: bookingDataFromServer.transactionId || paymentResult.transactionId,
-            amount: bookingDataFromServer.totalAmount || parseFloat(totalAmount.toFixed(2)),
-            date: new Date().toISOString(),
-            status: bookingDataFromServer.paymentStatus || 'completed'
-          },
-          user: {
-            name: user?.name || user?.username || 'Guest',
-            email: user?.email
           }
         };
 
-        console.log('Navigating with state:', navigationState);
+        console.log('Navigating to booking confirmation with state:', navigationState);
         
-        // Navigate to booking confirmation with all details
-        navigate('/booking/confirmation', {
+        // Navigate to booking confirmation with the booking ID in the URL
+        // and the full booking data in the location state
+        navigate(`/booking-confirmation/${bookingDataFromServer._id}`, {
           state: navigationState,
           replace: true
         });

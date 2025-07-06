@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -22,10 +22,14 @@ import {
   ConfirmationNumber as TicketIcon, 
   AccessTime as TimeIcon 
 } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext';
+import { getBooking } from '../api/bookings';
 
 export default function BookingConfirmation() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { bookingId } = useParams();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bookingDetails, setBookingDetails] = useState(null);
@@ -33,28 +37,37 @@ export default function BookingConfirmation() {
   useEffect(() => {
     const processBooking = async () => {
       try {
-        if (!location.state?.booking) {
+        let bookingData;
+        
+        // If we have booking data in location state, use it
+        if (location.state?.booking) {
+          bookingData = location.state.booking;
+        } 
+        // Otherwise, fetch it using the bookingId from the URL
+        else if (bookingId) {
+          bookingData = await getBooking(bookingId, token);
+        } 
+        // If we have neither, show an error
+        else {
           throw new Error('No booking information found');
         }
-
-        const { booking } = location.state;
         
         // Set booking details from the booking object
         setBookingDetails({
-          show: booking.show,
-          showTime: booking.showTime,
-          seats: booking.seats,
-          total: booking.totalAmount || 0,
-          bookingId: booking.bookingReference,
-          bookingDate: booking.createdAt || new Date().toISOString(),
+          show: bookingData.show,
+          showTime: bookingData.showTime,
+          seats: bookingData.seats,
+          total: bookingData.totalAmount || 0,
+          bookingId: bookingData.bookingReference || bookingId,
+          bookingDate: bookingData.createdAt || new Date().toISOString(),
+          payment: bookingData.payment || {}
         });
         
         setLoading(false);
-        // The backend should handle sending the email
 
       } catch (err) {
         console.error('Booking confirmation error:', err);
-        setError(err.message || 'Failed to process booking. Please try again.');
+        setError(err.message || 'Failed to load booking details. Please try again.');
         setLoading(false);
       }
     };

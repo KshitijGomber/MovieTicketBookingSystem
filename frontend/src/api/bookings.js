@@ -24,6 +24,23 @@ export async function getBookings() {
   return res.json();
 }
 
+export async function getBooking(bookingId, token) {
+  const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to fetch booking details');
+  }
+  
+  const data = await res.json();
+  return Array.isArray(data) ? data[0] : data; // Handle both array and single object responses
+}
+
 export async function checkSeatAvailability({ showId, seats, showTime }) {
   const res = await fetch(`${API_URL}/bookings/check-seats`, {
     method: 'POST',
