@@ -495,27 +495,63 @@ const ShowDetails = () => {
       >
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
-            <Box
-              component="img"
-              src={show?.image || show?.posterUrl || 'https://via.placeholder.com/300x450?text=No+Image'}
-              alt={show?.title}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://via.placeholder.com/300x450?text=No+Image';
-              }}
-              sx={{
-                width: '100%',
-                height: 'auto',
-                maxHeight: '500px',
-                objectFit: 'contain',
+            <Paper 
+              elevation={3} 
+              sx={{ 
+                p: 2, 
+                display: 'flex', 
+                justifyContent: 'center',
+                alignItems: 'center',
+                bgcolor: 'background.paper',
+                height: '100%',
+                minHeight: '450px',
                 borderRadius: 2,
-                boxShadow: 3,
-                transition: 'transform 0.3s ease',
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
+                overflow: 'hidden',
+                position: 'relative'
               }}
-            />
+            >
+              <Box
+                component="img"
+                src={show?.image || show?.posterUrl}
+                alt={show?.title || 'Movie Poster'}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/300x450?text=No+Poster+Available';
+                }}
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '500px',
+                  objectFit: 'contain',
+                  borderRadius: 1,
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.02)'
+                  }
+                }}
+              />
+              {!show?.image && !show?.posterUrl && (
+                <Box 
+                  sx={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'background.default',
+                    color: 'text.secondary',
+                    p: 2,
+                    textAlign: 'center'
+                  }}
+                >
+                  <Typography variant="body1">
+                    {show?.title || 'Movie'} poster not available
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
           </Grid>
 
           <Grid item xs={12} md={8}>

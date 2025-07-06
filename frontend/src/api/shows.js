@@ -40,7 +40,7 @@ export const mockShows = [
     _id: '68548601467ac59650bff6c5',
     title: 'Everything Everywhere All at Once',
     description: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.',
-    image: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',
+    image: 'https://m.media-amazon.com/images/M/MV5BYTdiOTIyZTQtNmQ1OS00NjZlLWIyMTgtYzk5Y2M3ZDVmMDk1XkEyXkFqcGdeQXVyMTAzMDg4NzU0._V1_FMjpg_UX1000_.jpg',
     duration: 139,
     genre: 'Action/Comedy',
     language: 'English/Chinese',
