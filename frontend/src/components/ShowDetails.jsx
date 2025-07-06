@@ -269,40 +269,22 @@ const ShowDetails = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleSeatSelection = (seatId) => {
-    // Check if user is authenticated
-    const userToken = localStorage.getItem('token');
-    if (!userToken) {
-      // Store the current URL to redirect back after login
-      localStorage.setItem('redirectAfterLogin', window.location.pathname);
-      navigate('/login');
-      return;
-    }
-    
-    // If authenticated, proceed with seat selection
-    setSelectedSeats(prev => 
-      prev.includes(seatId) 
-        ? prev.filter(id => id !== seatId)
-        : [...prev, seatId]
-    );
-  };
-
-  const handleSeatClick = (seatNumber) => {
+  const handleSeatClick = (seatId) => {
     if (!token) {
       setSnackbar({
         open: true,
         message: 'Please log in to select seats',
         severity: 'warning'
       });
-      // Don't navigate, just show the message
       return;
     }
     
+    // If authenticated, proceed with seat selection
     setSelectedSeats(prev => {
-      if (prev.includes(seatNumber)) {
-        return prev.filter(seat => seat !== seatNumber);
+      if (prev.includes(seatId)) {
+        return prev.filter(id => id !== seatId);
       } else {
-        return [...prev, seatNumber];
+        return [...prev, seatId];
       }
     });
   };
@@ -391,6 +373,59 @@ const ShowDetails = () => {
     return `${hours}h ${mins}m`;
   };
 
+  // Generate seat layout
+  const generateSeatLayout = () => {
+    const rows = ['A', 'B', 'C', 'D', 'E'];
+    const cols = [1, 2, 3, 4, 5, 6];
+    const seats = [];
+    
+    rows.forEach(row => {
+      const rowSeats = [];
+      cols.forEach(col => {
+        const seatId = `${row}${col}`;
+        const isBooked = bookedSeatsData?.bookedSeats?.includes(seatId) || false;
+        const isSelected = selectedSeats.includes(seatId);
+        
+        rowSeats.push(
+          <Box 
+            key={seatId}
+            onClick={() => !isBooked && handleSeatClick(seatId)}
+            sx={{
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 1,
+              cursor: isBooked ? 'not-allowed' : 'pointer',
+              backgroundColor: isBooked 
+                ? 'error.light' 
+                : isSelected 
+                  ? 'primary.main' 
+                  : 'action.hover',
+              color: isBooked || isSelected ? 'common.white' : 'text.primary',
+              opacity: isBooked ? 0.7 : 1,
+              '&:hover': !isBooked && {
+                backgroundColor: isSelected ? 'primary.dark' : 'action.selected',
+              },
+              m: 0.5,
+            }}
+          >
+            <EventSeat />
+          </Box>
+        );
+      });
+      
+      seats.push(
+        <Box key={row} display="flex" justifyContent="center" mb={1}>
+          {rowSeats}
+        </Box>
+      );
+    });
+    
+    return seats;
+  };
+
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 4 } }}>
       <Button
@@ -411,9 +446,10 @@ const ShowDetails = () => {
       </Button>
 
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, mb: 4 }}>
-        <Grid container spacing={4}>
-          {/* Movie Poster */}
-          <Grid item xs={12} md={4}>
+        {/* Movie Info Section */}
+        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4} mb={6}>
+          {/* Movie Poster - Smaller and on the left */}
+          <Box sx={{ width: { xs: '100%', md: '300px' }, flexShrink: 0 }}>
             <CardMedia
               component="img"
               sx={{
@@ -423,64 +459,70 @@ const ShowDetails = () => {
                 boxShadow: 3,
                 objectFit: 'cover',
                 aspectRatio: '2/3',
+                maxWidth: '300px',
+                mx: 'auto',
+                display: 'block'
               }}
               image={show.image || '/placeholder-movie.jpg'}
               alt={show.title}
             />
-          </Grid>
+          </Box>
 
-          {/* Movie Details */}
-          <Grid item xs={12} md={8}>
-            <Box mb={3}>
-              <Typography variant="h3" component="h1" gutterBottom>
-                {show.title}
+          {/* Movie Details - Right side */}
+          <Box flex={1}>
+            <Typography variant="h3" component="h1" gutterBottom>
+              {show.title}
+            </Typography>
+
+            <Box display="flex" flexWrap="wrap" gap={2} mb={3}>
+              <Chip
+                label={formatDuration(show.duration)}
+                color="primary"
+                size="medium"
+              />
+              <Chip
+                label={`${show.rating || 'N/A'}/10`}
+                variant="outlined"
+                size="medium"
+              />
+              <Chip label={show.genre} color="secondary" size="medium" />
+              <Chip label={show.language} variant="outlined" size="medium" />
+              <Chip
+                label={`From $${show.price?.toFixed(2) || '0.00'}`}
+                color="success"
+                size="medium"
+              />
+            </Box>
+
+            <Box mb={4}>
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{ fontWeight: 600, color: 'text.primary', mt: 2 }}
+              >
+                About the Movie
               </Typography>
+              <Typography
+                variant="body1"
+                paragraph
+                sx={{ color: 'text.secondary', lineHeight: 1.7, maxWidth: '800px' }}
+              >
+                {show.description}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
 
-              <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" mb={3}>
-                <Chip
-                  label={formatDuration(show.duration)}
-                  color="primary"
-                  size="medium"
-                />
-                <Chip
-                  label={`${show.rating || 'N/A'}/10`}
-                  variant="outlined"
-                  size="medium"
-                />
-                <Chip label={show.genre} color="secondary" size="medium" />
-                <Chip label={show.language} variant="outlined" size="medium" />
-                <Chip
-                  label={`From $${show.price?.toFixed(2) || '0.00'}`}
-                  color="success"
-                  size="medium"
-                />
-              </Box>
+        {/* Showtimes and Seat Selection Section */}
+        <Box mt={6}>
 
-              <Box mb={4}>
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  sx={{ fontWeight: 600, color: 'text.primary' }}
-                >
-                  About the Movie
-                </Typography>
-                <Typography
-                  variant="body1"
-                  paragraph
-                  sx={{ color: 'text.secondary', lineHeight: 1.7 }}
-                >
-                  {show.description}
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  sx={{ fontWeight: 600, mb: 2 }}
-                >
-                  Select Showtime
-                </Typography>
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{ fontWeight: 600, mb: 3, color: 'primary.main' }}
+          >
+            Select Showtime & Seats
+          </Typography>
 
                 {show.showTimes && show.showTimes.length > 0 ? (
                   <Box display="flex" flexWrap="wrap" gap={2} mb={4}>
@@ -515,21 +557,75 @@ const ShowDetails = () => {
                     
                     <Divider sx={{ my: 2 }} />
                     
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                        {seatCount} {seatCount === 1 ? 'Ticket' : 'Tickets'}
+                    <Box sx={{ mb: 4 }}>
+                      <Typography variant="h6" gutterBottom>
+                        Select Your Seats
                       </Typography>
+                      
                       <Box sx={{ 
-                        bgcolor: 'background.default', 
-                        p: 1.5, 
-                        borderRadius: 1,
-                        mb: 1
+                        bgcolor: 'background.paper', 
+                        p: 3, 
+                        borderRadius: 2,
+                        boxShadow: 1,
+                        mb: 2
                       }}>
-                        <Typography variant="body2">
-                          {selectedSeats.length > 0 
-                            ? `Seat${selectedSeats.length > 1 ? 's' : ''}: ${selectedSeats.join(', ')}`
-                            : 'No seats selected'}
+                        {/* Screen */}
+                        <Box 
+                          sx={{ 
+                            width: '100%', 
+                            height: 20, 
+                            bgcolor: 'text.primary',
+                            mb: 4,
+                            color: 'background.paper',
+                            textAlign: 'center',
+                            fontSize: '0.75rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '4px 4px 0 0'
+                          }}
+                        >
+                          SCREEN
+                        </Box>
+                        
+                        {/* Seats */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          {generateSeatLayout()}
+                        </Box>
+                        
+                        {/* Legend */}
+                        <Box display="flex" justifyContent="center" gap={4} mt={4}>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <EventSeat sx={{ color: 'action.hover' }} />
+                            <Typography variant="caption">Available</Typography>
+                          </Box>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <EventSeat sx={{ color: 'primary.main' }} />
+                            <Typography variant="caption">Selected</Typography>
+                          </Box>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <EventSeat sx={{ color: 'error.light', opacity: 0.7 }} />
+                            <Typography variant="caption">Booked</Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                      
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          {seatCount} {seatCount === 1 ? 'Ticket' : 'Tickets'}
                         </Typography>
+                        <Box sx={{ 
+                          bgcolor: 'background.default', 
+                          p: 1.5, 
+                          borderRadius: 1,
+                          mb: 1
+                        }}>
+                          <Typography variant="body2">
+                            {selectedSeats.length > 0 
+                              ? `Seat${selectedSeats.length > 1 ? 's' : ''}: ${selectedSeats.join(', ')}`
+                              : 'No seats selected'}
+                          </Typography>
+                        </Box>
                       </Box>
                     </Box>
                   </Box>
