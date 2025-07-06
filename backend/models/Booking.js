@@ -78,6 +78,5 @@ const bookingSchema = new mongoose.Schema({
 // Indexes for faster queries
 bookingSchema.index({ user: 1, status: 1 });
 bookingSchema.index({ show: 1, showTime: 1, status: 1 });
-bookingSchema.index({ bookingReference: 1 }, { unique: true });
 
 module.exports = mongoose.model('Booking', bookingSchema); 

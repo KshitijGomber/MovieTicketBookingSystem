@@ -21,10 +21,7 @@ const processPayment = async (amount, paymentDetails) => {
 };
 
 // GET /api/bookings - Get user's bookings (protected route)
-// Protected routes (require authentication)
-router.use(checkJwt);
-
-router.get('/', async (req, res) => {
+router.get('/', checkJwt, async (req, res) => {
   try {
     const userId = req.user.id;
     const bookings = await Booking.find({ user: userId })
@@ -294,7 +291,7 @@ router.post('/:id/cancel', checkJwt, async (req, res) => {
   }
 });
 
-// Public route - Get booked seats for a show
+// Public route - Get booked seats for a show (no authentication required)
 router.get('/show/:showId/seats', async (req, res) => {
   try {
     const { showTime } = req.query;
