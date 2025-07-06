@@ -19,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { Movie, EventSeat, ArrowBack } from '@mui/icons-material';
 
 const ShowDetails = () => {
+  // Extract showId from URL params
   const { showId: rawShowId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -27,18 +28,49 @@ const ShowDetails = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   
-  // Ensure showId is a string and trim any whitespace
-  const showId = rawShowId ? String(rawShowId).trim() : null;
+  // Ensure showId is a valid string and trim any whitespace
+  const showId = React.useMemo(() => {
+    if (!rawShowId) {
+      console.error('No showId found in URL parameters');
+      return null;
+    }
+    const id = String(rawShowId).trim();
+    if (!id) {
+      console.error('Empty showId in URL parameters');
+      return null;
+    }
+    console.log('ShowDetails - Extracted showId:', id);
+    return id;
+  }, [rawShowId]);
   
   // Debug logs
-  useEffect(() => {
-    console.log('ShowDetails - Component mounted with showId:', showId);
-    console.log('ShowDetails - Full URL:', window.location.href);
+  React.useEffect(() => {
+    console.group('ShowDetails - Component Mounted');
+    console.log('Raw showId from URL params:', rawShowId);
+    console.log('Processed showId:', showId);
+    console.log('Current URL:', window.location.href);
+    console.groupEnd();
+    
+    // Check if showId is valid
+    if (!showId) {
+      console.error('Invalid or missing showId');
+      setSnackbar({
+        open: true,
+        message: 'Invalid show ID. Please select a valid show.',
+        severity: 'error'
+      });
+      // Redirect to home page after showing error
+      const timer = setTimeout(() => {
+        navigate('/');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
     
     return () => {
       console.log('ShowDetails - Component unmounting');
     };
-  }, [showId]);
+  }, [showId, navigate, rawShowId]);
 
   // Format time to 12-hour format with AM/PM
   const formatTime = (timeString) => {
@@ -68,17 +100,66 @@ const ShowDetails = () => {
     }
   }, [searchParams]);
 
-  const { data: show, isLoading, isError, error } = useQuery({
-    queryKey: ['show', showId],
-    queryFn: () => {
-      if (!showId || showId === 'undefined') {
-        throw new Error('Show ID is missing');
+  const { 
+    data: show, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useQuery(
+    ['show', showId],
+    async () => {
+      if (!showId) {
+        console.error('No showId provided to fetchShow');
+        throw new Error('No show ID provided');
       }
-      return fetchShow(showId);
+      
+      console.log('useQuery - Fetching show with ID:', showId);
+      try {
+        const data = await fetchShow(showId);
+        console.log('useQuery - Successfully fetched show:', {
+          id: data?._id,
+          title: data?.title
+        });
+        return data;
+      } catch (err) {
+        console.error('useQuery - Error in fetchShow:', {
+          error: err.message,
+          showId,
+          timestamp: new Date().toISOString()
+        });
+        throw err; // Re-throw to trigger onError
+      }
     },
-    enabled: !!showId && showId !== 'undefined',
-    retry: false
-  });
+    {
+      enabled: !!showId, // Only run the query if showId exists
+      retry: 2,
+      retryDelay: 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+      onError: (err) => {
+        console.error('useQuery - onError:', {
+          message: err.message,
+          showId,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Show error to user
+        setSnackbar({
+          open: true,
+          message: `Error loading show: ${err.message}`,
+          severity: 'error'
+        });
+      },
+      onSettled: (data, error) => {
+        console.log('useQuery - onSettled', {
+          hasData: !!data,
+          hasError: !!error,
+          showId
+        });
+      }
+    }
+  );
 
   const { data: bookedSeatsData, isLoading: isLoadingSeats } = useQuery({
     queryKey: ['bookedSeats', showId, selectedShowTime],
