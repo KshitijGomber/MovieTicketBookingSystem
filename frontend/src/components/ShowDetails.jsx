@@ -24,6 +24,7 @@ const ShowDetails = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
   const [selectedShowTime, setSelectedShowTime] = useState('');
+  const [selectedSeats, setSelectedSeats] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Check for showTime in URL params
@@ -58,12 +59,40 @@ const ShowDetails = () => {
       return;
     }
     
-    // Navigate to the new booking page with show time parameter
-    navigate(`/book/${showId}?showTime=${encodeURIComponent(selectedShowTime)}`);
+    if (selectedSeats.length === 0) {
+      setSnackbar({ open: true, message: 'Please select at least one seat', severity: 'warning' });
+      return;
+    }
+    
+    // Navigate to the booking page with show time and selected seats
+    const params = new URLSearchParams({
+      showTime: selectedShowTime,
+      seats: selectedSeats.join(',')
+    });
+    
+    navigate(`/book/${showId}?${params.toString()}`);
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleSeatSelection = (seatId) => {
+    // Check if user is authenticated
+    const userToken = localStorage.getItem('token');
+    if (!userToken) {
+      // Store the current URL to redirect back after login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
+      return;
+    }
+    
+    // If authenticated, proceed with seat selection
+    setSelectedSeats(prev => 
+      prev.includes(seatId) 
+        ? prev.filter(id => id !== seatId)
+        : [...prev, seatId]
+    );
   };
 
   if (isLoading || isLoadingSeats) {
@@ -135,16 +164,20 @@ const ShowDetails = () => {
               fullWidth 
               size="large"
               onClick={handleBookNow}
-              disabled={isShowFull}
+              disabled={isShowFull || selectedSeats.length === 0}
               sx={{ 
                 py: 1.5, 
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
-                textTransform: 'none'
+                textTransform: 'none',
+                '&:disabled': {
+                  bgcolor: 'action.disabledBackground',
+                  color: 'text.disabled'
+                }
               }}
               startIcon={<EventSeat />}
             >
-              {isShowFull ? 'Fully Booked' : 'Book Now'}
+              {isShowFull ? 'Fully Booked' : selectedSeats.length > 0 ? `Book ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''}` : 'Select Seats'}
             </Button>
           )}
           
@@ -214,13 +247,14 @@ const ShowDetails = () => {
                       <Button
                         key={seatNum}
                         variant="outlined"
-                        color={isBooked ? 'error' : 'primary'}
+                        color={isBooked ? 'error' : selectedSeats.includes(seatNum) ? 'success' : 'primary'}
                         disabled={isBooked}
+                        onClick={() => handleSeatSelection(seatNum)}
                         sx={{
                           minWidth: '40px',
-                          bgcolor: isBooked ? 'error.light' : 'background.paper',
+                          bgcolor: isBooked ? 'error.light' : selectedSeats.includes(seatNum) ? 'success.light' : 'background.paper',
                           '&:hover': {
-                            bgcolor: isBooked ? 'error.light' : 'action.hover',
+                            bgcolor: isBooked ? 'error.light' : selectedSeats.includes(seatNum) ? 'success.dark' : 'action.hover',
                           },
                         }}
                       >
@@ -234,6 +268,10 @@ const ShowDetails = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box sx={{ width: 20, height: 20, bgcolor: 'primary.main', borderRadius: 1 }} />
                     <Typography variant="body2">Available</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 20, height: 20, bgcolor: 'success.main', borderRadius: 1 }} />
+                    <Typography variant="body2">Selected ({selectedSeats.length})</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box sx={{ width: 20, height: 20, bgcolor: 'error.light', borderRadius: 1 }} />

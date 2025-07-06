@@ -41,16 +41,24 @@ export async function checkSeatAvailability({ showId, seats, showTime }) {
 }
 
 export async function getBookedSeats(showId, showTime) {
-  const res = await fetch(`${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`, {
-    headers: getAuthHeader()
-  });
+  try {
+    const headers = getAuthHeader();
+    const res = await fetch(
+      `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`,
+      { headers }
+    );
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to fetch booked seats');
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to fetch booked seats');
+    }
+    
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching booked seats:', error);
+    // Return an empty array if there's an error (e.g., network error or unauthorized)
+    return [];
   }
-  
-  return res.json();
 }
 
 export async function processPayment({ amount, paymentDetails }) {
