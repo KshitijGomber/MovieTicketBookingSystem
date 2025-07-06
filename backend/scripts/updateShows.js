@@ -12,9 +12,10 @@ const updatedShows = [
     duration: 148,
     genre: 'Sci-Fi',
     language: 'English',
-    price: 12.99,
+    price: 9.99,
     showTimes: ['10:00 AM', '2:00 PM', '6:00 PM', '9:00 PM'],
-    availableSeats: 100
+    availableSeats: 30,
+    totalSeats: 30
   },
   {
     _id: '68548601467ac59650bff6c3',
@@ -24,9 +25,10 @@ const updatedShows = [
     duration: 152,
     genre: 'Action',
     language: 'English',
-    price: 13.99,
+    price: 9.99,
     showTimes: ['11:00 AM', '3:00 PM', '7:00 PM', '10:00 PM'],
-    availableSeats: 100
+    availableSeats: 30,
+    totalSeats: 30
   },
   {
     _id: '68548601467ac59650bff6c4',
@@ -36,33 +38,36 @@ const updatedShows = [
     duration: 132,
     genre: 'Drama',
     language: 'Korean',
-    price: 11.99,
-    showTimes: ['1:00 PM', '4:00 PM', '8:00 PM'],
-    availableSeats: 100
+    price: 9.99,
+    showTimes: ['12:00 PM', '4:00 PM', '8:00 PM'],
+    availableSeats: 30,
+    totalSeats: 30
   },
   {
     _id: '68548601467ac59650bff6c5',
     title: 'Everything Everywhere All at Once',
-    description: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.',
-    image: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',
+    description: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what matters to her by connecting with the lives she could have led in other universes.',
+    image: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jEuqLp.jpg',
     duration: 139,
-    genre: 'Action/Comedy',
-    language: 'English/Chinese',
-    price: 14.99,
-    showTimes: ['12:00 PM', '3:30 PM', '7:30 PM', '10:30 PM'],
-    availableSeats: 100
+    genre: 'Action',
+    language: 'English',
+    price: 9.99,
+    showTimes: ['1:00 PM', '5:00 PM', '9:00 PM'],
+    availableSeats: 30,
+    totalSeats: 30
   },
   {
     _id: '68548601467ac59650bff6c6',
     title: 'Dune',
-    description: 'A noble family becomes embroiled in a war for control over the galaxy\'s most valuable asset while its heir becomes troubled by visions of a dark future.',
+    description: 'Feature adaptation of Frank Herbert\'s science fiction novel about the son of a noble family entrusted with the protection of the most valuable asset and most vital element in the galaxy.',
     image: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg',
     duration: 155,
     genre: 'Sci-Fi',
     language: 'English',
-    price: 15.99,
-    showTimes: ['11:30 AM', '2:30 PM', '6:30 PM', '9:30 PM'],
-    availableSeats: 100
+    price: 9.99,
+    showTimes: ['2:00 PM', '6:00 PM', '10:00 PM'],
+    availableSeats: 30,
+    totalSeats: 30
   }
 ];
 

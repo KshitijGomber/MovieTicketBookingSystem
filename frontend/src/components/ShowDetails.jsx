@@ -112,15 +112,16 @@ const ShowDetails = () => {
   const generateSeatLayout = () => {
     if (!show) return [];
     
-    const rows = Math.ceil(show.totalSeats / 10);
+    const totalSeats = 30; // 6 seats per row, 5 rows
+    const seatsPerRow = 6;
+    const totalRows = 5;
     const seats = [];
     
-    for (let row = 1; row <= rows; row++) {
+    for (let row = 1; row <= totalRows; row++) {
       const rowSeats = [];
-      const seatsInRow = row === rows ? show.totalSeats % 10 || 10 : 10;
       
-      for (let seat = 1; seat <= seatsInRow; seat++) {
-        const seatId = `${String.fromCharCode(64 + row)}${seat}`;
+      for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
+        const seatId = String((row - 1) * seatsPerRow + seatNum); // Creates seat numbers 1-30
         const isBooked = bookedSeats.includes(seatId);
         const isSelected = selectedSeats.includes(seatId);
         
@@ -129,9 +130,10 @@ const ShowDetails = () => {
             key={seatId}
             onClick={() => !isBooked && handleSeatClick(seatId)}
             sx={{
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 1,
@@ -147,15 +149,19 @@ const ShowDetails = () => {
                 backgroundColor: isSelected ? 'primary.dark' : 'action.selected',
               },
               m: 0.5,
+              position: 'relative',
             }}
           >
             <EventSeat />
+            <Typography variant="caption" sx={{ fontSize: '0.6rem', mt: 0.5 }}>
+              {seatId}
+            </Typography>
           </Box>
         );
       }
       
       seats.push(
-        <Box key={row} display="flex" justifyContent="center" mb={1}>
+        <Box key={`row-${row}`} display="flex" justifyContent="center" mb={1}>
           {rowSeats}
         </Box>
       );
@@ -242,11 +248,17 @@ const ShowDetails = () => {
             }}>
               <Box
                 component="img"
-                src={show.posterUrl}
+                src={show.image || show.posterUrl || 'https://via.placeholder.com/300x450?text=No+Image'}
                 alt={show.title}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/300x450?text=No+Image';
+                }}
                 sx={{
                   width: '100%',
                   height: 'auto',
+                  maxHeight: '500px',
+                  objectFit: 'contain',
                   borderRadius: 2,
                   boxShadow: 3,
                   transition: 'transform 0.3s ease',
