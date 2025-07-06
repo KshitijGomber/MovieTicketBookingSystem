@@ -93,7 +93,7 @@ const ShowList = () => {
         return (
           <Grid item xs={6} sm={4} md={3} lg={2.4} key={show._id}>
             <Link 
-              to={`/show/${show._id}`} 
+              to={`/shows/${show._id}`} 
               style={{ 
                 textDecoration: 'none',
                 pointerEvents: fullyBooked ? 'none' : 'auto'
