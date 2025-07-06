@@ -35,7 +35,9 @@ mongoose.connect(process.env.MONGODB_URI)
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',  // Add local development URL
-  'http://127.0.0.1:3000'   // Add alternative localhost
+  'http://127.0.0.1:3000',  // Add alternative localhost
+  'https://movie-ticket-booking-system-two.vercel.app', // Vercel frontend
+  'https://movieticketbookingsystem-7suc.onrender.com'  // Render backend
 ].filter(Boolean);  // Remove any undefined values
 
 const corsOptions = {
@@ -43,8 +45,15 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    // Check if the origin is in the allowed list or is a subdomain of an allowed origin
+    const isAllowed = allowedOrigins.some(allowedOrigin => 
+      origin === allowedOrigin || 
+      origin.startsWith(allowedOrigin.replace(/https?:\/\//, 'https://'))
+    );
+    
+    if (!isAllowed) {
+      const msg = `The CORS policy for this site does not allow access from ${origin}.`;
+      console.error(msg);
       return callback(new Error(msg), false);
     }
     return callback(null, true);
