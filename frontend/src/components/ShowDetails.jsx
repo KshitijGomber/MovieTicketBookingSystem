@@ -220,33 +220,52 @@ const ShowDetails = () => {
         throw new Error(paymentResult.message || 'Payment processing failed');
       }
 
-      // Create booking data
+      // Create booking data in the format expected by the backend
       const bookingData = {
         showId: show._id,
-        showTitle: show.title,
+        seats: selectedSeats, // Array of seat numbers
         showTime: selectedShowTime,
-        seats: selectedSeats,
-        total: total,
         paymentDetails: {
           transactionId: paymentResult.transactionId,
           method: 'card',
-          status: 'completed'
+          status: 'completed',
+          amount: parseFloat(totalAmount.toFixed(2))
         },
-        userEmail: user?.email,
-        userName: user?.name || user?.username || 'Guest'
+        // The backend will get the user ID from the auth token
       };
 
+      console.log('Creating booking with data:', bookingData);
+      
       // Save booking to database
       const bookingResult = await createBooking(bookingData);
+      
+      if (!bookingResult || !bookingResult.length) {
+        throw new Error('No booking data returned from server');
+      }
 
       // Navigate to booking confirmation with all details
       navigate('/booking/confirmation', {
         state: {
-          ...bookingResult,
-          show,
+          // Use the first booking result as it contains all the necessary info
+          booking: bookingResult[0],
+          show: {
+            _id: show._id,
+            title: show.title,
+            duration: show.duration,
+            image: show.image
+          },
           showTime: selectedShowTime,
           seats: selectedSeats,
-          total: total
+          total: parseFloat(totalAmount.toFixed(2)),
+          paymentDetails: {
+            transactionId: paymentResult.transactionId,
+            amount: parseFloat(totalAmount.toFixed(2)),
+            date: new Date().toISOString()
+          },
+          user: {
+            name: user?.name || user?.username || 'Guest',
+            email: user?.email
+          }
         },
         replace: true
       });
