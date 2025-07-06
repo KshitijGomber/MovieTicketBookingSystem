@@ -85,14 +85,25 @@ const ShowDetails = () => {
   
   // Calculate total price
   const { subtotal, tax, total, seatCount } = useMemo(() => {
-    const price = parseFloat(show?.price) || 9.99;
+    console.log('Show price:', show?.price); // Debug log
+    const price = parseFloat(show?.price) || 0;
+    if (isNaN(price)) {
+      console.error('Invalid price value:', show?.price);
+      return {
+        subtotal: '0.00',
+        tax: '0.00',
+        total: '0.00',
+        seatCount: 0
+      };
+    }
     const subtotal = selectedSeats.length * price;
     const tax = subtotal * 0.1; // 10% tax
     return {
       subtotal: subtotal.toFixed(2),
       tax: tax.toFixed(2),
       total: (subtotal + tax).toFixed(2),
-      seatCount: selectedSeats.length
+      seatCount: selectedSeats.length,
+      pricePerSeat: price
     };
   }, [selectedSeats, show?.price]);
 
@@ -181,14 +192,27 @@ const ShowDetails = () => {
     setIsProcessing(true);
     
     try {
-      // First process the payment
+      // Ensure we have a valid price before proceeding
+      const pricePerSeat = parseFloat(show?.price);
+      if (isNaN(pricePerSeat) || pricePerSeat <= 0) {
+        throw new Error('Invalid show price. Please try again later.');
+      }
+
+      // Calculate the total amount including tax
+      const subtotal = selectedSeats.length * pricePerSeat;
+      const tax = subtotal * 0.1; // 10% tax
+      const totalAmount = subtotal + tax;
+
+      // Process the payment with the calculated amount
       const paymentResult = await processPayment({
-        amount: parseFloat(total), // Ensure amount is a number
+        amount: parseFloat(totalAmount.toFixed(2)), // Ensure amount is a number with 2 decimal places
         paymentDetails: {
           cardNumber: paymentDetails.cardNumber.replace(/\s/g, ''),
           expiry: paymentDetails.expiryDate,
           cvv: paymentDetails.cvv,
-          name: paymentDetails.cardName
+          name: paymentDetails.cardName,
+          currency: 'USD',
+          description: `Movie Ticket(s) for ${show?.title}`
         }
       });
 
