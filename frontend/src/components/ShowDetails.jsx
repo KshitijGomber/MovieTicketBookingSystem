@@ -427,7 +427,13 @@ const ShowDetails = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 4 } }}>
+    <Box sx={{ 
+      maxWidth: 1200, 
+      mx: 'auto', 
+      p: { xs: 2, md: 4 },
+      background: 'linear-gradient(to bottom, #f8f9fa, #ffffff)',
+      minHeight: '100vh'
+    }}>
       <Button
         component={Link}
         to="/"
@@ -436,32 +442,90 @@ const ShowDetails = () => {
           textTransform: 'none',
           mb: 3,
           color: 'primary.main',
+          fontWeight: 600,
+          px: 2,
+          py: 1,
+          borderRadius: 2,
           '&:hover': {
-            backgroundColor: 'action.hover',
+            backgroundColor: 'primary.light',
+            color: 'white',
             transform: 'translateX(-4px)',
+            boxShadow: 2,
           },
+          transition: 'all 0.3s ease',
         }}
       >
         Back to Movies
       </Button>
 
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 4, mb: 4 }}>
+      <Paper 
+        elevation={4} 
+        sx={{ 
+          p: { xs: 2, md: 4 }, 
+          borderRadius: 3, 
+          mb: 4,
+          background: 'white',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(0, 0, 0, 0.04)'
+        }}
+      >
         {/* Movie Info Section */}
         <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4} mb={6}>
-          {/* Movie Poster - Smaller and on the left */}
-          <Box sx={{ width: { xs: '100%', md: '300px' }, flexShrink: 0 }}>
+          {/* Movie Poster - Enhanced with subtle effects */}
+          <Box sx={{ 
+            width: { xs: '100%', md: '300px' }, 
+            flexShrink: 0,
+            position: 'relative',
+            '&:hover .movie-poster-overlay': {
+              opacity: 1,
+            }
+          }}>
+            <Box
+              className="movie-poster-overlay"
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderRadius: 2,
+                opacity: 0,
+                transition: 'opacity 0.3s ease',
+                zIndex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: 'white', 
+                  fontWeight: 'bold',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                }}
+              >
+                {show.title}
+              </Typography>
+            </Box>
             <CardMedia
               component="img"
               sx={{
                 width: '100%',
                 height: 'auto',
                 borderRadius: 2,
-                boxShadow: 3,
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
                 objectFit: 'cover',
                 aspectRatio: '2/3',
                 maxWidth: '300px',
                 mx: 'auto',
-                display: 'block'
+                display: 'block',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 12px 28px rgba(0, 0, 0, 0.2)'
+                }
               }}
               image={show.image || '/placeholder-movie.jpg'}
               alt={show.title}
@@ -469,43 +533,131 @@ const ShowDetails = () => {
           </Box>
 
           {/* Movie Details - Right side */}
-          <Box flex={1}>
-            <Typography variant="h3" component="h1" gutterBottom>
+          <Box flex={1} sx={{ pt: { md: 1 } }}>
+            <Typography 
+              variant="h3" 
+              component="h1" 
+              gutterBottom
+              sx={{
+                fontWeight: 800,
+                background: 'linear-gradient(45deg, #1976d2 0%, #2196f3 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 2,
+                lineHeight: 1.2
+              }}
+            >
               {show.title}
             </Typography>
 
-            <Box display="flex" flexWrap="wrap" gap={2} mb={3}>
+            <Box display="flex" flexWrap="wrap" gap={1.5} mb={3}>
               <Chip
                 label={formatDuration(show.duration)}
                 color="primary"
                 size="medium"
+                sx={{
+                  fontWeight: 600,
+                  '& .MuiChip-label': { px: 1.5 },
+                  boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)'
+                }}
               />
               <Chip
                 label={`${show.rating || 'N/A'}/10`}
                 variant="outlined"
                 size="medium"
+                sx={{
+                  fontWeight: 600,
+                  borderColor: 'gold',
+                  color: 'goldenrod',
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+                icon={<span style={{ color: 'gold' }}>★</span>}
               />
-              <Chip label={show.genre} color="secondary" size="medium" />
-              <Chip label={show.language} variant="outlined" size="medium" />
+              <Chip 
+                label={show.genre} 
+                color="secondary" 
+                size="medium"
+                sx={{
+                  fontWeight: 600,
+                  '& .MuiChip-label': { px: 1.5 },
+                  boxShadow: '0 2px 4px rgba(156, 39, 176, 0.2)'
+                }}
+              />
+              <Chip 
+                label={show.language} 
+                variant="outlined" 
+                size="medium"
+                sx={{
+                  fontWeight: 500,
+                  '& .MuiChip-label': { px: 1.5 },
+                  borderColor: 'text.secondary',
+                  color: 'text.primary'
+                }}
+              />
               <Chip
                 label={`From $${show.price?.toFixed(2) || '0.00'}`}
                 color="success"
                 size="medium"
+                sx={{
+                  fontWeight: 700,
+                  '& .MuiChip-label': { px: 1.5 },
+                  backgroundColor: 'success.light',
+                  color: 'white',
+                  boxShadow: '0 2px 4px rgba(46, 125, 50, 0.2)'
+                }}
               />
             </Box>
 
-            <Box mb={4}>
+            <Box 
+              mb={4}
+              sx={{
+                background: 'linear-gradient(to right, #f8f9fa, #ffffff, #f8f9fa)',
+                p: 3,
+                borderRadius: 2,
+                borderLeft: '4px solid',
+                borderColor: 'primary.main',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+              }}
+            >
               <Typography
                 variant="h5"
                 gutterBottom
-                sx={{ fontWeight: 600, color: 'text.primary', mt: 2 }}
+                sx={{ 
+                  fontWeight: 700, 
+                  color: 'primary.dark',
+                  display: 'flex',
+                  alignItems: 'center',
+                  '&:before': {
+                    content: '""',
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '3px',
+                    background: 'linear-gradient(90deg, #1976d2, #64b5f6)',
+                    mr: 2,
+                    borderRadius: '2px'
+                  }
+                }}
               >
                 About the Movie
               </Typography>
               <Typography
                 variant="body1"
                 paragraph
-                sx={{ color: 'text.secondary', lineHeight: 1.7, maxWidth: '800px' }}
+                sx={{ 
+                  color: 'text.secondary', 
+                  lineHeight: 1.8, 
+                  maxWidth: '800px',
+                  fontSize: '1.05rem',
+                  '&:first-letter': {
+                    float: 'left',
+                    fontSize: '2.5rem',
+                    lineHeight: 1,
+                    fontWeight: 'bold',
+                    color: 'primary.main',
+                    mr: 1,
+                    mt: 0.5
+                  }
+                }}
               >
                 {show.description}
               </Typography>
@@ -514,15 +666,48 @@ const ShowDetails = () => {
         </Box>
 
         {/* Showtimes and Seat Selection Section */}
-        <Box mt={6}>
-
-          <Typography
-            variant="h4"
-            gutterBottom
-            sx={{ fontWeight: 600, mb: 3, color: 'primary.main' }}
+        <Box 
+          mt={8}
+          sx={{
+            background: 'white',
+            p: 4,
+            borderRadius: 3,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(0, 0, 0, 0.03)'
+          }}
+        >
+          <Box 
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              mb: 4,
+              position: 'relative',
+              '&:after': {
+                content: '""',
+                position: 'absolute',
+                bottom: -12,
+                left: 0,
+                width: '60px',
+                height: '4px',
+                background: 'linear-gradient(90deg, #1976d2, #64b5f6)',
+                borderRadius: '2px'
+              }
+            }}
           >
-            Select Showtime & Seats
-          </Typography>
+            <EventSeat sx={{ color: 'primary.main', mr: 1.5, fontSize: '2rem' }} />
+            <Typography
+              variant="h4"
+              sx={{ 
+                fontWeight: 700, 
+                background: 'linear-gradient(45deg, #1565c0 0%, #0d47a1 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '-0.5px'
+              }}
+            >
+              Select Showtime & Seats
+            </Typography>
+          </Box>
 
                 {show.showTimes && show.showTimes.length > 0 ? (
                   <Box display="flex" flexWrap="wrap" gap={2} mb={4}>
