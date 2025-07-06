@@ -9,15 +9,35 @@ const { v4: uuidv4 } = require('uuid');
 const { sendBookingConfirmationEmail, sendBookingCancellationEmail } = require('../utils/emailService');
 
 // Mock payment processing
-const processPayment = async (amount, paymentDetails) => {
-  // In a real app, this would integrate with a payment gateway
-  return {
-    success: true,
-    transactionId: `txn_${uuidv4()}`,
-    amount,
-    timestamp: new Date(),
-    paymentMethod: paymentDetails?.method || 'card'
-  };
+const processPayment = async (amount, paymentDetails = {}) => {
+  try {
+    // Validate amount
+    const paymentAmount = parseFloat(amount);
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+      return {
+        success: false,
+        message: 'Invalid payment amount',
+        details: { amount: paymentAmount }
+      };
+    }
+
+    // In a real app, this would integrate with a payment gateway
+    return {
+      success: true,
+      transactionId: paymentDetails.transactionId || `txn_${uuidv4()}`,
+      amount: paymentAmount,
+      timestamp: new Date(),
+      paymentMethod: paymentDetails.method || 'card',
+      currency: paymentDetails.currency || 'USD'
+    };
+  } catch (error) {
+    console.error('Payment processing error:', error);
+    return {
+      success: false,
+      message: 'Payment processing failed',
+      details: error.message
+    };
+  }
 };
 
 // GET /api/bookings - Get user's bookings (protected route)
@@ -50,13 +70,16 @@ router.post('/', checkJwt, async (req, res) => {
     }
     
     // Process payment (mock)
-    const amount = seats.length * 10; // $10 per seat
+    const amount = paymentDetails?.amount || (seats.length * 10);
     const paymentResult = await processPayment(amount, paymentDetails);
     
     if (!paymentResult.success) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(400).json({ message: 'Payment failed' });
+      return res.status(400).json({ 
+        message: paymentResult.message || 'Payment failed',
+        details: paymentResult.details
+      });
     }
 
     // Check if the show exists
@@ -89,6 +112,7 @@ router.post('/', checkJwt, async (req, res) => {
     }
 
     // Create bookings for each seat
+    const seatPrice = (paymentDetails.amount / seats.length).toFixed(2);
     const bookingPromises = seats.map(seat => {
       const booking = new Booking({
         user: userId,
@@ -97,7 +121,7 @@ router.post('/', checkJwt, async (req, res) => {
         showTime,
         status: 'confirmed',
         payment: {
-          amount: 10, // $10 per seat
+          amount: parseFloat(seatPrice),
           method: paymentDetails?.method || 'card',
           status: 'completed',
           transactionId: paymentResult.transactionId,
