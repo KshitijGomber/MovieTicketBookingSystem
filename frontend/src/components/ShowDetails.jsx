@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { EventSeat, ArrowBack, AccessTime, Star, AttachMoney, Close } from '@mui/icons-material';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from '@mui/material';
+import { createBooking, processPayment } from '../api/bookings';
 import { fetchShow } from '../api/shows';
 import { getBookedSeats } from '../api/bookings';
 
@@ -180,31 +181,60 @@ const ShowDetails = () => {
     setIsProcessing(true);
     
     try {
-      // Simulate API call for payment processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      // First process the payment
+      const paymentResult = await processPayment({
+        amount: total,
+        cardNumber: paymentDetails.cardNumber.replace(/\s/g, ''),
+        expiry: paymentDetails.expiry,
+        cvv: paymentDetails.cvv,
+        name: paymentDetails.name
+      });
+
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.message || 'Payment processing failed');
+      }
+
+      // Create booking data
+      const bookingData = {
+        showId: show._id,
+        showTitle: show.title,
+        showTime: selectedShowTime,
+        seats: selectedSeats,
+        total: total,
+        paymentDetails: {
+          transactionId: paymentResult.transactionId,
+          method: 'card',
+          status: 'completed'
+        },
+        userEmail: user?.email,
+        userName: user?.name || user?.username || 'Guest'
+      };
+
+      // Save booking to database
+      const bookingResult = await createBooking(bookingData);
+
       // Navigate to booking confirmation with all details
-      navigate(`/booking/confirmation`, {
+      navigate('/booking/confirmation', {
         state: {
+          ...bookingResult,
           show,
           showTime: selectedShowTime,
           seats: selectedSeats,
-          total,
-          bookingId: `B-${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
-          bookingDate: new Date().toISOString()
-        }
+          total: total
+        },
+        replace: true
       });
       
-      setIsPaymentOpen(false);
     } catch (error) {
       console.error('Payment error:', error);
       setSnackbar({
         open: true,
-        message: 'Payment failed. Please try again.',
+        message: error.message || 'Payment failed. Please try again.',
         severity: 'error'
       });
     } finally {
       setIsProcessing(false);
+      setIsPaymentOpen(false);
     }
   };
   

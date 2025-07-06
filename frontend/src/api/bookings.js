@@ -103,25 +103,20 @@ export async function processPayment({ amount, paymentDetails }) {
   return data;
 }
 
-export async function createBooking({ showId, seats, showTime, paymentDetails }) {
-  const res = await fetch(`${API_URL}/bookings`, {
+export async function createBooking(bookingData) {
+  const response = await fetch(`${API_URL}/bookings`, {
     method: 'POST',
     headers: getAuthHeader(),
-    body: JSON.stringify({ 
-      showId, 
-      seats, 
-      showTime,
-      paymentDetails: {
-        ...paymentDetails,
-        method: 'card' // or 'upi' based on user selection
-      }
+    body: JSON.stringify({
+      ...bookingData,
+      showTime: formatTimeForApi(bookingData.showTime),
     })
   });
 
-  const data = await res.json();
+  const data = await response.json();
   
-  if (!res.ok) {
-    throw new Error(data.message || 'Booking failed');
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to create booking');
   }
   
   return data;

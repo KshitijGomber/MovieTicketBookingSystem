@@ -15,7 +15,7 @@ import Signup from './components/Auth/Signup';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
 import BookingPage from './pages/BookingPage';
-import BookingConfirmation from './components/BookingConfirmation';
+import BookingConfirmation from './pages/BookingConfirmation';
 
 
 function App() {
