@@ -2,13 +2,13 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function getAuthHeader() {
   const token = localStorage.getItem('token');
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-  return { 
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+  const headers = {
+    'Content-Type': 'application/json'
   };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 export async function getBookings() {
@@ -107,9 +107,3 @@ export async function cancelBooking(bookingId) {
   
   return data;
 }
-
-export async function getBookedSeats(showId, showTime) {
-  const res = await fetch(`${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`);
-  if (!res.ok) throw new Error('Failed to fetch booked seats');
-  return res.json();
-} 

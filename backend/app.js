@@ -32,12 +32,34 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',  // Add local development URL
+  'http://127.0.0.1:3000'   // Add alternative localhost
+].filter(Boolean);  // Remove any undefined values
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -74,8 +96,25 @@ app.use('/api/shows', showRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 
-// Error handling
+// Error handling middleware
 app.use((err, req, res, next) => {
+  // Handle CORS errors
+  if (err.message === 'The CORS policy for this site does not allow access from the specified Origin.') {
+    return res.status(403).json({
+      success: false,
+      message: 'Not allowed by CORS',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+
+  // Handle JWT authentication errors
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or missing authentication token',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
   console.error(err.stack);
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({ message: 'Invalid token' });
