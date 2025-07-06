@@ -104,28 +104,44 @@ export async function processPayment({ amount, paymentDetails }) {
 }
 
 export async function createBooking(bookingData) {
-  const response = await fetch(`${API_URL}/bookings`, {
-    method: 'POST',
-    headers: getAuthHeader(),
-    body: JSON.stringify({
-      ...bookingData,
-      showTime: formatTimeForApi(bookingData.showTime),
-    })
-  });
+  try {
+    const response = await fetch(`${API_URL}/bookings`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ...bookingData,
+        showTime: formatTimeForApi(bookingData.showTime),
+      })
+    });
 
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to create booking');
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(responseData.message || 'Failed to create booking');
+    }
+    
+    console.log('Booking response:', responseData);
+    
+    // Handle different response formats
+    if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
+      // Format 1: { success: true, data: [{...}] }
+      return { data: responseData.data };
+    } else if (responseData.booking) {
+      // Format 2: { success: true, booking: {...} }
+      return { data: [responseData.booking] };
+    } else if (Array.isArray(responseData)) {
+      // Format 3: [{...}] (direct array)
+      return { data: responseData };
+    } else if (typeof responseData === 'object') {
+      // Format 4: { ...bookingData }
+      return { data: [responseData] };
+    }
+    
+    throw new Error('Unexpected response format from server');
+  } catch (error) {
+    console.error('Error in createBooking:', error);
+    throw error;
   }
-  
-  // The backend returns { success, data, ... } but we just want the data array
-  if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-    return { data: data.data };
-  }
-  
-  // Fallback in case the response format is different
-  return { data: [data] };
 }
 
 export async function cancelBooking(bookingId) {

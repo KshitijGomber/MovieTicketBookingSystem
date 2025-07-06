@@ -240,6 +240,8 @@ const ShowDetails = () => {
         // Save booking to database
         const response = await createBooking(bookingData);
         
+        console.log('Booking response in component:', response);
+        
         if (!response || !response.data || !response.data.length) {
           throw new Error('No booking data returned from server');
         }
@@ -251,29 +253,51 @@ const ShowDetails = () => {
         setBookedSeats(updatedBookedSeats);
         setSelectedSeats([]);
 
-        // Navigate to booking confirmation with all details
-        navigate('/booking/confirmation', {
-          state: {
-            booking: bookingDataFromServer,
-            show: {
-              _id: show._id,
-              title: show.title,
-              duration: show.duration,
-              image: show.image
+        // Prepare navigation state
+        const navigationState = {
+          booking: {
+            ...bookingDataFromServer,
+            // Ensure we have all required fields with fallbacks
+            _id: bookingDataFromServer._id || `temp_${Date.now()}`,
+            bookingReference: bookingDataFromServer.bookingReference || `BR-${Date.now()}`,
+            status: bookingDataFromServer.status || 'confirmed',
+            show: bookingDataFromServer.show || {
+              _id: show?._id,
+              title: show?.title,
+              image: show?.image,
+              duration: show?.duration
             },
-            showTime: selectedShowTime,
-            seats: selectedSeats,
-            total: parseFloat(totalAmount.toFixed(2)),
-            paymentDetails: {
-              transactionId: paymentResult.transactionId,
-              amount: parseFloat(totalAmount.toFixed(2)),
-              date: new Date().toISOString()
-            },
-            user: {
+            user: bookingDataFromServer.user || {
               name: user?.name || user?.username || 'Guest',
               email: user?.email
             }
           },
+          show: {
+            _id: show?._id,
+            title: show?.title,
+            duration: show?.duration,
+            image: show?.image
+          },
+          showTime: selectedShowTime,
+          seats: selectedSeats,
+          total: parseFloat(totalAmount.toFixed(2)),
+          paymentDetails: {
+            transactionId: bookingDataFromServer.transactionId || paymentResult.transactionId,
+            amount: bookingDataFromServer.totalAmount || parseFloat(totalAmount.toFixed(2)),
+            date: new Date().toISOString(),
+            status: bookingDataFromServer.paymentStatus || 'completed'
+          },
+          user: {
+            name: user?.name || user?.username || 'Guest',
+            email: user?.email
+          }
+        };
+
+        console.log('Navigating with state:', navigationState);
+        
+        // Navigate to booking confirmation with all details
+        navigate('/booking/confirmation', {
+          state: navigationState,
           replace: true
         });
       } catch (error) {

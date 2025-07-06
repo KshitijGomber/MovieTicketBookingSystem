@@ -273,25 +273,35 @@ router.post('/', checkJwt, async (req, res) => {
 
     // Get the first booking to include in the response
     const firstBooking = bookings[0];
+    const bookingResponse = {
+      ...firstBooking.toObject(),
+      show: show ? {
+        _id: show._id,
+        title: show.title,
+        image: show.image,
+        duration: show.duration
+      } : null,
+      user: user ? {
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      } : null,
+      showTime: showTime, // Include the original showTime string
+      totalAmount: amount,
+      transactionId: paymentResult.transactionId,
+      paymentStatus: 'completed'
+    };
+    
+    console.log('Sending booking response:', {
+      success: true,
+      data: [bookingResponse],
+      transactionId: paymentResult.transactionId,
+      amount
+    });
     
     res.status(201).json({ 
       success: true, 
-      data: [{
-        ...firstBooking.toObject(),
-        show: show ? {
-          _id: show._id,
-          title: show.title,
-          image: show.image,
-          duration: show.duration
-        } : null,
-        user: user ? {
-          _id: user._id,
-          name: user.name,
-          email: user.email
-        } : null,
-        showTime: showTime, // Include the original showTime string
-        totalAmount: amount
-      }],
+      data: [bookingResponse],
       transactionId: paymentResult.transactionId,
       amount
     });
