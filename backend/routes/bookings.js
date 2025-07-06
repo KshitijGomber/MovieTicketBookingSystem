@@ -200,16 +200,24 @@ router.post('/', checkJwt, async (req, res) => {
     // Send confirmation email
     const user = await User.findById(userId);
     const show = await Show.findById(showId);
+    
     // Send email confirmation
     if (user && show) {
-      await sendBookingConfirmationEmail(
-        user.email,
-        user.name,
-        show.title,
-        showTime, // Keep the original string format for email
-        seats,
-        amount
-      );
+      try {
+        await sendBookingConfirmationEmail({
+          to: user.email,
+          movieName: show.title,
+          showTime: showTime, // Keep the original string format for email
+          seats: seats,
+          totalAmount: amount,
+          bookingId: bookings[0]?.bookingReference || 'N/A',
+          paymentId: paymentResult.transactionId,
+          theatreName: 'Cineplex' // Default theatre name
+        });
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't fail the booking if email fails
+      }
     }
 
     res.status(201).json({ 
