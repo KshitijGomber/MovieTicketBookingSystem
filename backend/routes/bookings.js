@@ -49,13 +49,27 @@ router.get('/', checkJwt, async (req, res) => {
       .sort({ createdAt: -1 }); // Most recent first
     res.json(bookings);
   } catch (error) {
-    console.error('Error fetching bookings:', error);
-    res.status(500).json({ message: 'Error fetching bookings', error: error.message });
+    console.error('Error fetching bookings:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      user: req.user
+    });
+    res.status(500).json({ 
+      message: 'Error fetching bookings', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
 // POST /api/bookings - Create a new booking
 router.post('/', checkJwt, async (req, res) => {
+  console.log('Received booking request:', {
+    body: req.body,
+    user: req.user
+  });
+
   const session = await mongoose.startSession();
   session.startTransaction();
   
@@ -63,10 +77,16 @@ router.post('/', checkJwt, async (req, res) => {
     const { showId, seats, showTime, paymentDetails } = req.body;
     const userId = req.user.id;
     
-    if (!showId || !seats || !seats.length || !showTime) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: 'Missing required fields: showId, seats, showTime' });
+    console.log('Processing booking:', { showId, seats, showTime, userId });
+    
+    if (!showId) {
+      throw new Error('Missing required field: showId');
+    }
+    if (!seats || !Array.isArray(seats) || !seats.length) {
+      throw new Error('Invalid or missing seats array');
+    }
+    if (!showTime) {
+      throw new Error('Missing required field: showTime');
     }
     
     // Process payment (mock)
@@ -88,12 +108,38 @@ router.post('/', checkJwt, async (req, res) => {
       return res.status(404).json({ message: 'Show not found' });
     }
 
+    // Convert showTime string to a Date object
+    const parseShowTime = (timeStr) => {
+      try {
+        const [time, period] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        
+        // Convert to 24-hour format
+        if (period === 'PM' && hours < 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        // Create a date object for today with the specified time
+        const showDate = new Date();
+        showDate.setHours(hours, minutes, 0, 0);
+        
+        return showDate;
+      } catch (error) {
+        console.error('Error parsing showTime:', { timeStr, error });
+        throw new Error('Invalid show time format. Expected format: "HH:MM AM/PM"');
+      }
+    };
+
+    const showDateTime = parseShowTime(showTime);
+    
     // Check if any of the seats are already booked
     const existingBookings = await Booking.find({
       show: showId,
       seat: { $in: seats },
-      showTime: showTime,
-      status: 'booked'
+      showTime: {
+        $gte: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate()),
+        $lt: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate() + 1)
+      },
+      status: { $in: ['booked', 'confirmed'] }
     }).session(session);
 
     if (existingBookings.length > 0) {
@@ -118,7 +164,7 @@ router.post('/', checkJwt, async (req, res) => {
         user: userId,
         show: showId,
         seat,
-        showTime,
+        showTime: showDateTime,
         status: 'confirmed',
         payment: {
           amount: parseFloat(seatPrice),
@@ -146,13 +192,13 @@ router.post('/', checkJwt, async (req, res) => {
     // Send confirmation email
     const user = await User.findById(userId);
     const show = await Show.findById(showId);
-    
+    // Send email confirmation
     if (user && show) {
       await sendBookingConfirmationEmail(
         user.email,
         user.name,
         show.title,
-        showTime,
+        showTime, // Keep the original string format for email
         seats,
         amount
       );
@@ -165,12 +211,29 @@ router.post('/', checkJwt, async (req, res) => {
       amount
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error('Error creating booking:', error);
+    console.error('Error creating booking:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      user: req.user
+    });
+    
+    try {
+      await session.abortTransaction();
+    } catch (abortError) {
+      console.error('Error aborting transaction:', abortError);
+    }
+    
+    try {
+      await session.endSession();
+    } catch (endSessionError) {
+      console.error('Error ending session:', endSessionError);
+    }
+    
     res.status(500).json({ 
-      message: 'Error creating booking',
-      error: error.message 
+      message: 'Error creating booking', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
