@@ -31,20 +31,6 @@ const ShowDetails = () => {
     message: '', 
     severity: 'info' 
   });
-  
-  // Calculate total price
-  const calculateTotal = () => {
-    const subtotal = selectedSeats.length * 10; // $10 per seat
-    const tax = subtotal * 0.1; // 10% tax
-    return {
-      subtotal: subtotal.toFixed(2),
-      tax: tax.toFixed(2),
-      total: (subtotal + tax).toFixed(2),
-      seatCount: selectedSeats.length
-    };
-  };
-  
-  const { subtotal, tax, total, seatCount } = calculateTotal();
 
   // Fetch show details
   const { data: show, isLoading, error } = useQuery({
@@ -52,12 +38,41 @@ const ShowDetails = () => {
     queryFn: () => fetchShow(params.id)
   });
 
-  // Fetch booked seats
-  const { data: bookedSeats = [] } = useQuery({
-    queryKey: ['bookedSeats', show?._id],
-    queryFn: () => getBookedSeats(show?._id),
-    enabled: !!show?._id
+  // Fetch booked seats for the selected showtime
+  const { data: bookedSeats = [], refetch: refetchBookedSeats } = useQuery({
+    queryKey: ['bookedSeats', show?._id, selectedShowTime],
+    queryFn: () => getBookedSeats(show?._id, selectedShowTime),
+    enabled: !!(show?._id && selectedShowTime),
+    onError: (error) => {
+      console.error('Error fetching booked seats:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error loading seat availability',
+        severity: 'error'
+      });
+    }
   });
+
+  // Reset selected seats when showtime changes
+  useEffect(() => {
+    setSelectedSeats([]);
+    if (selectedShowTime && show?._id) {
+      refetchBookedSeats();
+    }
+  }, [selectedShowTime, show?._id, refetchBookedSeats]);
+  
+  // Calculate total price
+  const { subtotal, tax, total, seatCount } = useMemo(() => {
+    const price = parseFloat(show?.price) || 9.99;
+    const subtotal = selectedSeats.length * price;
+    const tax = subtotal * 0.1; // 10% tax
+    return {
+      subtotal: subtotal.toFixed(2),
+      tax: tax.toFixed(2),
+      total: (subtotal + tax).toFixed(2),
+      seatCount: selectedSeats.length
+    };
+  }, [selectedSeats, show?.price]);
 
   const handleSeatClick = (seatId) => {
     if (!token) {
