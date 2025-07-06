@@ -183,11 +183,13 @@ const ShowDetails = () => {
     try {
       // First process the payment
       const paymentResult = await processPayment({
-        amount: total,
-        cardNumber: paymentDetails.cardNumber.replace(/\s/g, ''),
-        expiry: paymentDetails.expiryDate, // Changed from expiry to expiryDate
-        cvv: paymentDetails.cvv,
-        name: paymentDetails.cardName // Changed from name to cardName
+        amount: parseFloat(total), // Ensure amount is a number
+        paymentDetails: {
+          cardNumber: paymentDetails.cardNumber.replace(/\s/g, ''),
+          expiry: paymentDetails.expiryDate,
+          cvv: paymentDetails.cvv,
+          name: paymentDetails.cardName
+        }
       });
 
       if (!paymentResult.success) {
