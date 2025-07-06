@@ -86,27 +86,42 @@ export async function fetchShows() {
 }
 
 export async function fetchShow(showId) {
+  console.log('fetchShow - showId:', showId);
+  console.log('fetchShow - API_URL:', API_URL);
+  
   try {
     // First try to find in mock data
     const mockShow = mockShows.find(show => show._id === showId);
-    if (mockShow) return mockShow;
+    if (mockShow) {
+      console.log('fetchShow - Found in mock data:', mockShow);
+      return mockShow;
+    }
+    
+    console.log('fetchShow - Not found in mock data, trying API...');
     
     // If not in mock data, try the API
-    const response = await fetchWithTimeout(`${API_URL}/shows/${showId}`);
+    const apiUrl = `${API_URL}/shows/${showId}`;
+    console.log('fetchShow - Making request to:', apiUrl);
+    
+    const response = await fetchWithTimeout(apiUrl);
+    console.log('fetchShow - Response status:', response.status);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to fetch show');
+      console.error('fetchShow - Error response:', errorData);
+      throw new Error(errorData.message || `Failed to fetch show (${response.status})`);
     }
     
     const data = await response.json();
+    console.log('fetchShow - Response data:', data);
     
     // Check if we got a valid show object
     if (!data || typeof data !== 'object' || !data._id) {
-      console.error('Invalid show data received:', data);
+      console.error('fetchShow - Invalid show data received:', data);
       throw new Error('Invalid show data received from server');
     }
     
+    console.log('fetchShow - Successfully fetched show:', data._id);
     return data;
   } catch (error) {
     console.error('Error in fetchShow:', error);

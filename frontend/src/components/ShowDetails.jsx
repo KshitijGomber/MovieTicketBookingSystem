@@ -26,6 +26,10 @@ const ShowDetails = () => {
   const [selectedShowTime, setSelectedShowTime] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  
+  // Debug log
+  console.log('ShowDetails - showId:', showId);
+  console.log('ShowDetails - window.location:', window.location.href);
 
   // Format time to 12-hour format with AM/PM
   const formatTime = (timeString) => {
