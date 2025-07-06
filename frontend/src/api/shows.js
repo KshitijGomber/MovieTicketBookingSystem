@@ -86,8 +86,13 @@ export async function fetchShows() {
 }
 
 export async function fetchShow(showId) {
+  // Ensure showId is a string and trim any whitespace
+  showId = String(showId).trim();
   console.log('fetchShow - showId:', showId);
-  console.log('fetchShow - API_URL:', API_URL);
+  
+  // Hardcode the API URL to ensure it's correct
+  const apiBaseUrl = 'https://movieticketbookingsystem-7suc.onrender.com/api';
+  console.log('fetchShow - Using API URL:', apiBaseUrl);
   
   try {
     // First try to find in mock data
@@ -99,17 +104,31 @@ export async function fetchShow(showId) {
     
     console.log('fetchShow - Not found in mock data, trying API...');
     
-    // If not in mock data, try the API
-    const apiUrl = `${API_URL}/shows/${showId}`;
+    // If not in mock data, try the API with hardcoded URL
+    const apiUrl = `${apiBaseUrl}/shows/${showId}`;
     console.log('fetchShow - Making request to:', apiUrl);
     
-    const response = await fetchWithTimeout(apiUrl);
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add credentials if needed
+      // credentials: 'include',
+    });
+    
     console.log('fetchShow - Response status:', response.status);
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('fetchShow - Error response:', errorData);
-      throw new Error(errorData.message || `Failed to fetch show (${response.status})`);
+      let errorMessage = `Failed to fetch show (${response.status})`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+        console.error('fetchShow - Error response:', errorData);
+      } catch (e) {
+        console.error('fetchShow - Error parsing error response:', e);
+      }
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();

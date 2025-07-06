@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { Movie, EventSeat, ArrowBack } from '@mui/icons-material';
 
 const ShowDetails = () => {
-  const { showId } = useParams();
+  const { showId: rawShowId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -27,9 +27,18 @@ const ShowDetails = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   
-  // Debug log
-  console.log('ShowDetails - showId:', showId);
-  console.log('ShowDetails - window.location:', window.location.href);
+  // Ensure showId is a string and trim any whitespace
+  const showId = rawShowId ? String(rawShowId).trim() : null;
+  
+  // Debug logs
+  useEffect(() => {
+    console.log('ShowDetails - Component mounted with showId:', showId);
+    console.log('ShowDetails - Full URL:', window.location.href);
+    
+    return () => {
+      console.log('ShowDetails - Component unmounting');
+    };
+  }, [showId]);
 
   // Format time to 12-hour format with AM/PM
   const formatTime = (timeString) => {
