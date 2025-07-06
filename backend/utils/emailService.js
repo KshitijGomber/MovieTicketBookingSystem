@@ -147,7 +147,7 @@ const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, to
         </div>
         
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #7f8c8d; font-size: 0.9em;">
-          <p>If you have any questions, please contact our support team at support@movietickets.com</p>
+          <p>If you have any questions, please contact our support team at bookyourmov@gmail.com</p>
           <p>© ${new Date().getFullYear()} ${process.env.APP_NAME || 'Movie Ticket Booking'}. All rights reserved.</p>
         </div>
       </div>

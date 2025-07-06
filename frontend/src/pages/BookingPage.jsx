@@ -32,13 +32,26 @@ const BookingPage = () => {
 
   const handleSeatSelection = (seats) => {
     setSelectedSeats(seats);
-    // Redirect to show details page with selected seats
+  };
+
+  const handleTimeSelect = (time) => {
+    setShowTime(time);
+    setSelectedSeats([]); // Clear selected seats when time changes
+  };
+
+  const handleProceedToCheckout = () => {
+    if (selectedSeats.length === 0) {
+      // Show error or alert to select seats
+      return;
+    }
+
     navigate(`/shows/${showId}`, {
       state: { 
-        selectedSeats: seats,
+        selectedSeats,
         showTime: showTime || show?.timings?.[0],
         fromBookingPage: true
-      }
+      },
+      replace: true
     });
   };
 
@@ -73,12 +86,50 @@ const BookingPage = () => {
       </Typography>
       
       <Box mt={4}>
-        <SeatSelection
-          showId={showId}
-          showTime={showTime}
-          onSelectSeats={handleSeatSelection}
-          onTimeSelect={setShowTime}
-        />
+        <Box mb={3}>
+          <Typography variant="h6" gutterBottom>Select Show Time:</Typography>
+          <Box display="flex" gap={2} mb={3}>
+            {show.timings.map((time) => (
+              <Button
+                key={time}
+                variant={showTime === time ? 'contained' : 'outlined'}
+                onClick={() => handleTimeSelect(time)}
+              >
+                {time}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+
+        {showTime ? (
+          <>
+            <SeatSelection
+              showId={showId}
+              showTime={showTime}
+              onSelectSeats={handleSeatSelection}
+            />
+            
+            {selectedSeats.length > 0 && (
+              <Box mt={3} textAlign="center">
+                <Typography variant="h6" gutterBottom>
+                  Selected Seats: {selectedSeats.join(', ')}
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size="large"
+                  onClick={handleProceedToCheckout}
+                >
+                  Proceed to Checkout ({selectedSeats.length} seats)
+                </Button>
+              </Box>
+            )}
+          </>
+        ) : (
+          <Typography color="textSecondary">
+            Please select a show time to see available seats
+          </Typography>
+        )}
       </Box>
     </Container>
   );

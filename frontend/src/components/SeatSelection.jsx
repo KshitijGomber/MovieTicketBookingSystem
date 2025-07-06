@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Grid, Paper, CircularProgress } from '@mui/material';
 import { getBookedSeats } from '../api/bookings';
 
-const SeatSelection = ({ showId, showTime, onSeatsSelected }) => {
+const SeatSelection = ({ showId, showTime, onSelectSeats, onTimeSelect }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,11 +41,18 @@ const SeatSelection = ({ showId, showTime, onSeatsSelected }) => {
   const toggleSeat = (seatNumber) => {
     if (isSeatBooked(seatNumber)) return;
     
-    setSelectedSeats(prev => 
-      prev.includes(seatNumber)
+    setSelectedSeats(prev => {
+      const newSelectedSeats = prev.includes(seatNumber)
         ? prev.filter(seat => seat !== seatNumber)
-        : [...prev, seatNumber]
-    );
+        : [...prev, seatNumber];
+      
+      // Call onSelectSeats with the updated seats
+      if (onSelectSeats) {
+        onSelectSeats(newSelectedSeats);
+      }
+      
+      return newSelectedSeats;
+    });
   };
 
   const renderSeat = (seatNumber) => {
