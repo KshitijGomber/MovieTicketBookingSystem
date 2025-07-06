@@ -39,12 +39,21 @@ const ShowDetails = () => {
   });
 
   // Fetch booked seats for the selected showtime
-  const { data: bookedSeats = [], refetch: refetchBookedSeats } = useQuery({
+  const { data: bookedSeatsResponse, refetch: refetchBookedSeats } = useQuery({
     queryKey: ['bookedSeats', show?._id, selectedShowTime],
-    queryFn: () => getBookedSeats(show?._id, selectedShowTime),
+    queryFn: async () => {
+      try {
+        const response = await getBookedSeats(show?._id, selectedShowTime);
+        // Ensure we always return an array, even if the response is malformed
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error in getBookedSeats:', error);
+        return [];
+      }
+    },
     enabled: !!(show?._id && selectedShowTime),
     onError: (error) => {
-      console.error('Error fetching booked seats:', error);
+      console.error('Error in booked seats query:', error);
       setSnackbar({
         open: true,
         message: 'Error loading seat availability',
@@ -52,6 +61,9 @@ const ShowDetails = () => {
       });
     }
   });
+
+  // Ensure bookedSeats is always an array
+  const bookedSeats = Array.isArray(bookedSeatsResponse) ? bookedSeatsResponse : [];
 
   // Reset selected seats when showtime changes
   useEffect(() => {
@@ -75,20 +87,53 @@ const ShowDetails = () => {
   }, [selectedSeats, show?.price]);
 
   const handleSeatClick = (seatId) => {
-    if (!token) {
+    try {
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'Please log in to select seats',
+          severity: 'warning'
+        });
+        return;
+      }
+
+      if (!selectedShowTime) {
+        setSnackbar({
+          open: true,
+          message: 'Please select a showtime first',
+          severity: 'warning'
+        });
+        return;
+      }
+      
+      // Ensure seatId is a string for consistent comparison
+      const seatIdStr = String(seatId);
+      
+      // Check if seat is already booked
+      if (bookedSeats.includes(seatIdStr)) {
+        setSnackbar({
+          open: true,
+          message: 'This seat is already booked',
+          severity: 'warning'
+        });
+        return;
+      }
+      
+      setSelectedSeats(prev => {
+        // Ensure prev is an array
+        const prevArray = Array.isArray(prev) ? prev : [];
+        return prevArray.includes(seatIdStr)
+          ? prevArray.filter(id => id !== seatIdStr)
+          : [...prevArray, seatIdStr];
+      });
+    } catch (error) {
+      console.error('Error in handleSeatClick:', error);
       setSnackbar({
         open: true,
-        message: 'Please log in to select seats',
-        severity: 'warning'
+        message: 'Error selecting seat. Please try again.',
+        severity: 'error'
       });
-      return;
     }
-    
-    setSelectedSeats(prev => 
-      prev.includes(seatId) 
-        ? prev.filter(id => id !== seatId)
-        : [...prev, seatId]
-    );
   };
 
   const handleBookNow = () => {
@@ -125,64 +170,90 @@ const ShowDetails = () => {
   };
 
   const generateSeatLayout = () => {
-    if (!show) return [];
-    
-    const totalSeats = 30; // 6 seats per row, 5 rows
-    const seatsPerRow = 6;
-    const totalRows = 5;
-    const seats = [];
-    
-    for (let row = 1; row <= totalRows; row++) {
-      const rowSeats = [];
+    try {
+      if (!show) return [];
       
-      for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
-        const seatId = String((row - 1) * seatsPerRow + seatNum); // Creates seat numbers 1-30
-        const isBooked = bookedSeats.includes(seatId);
-        const isSelected = selectedSeats.includes(seatId);
+      const totalSeats = 30; // 6 seats per row, 5 rows
+      const seatsPerRow = 6;
+      const totalRows = 5;
+      const seats = [];
+      
+      // Ensure bookedSeats is an array of strings
+      const bookedSeatsArray = Array.isArray(bookedSeats) 
+        ? bookedSeats.map(seat => String(seat))
+        : [];
         
-        rowSeats.push(
-          <Box
-            key={seatId}
-            onClick={() => !isBooked && handleSeatClick(seatId)}
-            sx={{
-              width: 40,
-              height: 40,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 1,
-              cursor: isBooked ? 'not-allowed' : 'pointer',
-              backgroundColor: isBooked 
-                ? 'error.light' 
-                : isSelected 
-                  ? 'primary.main' 
-                  : 'action.hover',
-              color: isBooked || isSelected ? 'common.white' : 'text.primary',
-              opacity: isBooked ? 0.7 : 1,
-              '&:hover': !isBooked && {
-                backgroundColor: isSelected ? 'primary.dark' : 'action.selected',
-              },
-              m: 0.5,
-              position: 'relative',
-            }}
-          >
-            <EventSeat />
-            <Typography variant="caption" sx={{ fontSize: '0.6rem', mt: 0.5 }}>
-              {seatId}
-            </Typography>
+      // Ensure selectedSeats is an array of strings
+      const selectedSeatsArray = Array.isArray(selectedSeats)
+        ? selectedSeats.map(seat => String(seat))
+        : [];
+      
+      for (let row = 1; row <= totalRows; row++) {
+        const rowSeats = [];
+        
+        for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
+          const seatId = String((row - 1) * seatsPerRow + seatNum); // Creates seat numbers 1-30
+          const isBooked = bookedSeatsArray.includes(seatId);
+          const isSelected = selectedSeatsArray.includes(seatId);
+          
+          rowSeats.push(
+            <Box
+              key={`seat-${seatId}`}
+              onClick={() => !isBooked && handleSeatClick(seatId)}
+              sx={{
+                width: 40,
+                height: 40,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 1,
+                cursor: isBooked ? 'not-allowed' : 'pointer',
+                backgroundColor: isBooked 
+                  ? 'error.light' 
+                  : isSelected 
+                    ? 'primary.main' 
+                    : 'action.hover',
+                color: isBooked || isSelected ? 'common.white' : 'text.primary',
+                opacity: isBooked ? 0.7 : 1,
+                '&:hover': !isBooked && {
+                  backgroundColor: isSelected ? 'primary.dark' : 'action.selected',
+                },
+                m: 0.5,
+                position: 'relative',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <EventSeat />
+              <Typography variant="caption" sx={{ 
+                fontSize: '0.6rem', 
+                mt: 0.5,
+                userSelect: 'none'
+              }}>
+                {seatId}
+              </Typography>
+            </Box>
+          );
+        }
+        
+        seats.push(
+          <Box key={`row-${row}`} display="flex" justifyContent="center" mb={1}>
+            {rowSeats}
           </Box>
         );
       }
       
-      seats.push(
-        <Box key={`row-${row}`} display="flex" justifyContent="center" mb={1}>
-          {rowSeats}
+      return seats;
+    } catch (error) {
+      console.error('Error generating seat layout:', error);
+      return (
+        <Box textAlign="center" py={4}>
+          <Typography color="error">
+            Error loading seat layout. Please try refreshing the page.
+          </Typography>
         </Box>
       );
     }
-    
-    return seats;
   };
 
   if (isLoading) {
