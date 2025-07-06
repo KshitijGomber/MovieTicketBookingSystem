@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Typography, Button, Container, Alert, Box, IconButton,
 import { useState } from 'react';
 import './App.css';
 import ShowList from './components/ShowList';
-import ShowDetails from './components/ShowDetails.old.jsx';
+import ShowDetails from './components/ShowDetails';
 import MyBookings from './components/MyBookings';
 import LoginButton from './components/Auth/LoginButton';
 import LogoutButton from './components/Auth/LogoutButton';
