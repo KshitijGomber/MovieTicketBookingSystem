@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+
+// Debug function
+const debug = (message, data) => {
+  console.log(`[DEBUG] ${message}`, data || '');
+  return data;
+};
+
 import { fetchShow } from '../api/shows';
 import { getBookedSeats } from '../api/bookings';
 import { 
@@ -19,58 +26,61 @@ import { useAuth } from '../context/AuthContext';
 import { Movie, EventSeat, ArrowBack } from '@mui/icons-material';
 
 const ShowDetails = () => {
-  // Extract showId from URL params
-  const { showId: rawShowId } = useParams();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const params = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { token } = useAuth();
   const [selectedShowTime, setSelectedShowTime] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  
-  // Ensure showId is a valid string and trim any whitespace
-  const showId = React.useMemo(() => {
-    if (!rawShowId) {
-      console.error('No showId found in URL parameters');
-      return null;
-    }
-    const id = String(rawShowId).trim();
-    if (!id) {
-      console.error('Empty showId in URL parameters');
-      return null;
-    }
-    console.log('ShowDetails - Extracted showId:', id);
-    return id;
-  }, [rawShowId]);
-  
-  // Debug logs
-  React.useEffect(() => {
-    console.group('ShowDetails - Component Mounted');
-    console.log('Raw showId from URL params:', rawShowId);
-    console.log('Processed showId:', showId);
-    console.log('Current URL:', window.location.href);
-    console.groupEnd();
+  const [snackbar, setSnackbar] = useState({ 
+    open: false, 
+    message: '', 
+    severity: 'info' 
+  });
+
+  // Extract and validate showId
+  const showId = useMemo(() => {
+    // Try multiple ways to get the showId
+    const idFromParams = params?.showId || 
+                        new URLSearchParams(location.search).get('showId') ||
+                        location.pathname.split('/').pop();
     
-    // Check if showId is valid
+    debug('Raw showId from URL:', idFromParams);
+    
+    if (!idFromParams) {
+      console.error('No showId found in URL');
+      return null;
+    }
+    
+    const id = String(idFromParams).trim();
+    
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      console.error('Invalid showId format:', id);
+      return null;
+    }
+    
+    debug('Valid showId:', id);
+    return id;
+  }, [params, location]);
+
+  // Handle missing or invalid showId
+  useEffect(() => {
     if (!showId) {
-      console.error('Invalid or missing showId');
+      console.error('Invalid or missing showId, redirecting to home...');
       setSnackbar({
         open: true,
-        message: 'Invalid show ID. Please select a valid show.',
+        message: 'Invalid show ID. Redirecting to home page...',
         severity: 'error'
       });
-      // Redirect to home page after showing error
+      
       const timer = setTimeout(() => {
         navigate('/');
       }, 3000);
       
       return () => clearTimeout(timer);
     }
-    
-    return () => {
-      console.log('ShowDetails - Component unmounting');
-    };
-  }, [showId, navigate, rawShowId]);
+  }, [showId, navigate]);
 
   // Format time to 12-hour format with AM/PM
   const formatTime = (timeString) => {
@@ -100,66 +110,69 @@ const ShowDetails = () => {
     }
   }, [searchParams]);
 
+  // Fetch show details
   const { 
     data: show, 
     isLoading, 
     isError, 
     error,
     refetch 
-  } = useQuery(
-    ['show', showId],
-    async () => {
+  } = useQuery({
+    queryKey: ['show', showId],
+    queryFn: async () => {
       if (!showId) {
-        console.error('No showId provided to fetchShow');
         throw new Error('No show ID provided');
       }
       
-      console.log('useQuery - Fetching show with ID:', showId);
+      debug('Fetching show with ID:', showId);
+      
       try {
-        const data = await fetchShow(showId);
-        console.log('useQuery - Successfully fetched show:', {
-          id: data?._id,
-          title: data?.title
-        });
-        return data;
-      } catch (err) {
-        console.error('useQuery - Error in fetchShow:', {
-          error: err.message,
-          showId,
-          timestamp: new Date().toISOString()
-        });
-        throw err; // Re-throw to trigger onError
-      }
-    },
-    {
-      enabled: !!showId, // Only run the query if showId exists
-      retry: 2,
-      retryDelay: 1000,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-      onError: (err) => {
-        console.error('useQuery - onError:', {
-          message: err.message,
-          showId,
-          timestamp: new Date().toISOString()
+        const response = await fetch(`https://movieticketbookingsystem-7suc.onrender.com/api/shows/${showId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         
-        // Show error to user
-        setSnackbar({
-          open: true,
-          message: `Error loading show: ${err.message}`,
-          severity: 'error'
-        });
-      },
-      onSettled: (data, error) => {
-        console.log('useQuery - onSettled', {
-          hasData: !!data,
-          hasError: !!error,
-          showId
-        });
+        debug('API Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch show (${response.status})`);
+        }
+        
+        const data = await response.json();
+        debug('Fetched show data:', data);
+        
+        if (!data || !data._id) {
+          throw new Error('Invalid show data received');
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Error fetching show:', error);
+        throw error;
       }
+    },
+    enabled: !!showId,
+    retry: 1,
+    retryDelay: 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      console.error('Show fetch error:', error);
+      setSnackbar({
+        open: true,
+        message: `Error loading show: ${error.message}`,
+        severity: 'error'
+      });
+    },
+    onSuccess: (data) => {
+      debug('Successfully loaded show:', { id: data._id, title: data.title });
     }
-  );
+  });
 
   const { data: bookedSeatsData, isLoading: isLoadingSeats } = useQuery({
     queryKey: ['bookedSeats', showId, selectedShowTime],

@@ -62,14 +62,21 @@ export const mockShows = [
   }
 ];
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Use hardcoded API URL for now to avoid env issues
+const API_URL = 'https://movieticketbookingsystem-7suc.onrender.com';
 
 // Helper function to handle fetch with timeout
-const fetchWithTimeout = (url, options = {}, timeout = 5000) => {
+const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
   return Promise.race([
-    fetch(url, options),
+    fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    }),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), timeout)
+      setTimeout(() => reject(new Error(`Request timed out after ${timeout}ms`)), timeout)
     )
   ]);
 };
@@ -85,62 +92,83 @@ export async function fetchShows() {
   }
 }
 
+// Debug function to log to the console and show an alert
+const debugLog = (message, data = null) => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}`;
+  console.log(logMessage);
+  // Uncomment the line below to show alerts for debugging
+  // alert(logMessage);
+};
+
 export async function fetchShow(showId) {
-  // Ensure showId is a string and trim any whitespace
-  showId = String(showId).trim();
-  console.log('fetchShow - showId:', showId);
-  
-  // Hardcode the API URL to ensure it's correct
-  const apiBaseUrl = 'https://movieticketbookingsystem-7suc.onrender.com/api';
-  console.log('fetchShow - Using API URL:', apiBaseUrl);
-  
   try {
+    // Ensure showId is a string and trim any whitespace
+    showId = String(showId).trim();
+    debugLog('1. Starting fetchShow with showId:', { showId });
+    
+    // Hardcode the API URL to ensure it's correct
+    const apiBaseUrl = 'https://movieticketbookingsystem-7suc.onrender.com/api';
+    const apiUrl = `${apiBaseUrl}/shows/${showId}`;
+    debugLog('2. Using API URL:', { apiUrl });
+    
     // First try to find in mock data
     const mockShow = mockShows.find(show => show._id === showId);
     if (mockShow) {
-      console.log('fetchShow - Found in mock data:', mockShow);
+      debugLog('3. Found show in mock data:', mockShow);
       return mockShow;
     }
     
-    console.log('fetchShow - Not found in mock data, trying API...');
+    debugLog('4. Show not found in mock data, trying API...');
     
-    // If not in mock data, try the API with hardcoded URL
-    const apiUrl = `${apiBaseUrl}/shows/${showId}`;
-    console.log('fetchShow - Making request to:', apiUrl);
+    // Make the API request
+    debugLog('5. Making API request...');
+    let response;
+    try {
+      response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      debugLog('6. Received response status:', { status: response.status });
+    } catch (fetchError) {
+      debugLog('6. Fetch error:', { error: fetchError.message });
+      throw new Error(`Network error: ${fetchError.message}`);
+    }
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Add credentials if needed
-      // credentials: 'include',
-    });
-    
-    console.log('fetchShow - Response status:', response.status);
-    
+    // Check if response is ok
     if (!response.ok) {
-      let errorMessage = `Failed to fetch show (${response.status})`;
+      let errorMessage = `Server returned ${response.status} status`;
       try {
         const errorData = await response.json();
+        debugLog('7. Error response data:', errorData);
         errorMessage = errorData.message || errorMessage;
-        console.error('fetchShow - Error response:', errorData);
-      } catch (e) {
-        console.error('fetchShow - Error parsing error response:', e);
+      } catch (parseError) {
+        debugLog('7. Could not parse error response:', { error: parseError.message });
       }
       throw new Error(errorMessage);
     }
     
-    const data = await response.json();
-    console.log('fetchShow - Response data:', data);
+    // Parse the response
+    let data;
+    try {
+      data = await response.json();
+      debugLog('8. Successfully parsed response data:', data);
+    } catch (parseError) {
+      debugLog('8. Error parsing JSON response:', { error: parseError.message });
+      throw new Error('Invalid JSON response from server');
+    }
     
-    // Check if we got a valid show object
+    // Validate the response data
     if (!data || typeof data !== 'object' || !data._id) {
-      console.error('fetchShow - Invalid show data received:', data);
+      debugLog('9. Invalid show data received:', data);
       throw new Error('Invalid show data received from server');
     }
     
-    console.log('fetchShow - Successfully fetched show:', data._id);
+    debugLog('10. Successfully fetched show:', { showId: data._id, title: data.title });
     return data;
   } catch (error) {
     console.error('Error in fetchShow:', error);
