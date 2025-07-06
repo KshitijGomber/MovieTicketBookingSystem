@@ -119,7 +119,13 @@ export async function createBooking(bookingData) {
     throw new Error(data.message || 'Failed to create booking');
   }
   
-  return data;
+  // The backend returns { success, data, ... } but we just want the data array
+  if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+    return { data: data.data };
+  }
+  
+  // Fallback in case the response format is different
+  return { data: [data] };
 }
 
 export async function cancelBooking(bookingId) {

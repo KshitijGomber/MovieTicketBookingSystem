@@ -236,39 +236,50 @@ const ShowDetails = () => {
 
       console.log('Creating booking with data:', bookingData);
       
-      // Save booking to database
-      const bookingResult = await createBooking(bookingData);
-      
-      if (!bookingResult || !bookingResult.length) {
-        throw new Error('No booking data returned from server');
-      }
+      try {
+        // Save booking to database
+        const response = await createBooking(bookingData);
+        
+        if (!response || !response.data || !response.data.length) {
+          throw new Error('No booking data returned from server');
+        }
 
-      // Navigate to booking confirmation with all details
-      navigate('/booking/confirmation', {
-        state: {
-          // Use the first booking result as it contains all the necessary info
-          booking: bookingResult[0],
-          show: {
-            _id: show._id,
-            title: show.title,
-            duration: show.duration,
-            image: show.image
+        const bookingDataFromServer = response.data[0];
+        
+        // Update the booked seats in the UI
+        const updatedBookedSeats = [...bookedSeats, ...selectedSeats];
+        setBookedSeats(updatedBookedSeats);
+        setSelectedSeats([]);
+
+        // Navigate to booking confirmation with all details
+        navigate('/booking/confirmation', {
+          state: {
+            booking: bookingDataFromServer,
+            show: {
+              _id: show._id,
+              title: show.title,
+              duration: show.duration,
+              image: show.image
+            },
+            showTime: selectedShowTime,
+            seats: selectedSeats,
+            total: parseFloat(totalAmount.toFixed(2)),
+            paymentDetails: {
+              transactionId: paymentResult.transactionId,
+              amount: parseFloat(totalAmount.toFixed(2)),
+              date: new Date().toISOString()
+            },
+            user: {
+              name: user?.name || user?.username || 'Guest',
+              email: user?.email
+            }
           },
-          showTime: selectedShowTime,
-          seats: selectedSeats,
-          total: parseFloat(totalAmount.toFixed(2)),
-          paymentDetails: {
-            transactionId: paymentResult.transactionId,
-            amount: parseFloat(totalAmount.toFixed(2)),
-            date: new Date().toISOString()
-          },
-          user: {
-            name: user?.name || user?.username || 'Guest',
-            email: user?.email
-          }
-        },
-        replace: true
-      });
+          replace: true
+        });
+      } catch (error) {
+        console.error('Error creating booking:', error);
+        throw error; // Re-throw to be caught by the outer catch
+      }
       
     } catch (error) {
       console.error('Payment error:', error);

@@ -219,17 +219,34 @@ router.post('/', checkJwt, async (req, res) => {
       return booking.save({ session });
     });
 
-    // Update available seats
+    // Update available seats and mark seats as booked
     await Show.findByIdAndUpdate(
       showId,
-      { $inc: { availableSeats: -seats.length } },
-      { session }
+      { 
+        $inc: { availableSeats: -seats.length },
+        $addToSet: { 
+          bookedSeats: { 
+            $each: seats.map(seat => ({
+              seatNumber: seat,
+              showTime: showDateTime,
+              bookingDate: new Date()
+            }))
+          }
+        }
+      },
+      { session, new: true }
     );
 
     // Execute all operations in transaction
     const bookings = await Promise.all(bookingPromises);
     await session.commitTransaction();
     session.endSession();
+    
+    console.log('Booking created successfully:', {
+      bookingIds: bookings.map(b => b._id),
+      seats,
+      showTime: showDateTime
+    });
 
     // Send confirmation email
     const user = await User.findById(userId);
@@ -486,6 +503,7 @@ const parseShowTime = (timeStr) => {
 router.get('/show/:showId/seats', async (req, res) => {
   try {
     const { showTime } = req.query;
+    const { showId } = req.params;
     
     if (!showTime) {
       return res.status(400).json({ message: 'Showtime is required' });
@@ -499,30 +517,59 @@ router.get('/show/:showId/seats', async (req, res) => {
       return res.status(400).json({ message: 'Invalid showtime format. Expected format: "10:00 AM"' });
     }
 
-    // Find bookings for the same show and time (ignoring seconds and milliseconds)
+    // Calculate time window for the show (2-hour window)
     const startTime = new Date(showTimeDate);
+    startTime.setHours(startTime.getHours() - 1); // 1 hour before
+    
     const endTime = new Date(showTimeDate);
-    endTime.setMinutes(endTime.getMinutes() + 1); // 1-minute window
+    endTime.setHours(endTime.getHours() + 1); // 1 hour after
 
-    const bookedSeats = await Booking.find({
-      show: req.params.showId,
+    // Get seats from Show model's bookedSeats array
+    const show = await Show.findById(showId);
+    let bookedSeatsFromShow = [];
+    
+    if (show && Array.isArray(show.bookedSeats)) {
+      // Filter seats for the specific show time window
+      bookedSeatsFromShow = show.bookedSeats
+        .filter(seat => {
+          if (!seat || !seat.showTime) return false;
+          const seatTime = new Date(seat.showTime);
+          return seatTime >= startTime && seatTime <= endTime;
+        })
+        .map(seat => seat.seatNumber || seat);
+    }
+
+    // Get seats from Bookings collection
+    const bookings = await Booking.find({
+      show: showId,
       showTime: {
         $gte: startTime,
-        $lt: endTime
+        $lte: endTime
       },
-      status: 'booked'
+      status: { $in: ['booked', 'pending_payment'] }
     }).select('seat');
 
-    const seatNumbers = bookedSeats.map(booking => booking.seat);
+    // Combine and deduplicate seat numbers from both sources
+    const seatNumbersFromBookings = bookings.map(booking => booking.seat);
+    const allBookedSeats = [...new Set([...bookedSeatsFromShow, ...seatNumbersFromBookings])];
     
-    res.json({ bookedSeats: seatNumbers });
+    console.log('Booked seats:', {
+      fromShow: bookedSeatsFromShow,
+      fromBookings: seatNumbersFromBookings,
+      combined: allBookedSeats,
+      showTime: showTimeDate,
+      timeWindow: { start: startTime, end: endTime }
+    });
+    
+    res.json(allBookedSeats);
   } catch (error) {
     console.error('Error fetching booked seats:', error);
     res.status(500).json({ 
-      message: 'Error fetching booked seats',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Error fetching booked seats', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
 
-module.exports = router; 
+module.exports = router;

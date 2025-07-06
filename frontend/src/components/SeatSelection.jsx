@@ -6,26 +6,40 @@ const SeatSelection = ({ showId, showTime, onSeatsSelected }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchBookedSeats = async () => {
+      if (!showId || !showTime) return;
+      
       try {
-        const data = await getBookedSeats(showId, showTime);
-        setBookedSeats(data.bookedSeats || []);
-      } catch (err) {
-        setError('Failed to load seat availability');
-        console.error(err);
-      } finally {
-        setLoading(false);
+        const booked = await getBookedSeats(showId, showTime);
+        console.log('Fetched booked seats:', booked);
+        setBookedSeats(booked);
+      } catch (error) {
+        console.error('Error fetching booked seats:', error);
+        // Don't update state on error to prevent UI flicker
       }
     };
-
+    
     fetchBookedSeats();
+    
+    const intervalId = setInterval(fetchBookedSeats, 10000); // Poll every 10 seconds
+    
+    return () => clearInterval(intervalId); // Clean up on unmount
   }, [showId, showTime]);
 
+  const isSeatBooked = (seatNumber) => {
+    return Array.isArray(bookedSeats) 
+      ? bookedSeats.some(seat => 
+          typeof seat === 'string' 
+            ? seat === seatNumber 
+            : seat.seatNumber === seatNumber || seat === seatNumber
+        )
+      : bookedSeats === seatNumber; // Fallback for non-array values
+  };
+
   const toggleSeat = (seatNumber) => {
-    if (bookedSeats.includes(seatNumber)) return;
+    if (isSeatBooked(seatNumber)) return;
     
     setSelectedSeats(prev => 
       prev.includes(seatNumber)
