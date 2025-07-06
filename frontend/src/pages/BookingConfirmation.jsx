@@ -9,10 +9,19 @@ import {
   Grid,
   Container,
   Alert,
-  CircularProgress
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon
 } from '@mui/material';
-import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
-import { createBooking } from '../api/bookings';
+import { 
+  CheckCircle as CheckCircleIcon, 
+  LocalMovies as MovieIcon, 
+  Event as EventIcon, 
+  ConfirmationNumber as TicketIcon, 
+  AccessTime as TimeIcon 
+} from '@mui/icons-material';
 
 export default function BookingConfirmation() {
   const location = useLocation();
@@ -24,30 +33,23 @@ export default function BookingConfirmation() {
   useEffect(() => {
     const processBooking = async () => {
       try {
-        if (!location.state) {
+        if (!location.state?.booking) {
           throw new Error('No booking information found');
         }
 
-        const { show, showTime, seats, total, bookingId, bookingDate } = location.state;
+        const { booking } = location.state;
         
-        // Send booking details to backend
-        const bookingData = {
-          showId: show._id,
-          showTitle: show.title,
-          showTime,
-          seats,
-          total,
-          bookingId,
-          bookingDate: bookingDate || new Date().toISOString(),
-        };
-
-        // Save booking to database
-        await createBooking(bookingData);
+        // Set booking details from the booking object
+        setBookingDetails({
+          show: booking.show,
+          showTime: booking.showTime,
+          seats: booking.seats,
+          total: booking.totalAmount || 0,
+          bookingId: booking.bookingReference,
+          bookingDate: booking.createdAt || new Date().toISOString(),
+        });
         
-        setBookingDetails(bookingData);
         setLoading(false);
-
-        // Send confirmation email (handled by backend)
         // The backend should handle sending the email
 
       } catch (err) {
@@ -62,16 +64,16 @@ export default function BookingConfirmation() {
 
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ mt: 8, textAlign: 'center' }}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>Processing your booking...</Typography>
-      </Container>
+        <Typography variant="body1" sx={{ ml: 2 }}>Processing your booking...</Typography>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ mt: 8 }}>
+      <Container maxWidth="md" sx={{ py: 8 }}>
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
@@ -84,10 +86,8 @@ export default function BookingConfirmation() {
 
   if (!bookingDetails) {
     return (
-      <Container maxWidth="md" sx={{ mt: 8 }}>
-        <Alert severity="error">
-          No booking information found. Please try again.
-        </Alert>
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Alert severity="warning">No booking details available.</Alert>
         <Button variant="contained" onClick={() => navigate('/')} sx={{ mt: 2 }}>
           Back to Home
         </Button>
@@ -95,77 +95,116 @@ export default function BookingConfirmation() {
     );
   }
 
+  const formatDate = (dateString) => {
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mb: 4 }}>
         <Box textAlign="center" mb={4}>
           <CheckCircleIcon color="success" sx={{ fontSize: 80, mb: 2 }} />
           <Typography variant="h4" component="h1" gutterBottom>
             Booking Confirmed!
           </Typography>
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            Your booking reference: {bookingDetails.bookingId}
+          </Typography>
           <Typography color="text.secondary" paragraph>
-            Thank you for your booking. A confirmation has been sent to your email.
+            A confirmation has been sent to your email.
           </Typography>
         </Box>
 
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" gutterBottom>Booking Details</Typography>
-            <Divider sx={{ mb: 2 }} />
-            <Box mb={3}>
-              <Typography variant="subtitle2" color="text.secondary">Booking ID</Typography>
-              <Typography variant="body1">{bookingDetails.bookingId}</Typography>
-            </Box>
-            <Box mb={3}>
-              <Typography variant="subtitle2" color="text.secondary">Movie</Typography>
-              <Typography variant="body1">{bookingDetails.showTitle}</Typography>
-            </Box>
-            <Box mb={3}>
-              <Typography variant="subtitle2" color="text.secondary">Show Time</Typography>
-              <Typography variant="body1">
-                {new Date(bookingDetails.showTime).toLocaleString()}
+            <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <MovieIcon sx={{ mr: 1 }} /> Movie Details
               </Typography>
-            </Box>
+              <Divider sx={{ mb: 2 }} />
+              
+              <Box sx={{ display: 'flex', mb: 3 }}>
+                <img 
+                  src={bookingDetails.show?.image} 
+                  alt={bookingDetails.show?.title} 
+                  style={{ 
+                    width: '120px',
+                    height: '180px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    marginRight: '16px'
+                  }} 
+                />
+                <Box>
+                  <Typography variant="h6" gutterBottom>{bookingDetails.show?.title}</Typography>
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {bookingDetails.show?.description || 'No description available.'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Duration:</strong> {bookingDetails.show?.duration || 'N/A'}
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" gutterBottom>Seat Information</Typography>
-            <Divider sx={{ mb: 2 }} />
-            <Box mb={3}>
-              <Typography variant="subtitle2" color="text.secondary">Seats</Typography>
-              <Typography variant="body1">{bookingDetails.seats.join(', ')}</Typography>
-            </Box>
-            <Box mb={3}>
-              <Typography variant="subtitle2" color="text.secondary">Total Amount</Typography>
-              <Typography variant="h6" color="primary">
-                ${parseFloat(bookingDetails.total).toFixed(2)}
+            <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <EventIcon sx={{ mr: 1 }} /> Booking Details
               </Typography>
-            </Box>
+              <Divider sx={{ mb: 2 }} />
+              
+              <List>
+                <ListItem>
+                  <ListItemIcon><TimeIcon /></ListItemIcon>
+                  <ListItemText 
+                    primary="Show Time" 
+                    secondary={formatDate(bookingDetails.showTime)} 
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon><TicketIcon /></ListItemIcon>
+                  <ListItemText 
+                    primary="Seats" 
+                    secondary={bookingDetails.seats?.join(', ') || 'No seats selected'} 
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText 
+                    primary="Total Amount" 
+                    secondary={`$${bookingDetails.total?.toFixed(2) || '0.00'}`} 
+                    sx={{ '& .MuiListItemText-primary': { fontWeight: 'bold' } }}
+                  />
+                </ListItem>
+              </List>
+            </Paper>
           </Grid>
         </Grid>
 
-        <Box mt={4} pt={3} borderTop={1} borderColor="divider">
-          <Typography variant="body2" color="text.secondary" paragraph>
-            A confirmation email has been sent to your registered email address with all the details.
-            Please present this booking ID at the theater.
-          </Typography>
-          
-          <Box mt={4} display="flex" justifyContent="center" gap={2}>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => window.print()}
-            >
-              Print Ticket
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => navigate('/')}
-            >
-              Back to Home
-            </Button>
-          </Box>
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => navigate('/')}
+            sx={{ mr: 2 }}
+          >
+            Back to Home
+          </Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => window.print()}
+          >
+            Print Ticket
+          </Button>
         </Box>
       </Paper>
     </Container>
