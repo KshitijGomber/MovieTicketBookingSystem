@@ -1,36 +1,106 @@
-// Mock data for shows
+// Mock data for shows that matches the backend schema
 export const mockShows = [
   {
-    id: '1',
-    movie: 'Inception',
-    time: '7:00 PM',
-    availableSeats: 30,
+    _id: '68548601467ac59650bff6c2',
+    title: 'Inception',
+    description: 'A thief who enters the dreams of others to steal their secrets gets a chance to have his old life back as payment for a task considered impossible: inception.',
+    image: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
+    duration: 148,
+    genre: 'Sci-Fi',
+    language: 'English',
+    price: 12.99,
+    showTimes: ['10:00 AM', '2:00 PM', '6:00 PM', '9:00 PM'],
+    availableSeats: 97
   },
   {
-    id: '2',
-    movie: 'Interstellar',
-    time: '9:00 PM',
-    availableSeats: 0,
+    _id: '68548601467ac59650bff6c3',
+    title: 'The Dark Knight',
+    description: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+    image: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+    duration: 152,
+    genre: 'Action',
+    language: 'English',
+    price: 13.99,
+    showTimes: ['11:00 AM', '3:00 PM', '7:00 PM', '10:00 PM'],
+    availableSeats: 99
   },
   {
-    id: '3',
-    movie: 'The Dark Knight',
-    time: '6:00 PM',
-    availableSeats: 12,
+    _id: '68548601467ac59650bff6c4',
+    title: 'Parasite',
+    description: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
+    image: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
+    duration: 132,
+    genre: 'Drama',
+    language: 'Korean',
+    price: 11.99,
+    showTimes: ['1:00 PM', '4:00 PM', '8:00 PM'],
+    availableSeats: 100
   },
+  {
+    _id: '68548601467ac59650bff6c5',
+    title: 'Everything Everywhere All at Once',
+    description: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.',
+    image: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',
+    duration: 139,
+    genre: 'Action/Comedy',
+    language: 'English/Chinese',
+    price: 14.99,
+    showTimes: ['12:00 PM', '3:30 PM', '7:30 PM', '10:30 PM'],
+    availableSeats: 100
+  },
+  {
+    _id: '68548601467ac59650bff6c6',
+    title: 'Dune',
+    description: 'A noble family becomes embroiled in a war for control over the galaxy\'s most valuable asset while its heir becomes troubled by visions of a dark future.',
+    image: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg',
+    duration: 155,
+    genre: 'Sci-Fi',
+    language: 'English',
+    price: 15.99,
+    showTimes: ['11:30 AM', '2:30 PM', '6:30 PM', '9:30 PM'],
+    availableSeats: 100
+  }
 ];
 
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Helper function to handle fetch with timeout
+const fetchWithTimeout = (url, options = {}, timeout = 5000) => {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), timeout)
+    )
+  ]);
+};
+
 export async function fetchShows() {
-  const res = await fetch(`${API_URL}/shows`);
-  if (!res.ok) throw new Error('Failed to fetch shows');
-  return res.json();
+  try {
+    const response = await fetchWithTimeout(`${API_URL}/shows`);
+    if (!response.ok) throw new Error('Failed to fetch shows');
+    return await response.json();
+  } catch (error) {
+    console.error('Using mock data due to error:', error.message);
+    return mockShows; // Return mock data if the API call fails
+  }
 }
 
 export async function fetchShow(showId) {
-  const res = await fetch(`${API_URL}/shows/${showId}`);
-  if (!res.ok) throw new Error('Failed to fetch show');
-  return res.json();
-} 
+  try {
+    // First try to find in mock data
+    const mockShow = mockShows.find(show => show._id === showId);
+    if (mockShow) return mockShow;
+    
+    // If not in mock data, try the API
+    const response = await fetchWithTimeout(`${API_URL}/shows/${showId}`);
+    if (!response.ok) throw new Error('Failed to fetch show');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching show:', error.message);
+    // Try to find in mock data as fallback
+    const mockShow = mockShows.find(show => show._id === showId);
+    if (mockShow) return mockShow;
+    
+    throw new Error('Show not found');
+  }
+}
