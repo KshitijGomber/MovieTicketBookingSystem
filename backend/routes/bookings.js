@@ -207,7 +207,7 @@ router.post('/', checkJwt, async (req, res) => {
         await sendBookingConfirmationEmail({
           to: user.email,
           movieName: show.title,
-          showTime: showTime, // Keep the original string format for email
+          showTime: showDateTime, // Use the Date object for consistent formatting
           seats: seats,
           totalAmount: amount,
           bookingId: bookings[0]?.bookingReference || 'N/A',
@@ -220,9 +220,27 @@ router.post('/', checkJwt, async (req, res) => {
       }
     }
 
+    // Get the first booking to include in the response
+    const firstBooking = bookings[0];
+    
     res.status(201).json({ 
       success: true, 
-      bookings,
+      data: [{
+        ...firstBooking.toObject(),
+        show: show ? {
+          _id: show._id,
+          title: show.title,
+          image: show.image,
+          duration: show.duration
+        } : null,
+        user: user ? {
+          _id: user._id,
+          name: user.name,
+          email: user.email
+        } : null,
+        showTime: showTime, // Include the original showTime string
+        totalAmount: amount
+      }],
       transactionId: paymentResult.transactionId,
       amount
     });

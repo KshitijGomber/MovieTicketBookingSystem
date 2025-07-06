@@ -65,16 +65,25 @@ const sendPasswordResetEmail = async (to, token) => {
  * @param {Array} options.seats - Array of booked seats
  * @param {number} options.totalAmount - Total amount paid
  * @param {string} options.bookingId - Booking reference ID
+ * @param {string} options.theatreName - Theatre name
+ * @param {string} options.paymentId - Payment ID
  * @returns {Promise}
  */
 const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, totalAmount, bookingId, theatreName = 'Cineplex', paymentId }) => {
-  const formattedTime = new Date(showTime).toLocaleString('en-IN', {
+  // Calculate subtotal and tax (10% of subtotal)
+  const subtotal = totalAmount / 1.1; // Reverse calculate subtotal from total (which includes 10% tax)
+  const tax = totalAmount - subtotal;
+  
+  // Format the show time for display
+  const showDate = showTime ? new Date(showTime) : new Date();
+  const formattedTime = showDate.toLocaleString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: true
   });
 
   const mailOptions = {
@@ -111,15 +120,15 @@ const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, to
           <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <div style="display: flex; justify-content: space-between; margin: 10px 0;">
               <span>Subtotal</span>
-              <span>₹${(totalAmount * 0.8).toFixed(2)}</span>
+              <span>$${subtotal.toFixed(2)}</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin: 10px 0;">
-              <span>GST (18%)</span>
-              <span>₹${(totalAmount * 0.18).toFixed(2)}</span>
+              <span>Tax (10%)</span>
+              <span>$${tax.toFixed(2)}</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin: 10px 0; font-weight: bold; font-size: 1.1em;">
               <span>Total Amount</span>
-              <span>₹${totalAmount.toFixed(2)}</span>
+              <span>$${totalAmount.toFixed(2)}</span>
             </div>
           </div>
           
