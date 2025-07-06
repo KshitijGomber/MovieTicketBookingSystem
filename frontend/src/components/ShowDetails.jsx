@@ -75,12 +75,20 @@ const ShowDetails = () => {
   // Ensure bookedSeats is always an array
   const bookedSeats = Array.isArray(bookedSeatsResponse) ? bookedSeatsResponse : [];
 
-  // Reset selected seats when showtime changes
+  // Reset selected seats and refetch booked seats when showtime changes or component mounts
   useEffect(() => {
-    setSelectedSeats([]);
+    // If we have a show time and show ID, fetch the latest booked seats
     if (selectedShowTime && show?._id) {
-      refetchBookedSeats();
+      console.log('Refreshing booked seats for show:', show._id, 'at', selectedShowTime);
+      refetchBookedSeats()
+        .then(() => console.log('Booked seats refreshed successfully'))
+        .catch(err => console.error('Error refreshing booked seats:', err));
+    } else {
+      console.log('Show ID or show time not available for fetching booked seats');
     }
+    
+    // Clear any selected seats when show time changes
+    setSelectedSeats([]);
   }, [selectedShowTime, show?._id, refetchBookedSeats]);
   
   // Calculate total price
@@ -248,10 +256,12 @@ const ShowDetails = () => {
 
         const bookingDataFromServer = response.data[0];
         
-        // Update the booked seats in the UI
-        const updatedBookedSeats = [...bookedSeats, ...selectedSeats];
-        setBookedSeats(updatedBookedSeats);
+        // Clear selected seats after successful booking
         setSelectedSeats([]);
+        // Refetch booked seats to ensure UI is up to date
+        if (show?._id && selectedShowTime) {
+          refetchBookedSeats();
+        }
 
         // Prepare navigation state
         const navigationState = {
