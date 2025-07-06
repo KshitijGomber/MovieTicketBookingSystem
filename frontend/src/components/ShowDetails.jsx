@@ -20,7 +20,12 @@ import {
   Chip,
   Paper,
   Breadcrumbs,
-  Snackbar
+  Snackbar,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  Divider
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { Movie, EventSeat, ArrowBack } from '@mui/icons-material';
