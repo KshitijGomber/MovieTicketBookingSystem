@@ -139,7 +139,7 @@ router.post('/', checkJwt, async (req, res) => {
         $gte: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate()),
         $lt: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate() + 1)
       },
-      status: { $in: ['booked', 'confirmed'] }
+      status: { $in: ['booked', 'pending_payment'] }
     }).session(session);
 
     if (existingBookings.length > 0) {
@@ -157,19 +157,27 @@ router.post('/', checkJwt, async (req, res) => {
       return res.status(400).json({ message: 'Invalid showtime' });
     }
 
+    // Generate a unique booking reference
+    const generateBookingReference = () => {
+      return `BK-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    };
+
     // Create bookings for each seat
     const seatPrice = (paymentDetails.amount / seats.length).toFixed(2);
     const bookingPromises = seats.map(seat => {
+      const bookingReference = generateBookingReference();
       const booking = new Booking({
         user: userId,
         show: showId,
         seat,
         showTime: showDateTime,
-        status: 'confirmed',
+        status: 'booked',
+        bookingReference,
         payment: {
+          id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           amount: parseFloat(seatPrice),
           method: paymentDetails?.method || 'card',
-          status: 'completed',
+          status: 'succeeded',
           transactionId: paymentResult.transactionId,
           paymentDate: new Date()
         }
