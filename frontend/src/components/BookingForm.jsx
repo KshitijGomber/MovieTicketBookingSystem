@@ -20,6 +20,15 @@ const BookingForm = () => {
   const { showId } = useParams();
   const navigate = useNavigate();
   const [bookingDetails, setBookingDetails] = useState(null);
+  const [cvv, setCvv] = useState('');
+  const [cvvError, setCvvError] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [expiryError, setExpiryError] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardNumberError, setCardNumberError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
   const { token } = useAuth();
 
   useEffect(() => {
@@ -47,6 +56,145 @@ const BookingForm = () => {
       });
     }
   }, []);
+
+  const handleCVVChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 4) value = value.slice(0, 4);
+    
+    setCvv(value);
+    
+    // Clear error when input is empty
+    if (!value) {
+      setCvvError('');
+      return;
+    }
+    
+    // Validate CVV
+    const isValid = validateCVV(value);
+    setCvvError(isValid ? '' : 'Please enter a valid CVV (3-4 digits)');
+  };
+
+  const handleExpiryChange = (e) => {
+    let value = e.target.value;
+    
+    // Allow only digits and slash
+    value = value.replace(/[^\d/]/g, '');
+    
+    // Auto-insert slash after MM
+    if (value.length === 2 && !value.includes('/')) {
+      value = value + '/';
+    }
+    
+    // Limit to MM/YY format
+    if (value.length > 5) return;
+    
+    setExpiry(value);
+    
+    // Clear error when input is empty
+    if (!value.trim()) {
+      setExpiryError('');
+      return;
+    }
+    
+    // Validate format and date
+    const isValid = validateExpiry(value);
+    setExpiryError(isValid ? '' : 'Please enter a valid expiry date (MM/YY)');
+  };
+
+  const handleCardNumberChange = (e) => {
+    let value = e.target.value;
+    
+    // Allow only digits and spaces
+    value = value.replace(/[^\d\s]/g, '');
+    
+    // Limit to 16 digits with optional spaces
+    if (value.length > 19) return;
+    
+    setCardNumber(value);
+    
+    // Clear error when input is empty
+    if (!value.trim()) {
+      setCardNumberError('');
+      return;
+    }
+    
+    // Validate card number
+    const isValid = validateCardNumber(value);
+    setCardNumberError(isValid ? '' : 'Please enter a valid card number');
+  };
+
+  const handlePayment = async () => {
+    setIsProcessing(true);
+    setError('');
+    
+    try {
+      // Prepare booking data
+      const bookingData = {
+        showId: show._id,
+        movieId: show.movie._id,
+        theaterId: show.theater._id,
+        showTime: bookingDetails.showTime,
+        seats: bookingDetails.seats,
+        totalAmount: bookingDetails.totalPrice,
+        paymentMethod: 'card',
+        cardLast4: cardNumber.slice(-4).replace(/\s/g, '')
+      };
+      
+      // Make API call to create booking
+      const response = await fetch('https://movieticketbookingsystem-7suc.onrender.com/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(bookingData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to process booking');
+      }
+      
+      // Handle successful payment
+      const result = await response.json();
+      setPaymentStatus('succeeded');
+      onPaymentSuccess(result);
+      
+    } catch (error) {
+      console.error('Payment failed:', error);
+      setPaymentStatus('failed');
+      setError(error.message || 'Payment failed. Please try again.');
+      
+      // Scroll to error message
+      setTimeout(() => {
+        const errorElement = document.getElementById('payment-error');
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const validateCVV = (value) => {
+    return value.length >= 3 && value.length <= 4;
+  };
+
+  const validateExpiry = (value) => {
+    const parts = value.split('/');
+    if (parts.length !== 2) return false;
+    const month = parseInt(parts[0]);
+    const year = parseInt(parts[1]);
+    return month >= 1 && month <= 12 && year >= 22;
+  };
+
+  const validateCardNumber = (value) => {
+    // Accepts 16 digits with optional spaces or hyphens after every 4 digits
+    const regex = /^(\d{4}[\s-]?){3}\d{4}$/;
+    return regex.test(value);
+  };
 
   if (isLoading) return <CircularProgress />;
   if (isError || !show) return <Alert severity="error">Show not found.</Alert>;
