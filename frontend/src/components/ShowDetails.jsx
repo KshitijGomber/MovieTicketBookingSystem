@@ -55,44 +55,71 @@ const ShowDetails = () => {
 
   // Extract and validate showId
   const showId = useMemo(() => {
-    // Try multiple ways to get the showId
-    const idFromParams = params?.showId || 
-                        new URLSearchParams(location.search).get('showId') ||
-                        location.pathname.split('/').pop();
+    console.log('=== Debugging showId extraction ===');
+    console.log('params:', params);
+    console.log('location:', location);
     
-    debug('Raw showId from URL:', idFromParams);
+    // Try multiple ways to get the showId
+    let idFromParams = params?.id || // For /shows/:id
+                      params?.showId || // For /book/:showId
+                      new URLSearchParams(location.search).get('showId') ||
+                      location.pathname.split('/').pop();
+    
+    console.log('Initial idFromParams:', idFromParams);
+    
+    // Clean up the ID if it has query parameters
+    if (idFromParams && idFromParams.includes('?')) {
+      idFromParams = idFromParams.split('?')[0];
+      console.log('Cleaned idFromParams:', idFromParams);
+    }
+    
+    console.log('Final idFromParams:', idFromParams);
     
     if (!idFromParams) {
       console.error('No showId found in URL');
+      console.log('Available params:', params);
+      console.log('Location:', location);
       return null;
     }
     
     const id = String(idFromParams).trim();
+    console.log('Trimmed ID:', id);
     
-    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
-      console.error('Invalid showId format:', id);
-      return null;
+    // List of valid show IDs from the API
+    const validShowIds = [
+      '68548601467ac59650bff6c2', // Inception
+      '68548601467ac59650bff6c3', // The Dark Knight
+      '68548601467ac59650bff6c4', // Parasite
+      '68548601467ac59650bff6c5', // Everything Everywhere All at Once
+      '68548601467ac59650bff6c6'  // Dune
+    ];
+    
+    // Check if the ID is in the valid list
+    if (!validShowIds.includes(id)) {
+      console.error('Show ID not found in valid shows:', id);
+      console.log('Valid show IDs:', validShowIds);
+      // For development, let's still return the ID to see what happens
+      console.log('Proceeding with the ID anyway for debugging');
+      return id;
     }
     
-    debug('Valid showId:', id);
+    console.log('Using showId:', id);
     return id;
   }, [params, location]);
 
   // Handle missing or invalid showId
   useEffect(() => {
     if (!showId) {
-      console.error('Invalid or missing showId, redirecting to home...');
+      console.error('Invalid or missing showId, showing error...');
       setSnackbar({
         open: true,
-        message: 'Invalid show ID. Redirecting to home page...',
-        severity: 'error'
+        message: 'Show not found. Please select a valid movie from the home page.',
+        severity: 'error',
+        autoHideDuration: 10000
       });
       
-      const timer = setTimeout(() => {
-        navigate('/');
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+      // Don't redirect automatically, let the user click the back button
+      return;
     }
   }, [showId, navigate]);
 
@@ -130,13 +157,17 @@ const ShowDetails = () => {
     queryKey: ['show', showId],
     queryFn: async () => {
       if (!showId) {
+        console.error('No show ID provided in queryFn');
         throw new Error('No show ID provided');
       }
       
-      debug('Fetching show with ID:', showId);
+      console.log('Fetching show with ID:', showId);
       
       try {
-        const response = await fetch(`https://movieticketbookingsystem-7suc.onrender.com/api/shows/${showId}`, {
+        const apiUrl = `https://movieticketbookingsystem-7suc.onrender.com/api/shows/${showId}`;
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -145,17 +176,25 @@ const ShowDetails = () => {
           cache: 'no-store' // Modern way to prevent caching
         });
         
-        debug('API Response status:', response.status);
+        console.log('API Response status:', response.status);
         
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+          let errorData;
+          try {
+            errorData = await response.json();
+            console.error('API Error response:', errorData);
+          } catch (e) {
+            console.error('Failed to parse error response:', e);
+            errorData = {};
+          }
           throw new Error(errorData.message || `Failed to fetch show (${response.status})`);
         }
         
         const data = await response.json();
-        debug('Fetched show data:', data);
+        console.log('Fetched show data:', data);
         
         if (!data || !data._id) {
+          console.error('Invalid show data received:', data);
           throw new Error('Invalid show data received');
         }
         

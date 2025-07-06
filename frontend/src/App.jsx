@@ -104,7 +104,10 @@ function App() {
         <Routes>
           <Route path="/" element={<ShowList />} />
           <Route path="/shows" element={<ShowList />} />
+          
+          {/* Handle both /shows/:id and /show/:id routes */}
           <Route path="/shows/:id" element={<ShowDetails />} />
+          <Route path="/show/:id" element={<ShowDetails />} />
           
           {/* New Booking Flow */}
           <Route path="/book/:showId" element={
