@@ -40,11 +40,37 @@ export async function checkSeatAvailability({ showId, seats, showTime }) {
   return data;
 }
 
+// Format time to 12-hour format with AM/PM for API consistency
+const formatTimeForApi = (timeString) => {
+  if (!timeString) return '';
+  
+  // If it's already in the correct format, return as is
+  if (/^\d{1,2}:\d{2} [AP]M$/.test(timeString)) {
+    return timeString;
+  }
+  
+  // If it's a Date object or ISO string, format it
+  const date = new Date(timeString);
+  if (isNaN(date.getTime())) return timeString; // Return as is if not a valid date
+  
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
 export async function getBookedSeats(showId, showTime) {
+  if (!showTime) {
+    console.error('Show time is required');
+    return { bookedSeats: [] };
+  }
+
   try {
+    const formattedTime = formatTimeForApi(showTime);
     const headers = getAuthHeader();
     const res = await fetch(
-      `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(showTime)}`,
+      `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(formattedTime)}`,
       { headers }
     );
 
@@ -57,7 +83,7 @@ export async function getBookedSeats(showId, showTime) {
   } catch (error) {
     console.error('Error fetching booked seats:', error);
     // Return an empty array if there's an error (e.g., network error or unauthorized)
-    return [];
+    return { bookedSeats: [] };
   }
 }
 

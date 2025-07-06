@@ -291,6 +291,20 @@ router.post('/:id/cancel', checkJwt, async (req, res) => {
   }
 });
 
+// Helper function to convert time string to Date object
+const parseShowTime = (timeStr) => {
+  // Expected format: "10:00 AM"
+  const [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
 // Public route - Get booked seats for a show (no authentication required)
 router.get('/show/:showId/seats', async (req, res) => {
   try {
@@ -300,9 +314,25 @@ router.get('/show/:showId/seats', async (req, res) => {
       return res.status(400).json({ message: 'Showtime is required' });
     }
 
+    // Parse the showTime string to a Date object
+    let showTimeDate;
+    try {
+      showTimeDate = parseShowTime(showTime);
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid showtime format. Expected format: "10:00 AM"' });
+    }
+
+    // Find bookings for the same show and time (ignoring seconds and milliseconds)
+    const startTime = new Date(showTimeDate);
+    const endTime = new Date(showTimeDate);
+    endTime.setMinutes(endTime.getMinutes() + 1); // 1-minute window
+
     const bookedSeats = await Booking.find({
       show: req.params.showId,
-      showTime: showTime,
+      showTime: {
+        $gte: startTime,
+        $lt: endTime
+      },
       status: 'booked'
     }).select('seat');
 
@@ -311,7 +341,10 @@ router.get('/show/:showId/seats', async (req, res) => {
     res.json({ bookedSeats: seatNumbers });
   } catch (error) {
     console.error('Error fetching booked seats:', error);
-    res.status(500).json({ message: 'Error fetching booked seats' });
+    res.status(500).json({ 
+      message: 'Error fetching booked seats',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

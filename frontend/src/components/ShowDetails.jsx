@@ -27,11 +27,31 @@ const ShowDetails = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+  // Format time to 12-hour format with AM/PM
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    
+    // If it's already in the correct format, return as is
+    if (typeof timeString === 'string' && /\d{1,2}:\d{2} [AP]M/.test(timeString)) {
+      return timeString;
+    }
+    
+    // If it's a Date object or ISO string, format it
+    const date = new Date(timeString);
+    if (isNaN(date.getTime())) return timeString; // Return as is if not a valid date
+    
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   // Check for showTime in URL params
   useEffect(() => {
     const showTimeParam = searchParams.get('showTime');
     if (showTimeParam) {
-      setSelectedShowTime(showTimeParam);
+      setSelectedShowTime(formatTime(showTimeParam));
     }
   }, [searchParams]);
 
@@ -210,25 +230,28 @@ const ShowDetails = () => {
           
           <Typography variant="h5" gutterBottom>Show Times</Typography>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
-            {show.showTimes?.map((time) => (
-              <Button
-                key={time}
-                variant={selectedShowTime === time ? 'contained' : 'outlined'}
-                color={selectedShowTime === time ? 'primary' : 'inherit'}
-                onClick={() => setSelectedShowTime(time)}
-                sx={{
-                  minWidth: 120,
-                  py: 1.5,
-                  borderRadius: 2,
-                  borderWidth: 2,
-                  '&:hover': {
+            {show.showTimes?.map((time) => {
+              const formattedTime = formatTime(time);
+              return (
+                <Button
+                  key={formattedTime}
+                  variant={selectedShowTime === formattedTime ? 'contained' : 'outlined'}
+                  color={selectedShowTime === formattedTime ? 'primary' : 'inherit'}
+                  onClick={() => setSelectedShowTime(formattedTime)}
+                  sx={{
+                    minWidth: 120,
+                    py: 1.5,
+                    borderRadius: 2,
                     borderWidth: 2,
-                  },
-                }}
-              >
-                {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Button>
-            ))}
+                    '&:hover': {
+                      borderWidth: 2,
+                    },
+                  }}
+                >
+                  {formattedTime}
+                </Button>
+              );
+            })}
           </Box>
           
           {selectedShowTime && (
