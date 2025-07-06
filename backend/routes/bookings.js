@@ -1,142 +1,239 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Show = require('../models/Show');
 const User = require('../models/User');
 const checkJwt = require('../middleware/auth');
+const { v4: uuidv4 } = require('uuid');
 const { sendBookingConfirmationEmail, sendBookingCancellationEmail } = require('../utils/emailService');
-const { processPayment, processRefund } = require('../utils/paymentService');
+
+// Mock payment processing
+const processPayment = async (amount, paymentDetails) => {
+  // In a real app, this would integrate with a payment gateway
+  return {
+    success: true,
+    transactionId: `txn_${uuidv4()}`,
+    amount,
+    timestamp: new Date(),
+    paymentMethod: paymentDetails?.method || 'card'
+  };
+};
 
 // Protect all booking routes
 router.use(checkJwt);
 
 // GET /api/bookings - Get user's bookings
-router.get('/', async (req, res) => {
+router.get('/', checkJwt, async (req, res) => {
   try {
     const userId = req.user.id;
-    const bookings = await Booking.find({ user: userId }).populate('show');
+    const bookings = await Booking.find({ user: userId })
+      .populate('show', 'title posterUrl duration')
+      .sort({ createdAt: -1 }); // Most recent first
     res.json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
-    res.status(500).json({ message: 'Error fetching bookings' });
+    res.status(500).json({ message: 'Error fetching bookings', error: error.message });
   }
 });
 
 // POST /api/bookings - Create a new booking
-router.post('/', async (req, res) => {
+router.post('/', checkJwt, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
-    const { showId, seat, showTime, paymentMethod = 'card' } = req.body;
+    const { showId, seats, showTime, paymentDetails } = req.body;
     const userId = req.user.id;
     
-    if (!showId || !seat || !showTime) {
-      return res.status(400).json({ message: 'Missing required fields: showId, seat, showTime' });
+    if (!showId || !seats || !seats.length || !showTime) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Missing required fields: showId, seats, showTime' });
+    }
+    
+    // Process payment (mock)
+    const amount = seats.length * 10; // $10 per seat
+    const paymentResult = await processPayment(amount, paymentDetails);
+    
+    if (!paymentResult.success) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Payment failed' });
     }
 
     // Check if the show exists
-    const show = await Show.findById(showId);
-    if (!show) {
+    const showDetails = await Show.findById(showId);
+    if (!showDetails) {
       return res.status(404).json({ message: 'Show not found' });
     }
 
-    // Check if the seat is already booked for this show and showtime
-    const existingBooking = await Booking.findOne({
+    // Check if any of the seats are already booked
+    const existingBookings = await Booking.find({
       show: showId,
-      seat: seat,
+      seat: { $in: seats },
+      showTime: showTime,
+      status: 'booked'
+    }).session(session);
+
+    if (existingBookings.length > 0) {
+      const bookedSeats = existingBookings.map(b => b.seat);
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ 
+        message: `Seat(s) ${bookedSeats.join(', ')} are already booked`,
+        bookedSeats
+      });
+    }
+
+    // Check if the showtime is valid
+    if (!showDetails.showTimes.includes(showTime)) {
+      return res.status(400).json({ message: 'Invalid showtime' });
+    }
+
+    // Create bookings for each seat
+    const bookingPromises = seats.map(seat => {
+      const booking = new Booking({
+        user: userId,
+        show: showId,
+        seat,
+        showTime,
+        status: 'confirmed',
+        payment: {
+          amount: 10, // $10 per seat
+          method: paymentDetails?.method || 'card',
+          status: 'completed',
+          transactionId: paymentResult.transactionId,
+          paymentDate: new Date()
+        }
+      });
+      return booking.save({ session });
+    });
+
+    // Update available seats
+    await Show.findByIdAndUpdate(
+      showId,
+      { $inc: { availableSeats: -seats.length } },
+      { session }
+    );
+
+    // Execute all operations in transaction
+    const bookings = await Promise.all(bookingPromises);
+    await session.commitTransaction();
+    session.endSession();
+
+    // Send confirmation email
+    const user = await User.findById(userId);
+    const show = await Show.findById(showId);
+    
+    if (user && show) {
+      await sendBookingConfirmationEmail(
+        user.email,
+        user.name,
+        show.title,
+        showTime,
+        seats,
+        amount
+      );
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      bookings,
+      transactionId: paymentResult.transactionId,
+      amount
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error('Error creating booking:', error);
+    res.status(500).json({ 
+      message: 'Error creating booking',
+      error: error.message 
+    });
+  }
+});
+
+// POST /api/bookings/check-seats - Check seat availability
+router.post('/check-seats', async (req, res) => {
+  try {
+    const { showId, seats, showTime } = req.body;
+    
+    if (!showId || !seats || !seats.length || !showTime) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const existingBookings = await Booking.find({
+      show: showId,
+      seat: { $in: seats },
       showTime: showTime,
       status: 'booked'
     });
 
-    if (existingBooking) {
-      return res.status(400).json({ message: `Seat ${seat} is already booked` });
-    }
-
-    // Check if the showtime is valid
-    if (!show.showTimes.includes(showTime)) {
-      return res.status(400).json({ message: 'Invalid showtime' });
-    }
-
-    // Get user details for email
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Process payment
-    const paymentAmount = show.price || 0;
-    const paymentResult = await processPayment({
-      amount: paymentAmount,
-      currency: 'INR',
-      paymentMethod,
-      description: `Booking for ${show.title} - Seat ${seat}`
-    });
-
-    if (!paymentResult.success) {
-      return res.status(400).json({ 
-        message: 'Payment failed',
-        error: paymentResult.error
+    if (existingBookings.length > 0) {
+      const bookedSeats = existingBookings.map(b => b.seat);
+      return res.status(200).json({ 
+        available: false, 
+        message: `Seat(s) ${bookedSeats.join(', ')} are already booked`,
+        bookedSeats
       });
     }
 
-    // Create the booking with payment reference
-    const booking = new Booking({
-      user: userId,
-      show: showId,
-      seat: seat,
-      showTime: showTime,
-      status: 'booked',
-      payment: {
-        id: paymentResult.paymentId,
-        amount: paymentAmount,
-        status: paymentResult.status,
-        method: paymentMethod,
-        receiptUrl: paymentResult.receiptUrl
-      },
-      bookingReference: `BK${Date.now().toString().slice(-8)}`
-    });
-
-    await booking.save();
-
-    // Send booking confirmation email
-    try {
-      await sendBookingConfirmationEmail({
-        to: user.email,
-        movieName: show.title,
-        showTime: showTime,
-        seats: [seat],
-        totalAmount: paymentAmount,
-        bookingId: booking.bookingReference,
-        theatreName: show.theatre || 'Cineplex',
-        paymentId: paymentResult.paymentId
-      });
-    } catch (emailError) {
-      console.error('Failed to send booking confirmation email:', emailError);
-      // Don't fail the request if email fails
-    }
-
-    // Populate the show details before sending response
-    await booking.populate('show');
-
-    res.status(201).json(booking);
+    res.json({ available: true });
   } catch (error) {
-    console.error('Error creating booking:', error);
-    res.status(500).json({ message: 'Error creating booking' });
+    console.error('Error checking seats:', error);
+    res.status(500).json({ message: 'Error checking seat availability' });
+  }
+});
+
+// POST /api/bookings/process-payment - Process payment (mock)
+router.post('/process-payment', checkJwt, async (req, res) => {
+  try {
+    const { amount, paymentDetails } = req.body;
+    
+    if (!amount || !paymentDetails) {
+      return res.status(400).json({ message: 'Amount and payment details are required' });
+    }
+
+    // Mock payment processing
+    const paymentResult = await processPayment(amount, paymentDetails);
+    
+    res.json({
+      success: paymentResult.success,
+      transactionId: paymentResult.transactionId,
+      timestamp: paymentResult.timestamp
+    });
+  } catch (error) {
+    console.error('Payment processing error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Payment processing failed',
+      error: error.message 
+    });
   }
 });
 
 // POST /api/bookings/:id/cancel - Cancel a booking
-router.post('/:id/cancel', async (req, res) => {
+router.post('/:id/cancel', checkJwt, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
     const userId = req.user.id;
     const booking = await Booking.findOne({ 
       _id: req.params.id, 
       user: userId 
-    }).populate('show').populate('user', 'email name');
+    }).session(session);
     
     if (!booking) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     if (booking.status === 'cancelled') {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: 'Booking is already cancelled' });
     }
 
@@ -187,8 +284,13 @@ router.post('/:id/cancel', async (req, res) => {
       refund: refundResult
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('Error cancelling booking:', error);
-    res.status(500).json({ message: 'Error cancelling booking' });
+    res.status(500).json({ 
+      message: 'Error cancelling booking',
+      error: error.message 
+    });
   }
 });
 

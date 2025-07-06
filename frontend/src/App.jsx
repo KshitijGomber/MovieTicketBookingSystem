@@ -1,20 +1,21 @@
-import { Routes, Route, Link as RouterLink } from 'react-router-dom';
+import { Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Alert, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { useState } from 'react';
 import './App.css';
 import ShowList from './components/ShowList';
 import ShowDetails from './components/ShowDetails';
-import BookingForm from './components/BookingForm';
 import MyBookings from './components/MyBookings';
 import LoginButton from './components/Auth/LoginButton';
 import LogoutButton from './components/Auth/LogoutButton';
-import { AccountCircle } from '@mui/icons-material';
+import { AccountCircle, Movie, Home, ConfirmationNumber } from '@mui/icons-material';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './context/AuthContext';
 import Signin from './components/Auth/Signin';
 import Signup from './components/Auth/Signup';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
+import BookingPage from './pages/BookingPage';
+import BookingConfirmation from './components/BookingConfirmation';
 
 
 function App() {
@@ -102,27 +103,41 @@ function App() {
       <Container sx={{ mt: '80px' }}>
         <Routes>
           <Route path="/" element={<ShowList />} />
-          <Route path="/show/:showId" element={<ShowDetails />} />
-          <Route 
-            path="/booking/:showId" 
-            element={
-              <ProtectedRoute>
-                <BookingForm />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-bookings" 
-            element={
-              <ProtectedRoute>
-                <MyBookings />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/shows" element={<ShowList />} />
+          <Route path="/shows/:id" element={<ShowDetails />} />
+          
+          {/* New Booking Flow */}
+          <Route path="/book/:showId" element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/my-bookings" element={
+            <ProtectedRoute>
+              <MyBookings />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/booking-confirmation/:bookingId" element={
+            <ProtectedRoute>
+              <BookingConfirmation />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/signin" element={token ? <Navigate to="/" /> : <Signin />} />
+          <Route path="/signup" element={token ? <Navigate to="/" /> : <Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          
+          <Route path="*" element={
+            <Container>
+              <Alert severity="error">
+                <Typography variant="h4">404 - Page Not Found</Typography>
+                <Button component={RouterLink} to="/" sx={{ mt: 2 }}>Go to Home</Button>
+              </Alert>
+            </Container>
+          } />
         </Routes>
       </Container>
     </>
