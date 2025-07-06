@@ -25,13 +25,33 @@ const MyBookings = () => {
 
   const cancelMutation = useMutation({
     mutationFn: cancelBooking,
-    onSuccess: () => {
-      setSnackbar({ open: true, message: 'Booking cancelled successfully!', severity: 'success' });
+    onSuccess: (data) => {
+      // Update the bookings list optimistically
+      queryClient.setQueryData(['bookings'], (oldData) => {
+        if (!oldData) return [];
+        return oldData.map(booking => 
+          booking._id === data.booking._id ? { ...booking, status: 'cancelled' } : booking
+        );
+      });
+      
+      setSnackbar({ 
+        open: true, 
+        message: data.message || 'Booking cancelled successfully!',
+        severity: 'success' 
+      });
+      
+      // Invalidate and refetch to ensure UI is in sync
       queryClient.invalidateQueries(['bookings']);
     },
     onError: (error) => {
-      setSnackbar({ open: true, message: error.message, severity: 'error' });
-      if (error.message && (error.message.includes('401') || error.message.toLowerCase().includes('token')) ) {
+      console.error('Cancellation error:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Failed to cancel booking. Please try again.', 
+        severity: 'error' 
+      });
+      
+      if (error.message && (error.message.includes('401') || error.message.toLowerCase().includes('token'))) {
         setAuthError(true);
       }
     },

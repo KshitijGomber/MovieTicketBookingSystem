@@ -443,37 +443,70 @@ router.post('/:id/cancel', checkJwt, async (req, res) => {
       }
     }
 
-    // Update booking status
-    booking.status = 'cancelled';
-    if (refundResult) {
-      booking.refund = {
-        id: refundResult.refundId,
-        amount: refundResult.amount,
-        status: refundResult.status,
-        processedAt: new Date()
-      };
-    }
-    await booking.save();
-
-    // Send cancellation email
     try {
-      await sendBookingCancellationEmail({
-        to: booking.user.email,
-        movieName: booking.show?.title || 'Your movie',
-        bookingId: booking.bookingReference || booking._id.toString(),
-        refundAmount: refundResult?.amount || (booking.payment?.amount || 0),
-        showTime: booking.showTime || booking.show?.showTime
-      });
-    } catch (emailError) {
-      console.error('Failed to send cancellation email:', emailError);
-      // Don't fail the request if email fails
-    }
+      // Update booking status
+      booking.status = 'cancelled';
+      if (refundResult) {
+        booking.refund = {
+          id: refundResult.refundId,
+          amount: refundResult.amount,
+          status: refundResult.status,
+          processedAt: new Date()
+        };
+      }
+      await booking.save({ session });
 
-    res.json({ 
-      message: 'Booking cancelled successfully', 
-      booking,
-      refund: refundResult
-    });
+      // Update the show's bookedSeats array
+      if (booking.show && booking.seat) {
+        await Show.updateOne(
+          { _id: booking.show },
+          { 
+            $pull: { 
+              bookedSeats: { 
+                seatNumber: booking.seat,
+                showTime: booking.showTime
+              } 
+            },
+            $inc: { availableSeats: 1 }
+          },
+          { session }
+        );
+      }
+
+      // Commit the transaction
+      await session.commitTransaction();
+      
+      // Send cancellation email (outside of transaction)
+      try {
+        const user = await User.findById(booking.user);
+        if (user && user.email) {
+          await sendBookingCancellationEmail({
+            to: user.email,
+            movieName: booking.show?.title || 'Your movie',
+            bookingId: booking.bookingReference || booking._id.toString(),
+            refundAmount: refundResult?.amount || (booking.payment?.amount || 0),
+            showTime: booking.showTime || booking.show?.showTime
+          });
+        } else {
+          console.log('No email found for user, skipping cancellation email');
+        }
+      } catch (emailError) {
+        console.error('Failed to send cancellation email:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      res.json({ 
+        success: true,
+        message: 'Booking cancelled successfully', 
+        booking: booking.toObject(),
+        refund: refundResult
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   } catch (error) {
     await session.abortTransaction();
     session.endSession();

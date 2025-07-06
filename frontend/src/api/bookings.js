@@ -129,16 +129,30 @@ export async function createBooking(bookingData) {
 }
 
 export async function cancelBooking(bookingId) {
-  const res = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, {
-    method: 'POST',
-    headers: getAuthHeader()
-  });
+  try {
+    const res = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, {
+      method: 'POST',
+      headers: getAuthHeader()
+    });
 
-  const data = await res.json();
-  
-  if (!res.ok) {
-    throw new Error(data.message || 'Failed to cancel booking');
+    const data = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to cancel booking');
+    }
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Cancellation was not successful');
+    }
+    
+    return {
+      success: true,
+      message: data.message || 'Booking cancelled successfully',
+      booking: data.booking,
+      refund: data.refund
+    };
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    throw error;
   }
-  
-  return data;
 }
