@@ -42,27 +42,38 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin is in the allowed list or is a subdomain of an allowed origin
-    const isAllowed = allowedOrigins.some(allowedOrigin => 
+    console.log('CORS Origin Check:', { origin, allowedOrigins });
+    if (!origin || allowedOrigins.some(allowedOrigin => 
       origin === allowedOrigin || 
-      origin.startsWith(allowedOrigin.replace(/https?:\/\//, 'https://'))
-    );
-    
-    if (!isAllowed) {
-      const msg = `The CORS policy for this site does not allow access from ${origin}.`;
-      console.error(msg);
-      return callback(new Error(msg), false);
+      origin.startsWith(allowedOrigin.replace('https://', 'http://')) ||
+      origin.includes('vercel.app') ||
+      origin.includes('localhost')
+    )) {
+      callback(null, true);
+    } else {
+      console.error('CORS Error: Not allowed by CORS -', origin);
+      callback(new Error('Not allowed by CORS'));
     }
-    return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-  maxAge: 86400 // 24 hours
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'Cache-Control',
+    'Pragma',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: [
+    'Content-Range', 
+    'X-Content-Range',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Origin'
+  ],
+  preflightContinue: true,
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
@@ -105,16 +116,22 @@ app.use('/api/shows', showRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  // Handle CORS errors
-  if (err.message === 'The CORS policy for this site does not allow access from the specified Origin.') {
-    return res.status(403).json({
-      success: false,
-      message: 'Not allowed by CORS',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-  }
+  console.error('Error Stack:', err.stack);
+  console.error('Error Details:', {
+    message: err.message,
+    name: err.name,
+    ...err
+  });
+  
 
   // Handle JWT authentication errors
   if (err.name === 'UnauthorizedError') {

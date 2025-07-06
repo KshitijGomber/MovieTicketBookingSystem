@@ -131,9 +131,9 @@ const ShowDetails = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
+            'Accept': 'application/json'
+          },
+          cache: 'no-store' // Modern way to prevent caching
         });
         
         debug('API Response status:', response.status);
