@@ -163,10 +163,11 @@ const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, to
  * @param {string} options.to - Recipient email
  * @param {string} options.movieName - Name of the movie
  * @param {string} options.bookingId - Booking reference ID
- * @param {number} options.refundAmount - Amount to be refunded
+ * @param {number} options.refundAmount - Amount to be refunded (in USD)
+ * @param {string} [options.showTime] - Show time (optional)
  * @returns {Promise}
  */
-const sendBookingCancellationEmail = async ({ to, movieName, bookingId, refundAmount }) => {
+const sendBookingCancellationEmail = async ({ to, movieName, bookingId, refundAmount, showTime }) => {
   const mailOptions = {
     from: `"${process.env.APP_NAME || 'Movie Ticket Booking'}" <${process.env.SMTP_USER}>`,
     to,
@@ -184,9 +185,21 @@ const sendBookingCancellationEmail = async ({ to, movieName, bookingId, refundAm
           
           <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #f57c00; margin-top: 0;">Refund Details</h3>
-            <p>Amount to be refunded: <strong>₹${refundAmount.toFixed(2)}</strong></p>
-            <p style="font-size: 0.9em; color: #7f8c8d;">
+            <p>Amount to be refunded: <strong>$${(refundAmount || 0).toFixed(2)} USD</strong></p>
+            ${showTime ? `
+            <p style="margin: 10px 0 5px 0;">
+              <strong>Show Time:</strong> ${new Date(showTime).toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>` : ''}
+            <p style="font-size: 0.9em; color: #7f8c8d; margin-top: 15px;">
               The refund will be processed to your original payment method within 5-7 business days.
+              You will receive a confirmation email once the refund has been processed.
             </p>
           </div>
           

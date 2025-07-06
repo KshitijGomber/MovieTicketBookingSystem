@@ -11,31 +11,65 @@ const { sendBookingConfirmationEmail, sendBookingCancellationEmail } = require('
 // Mock payment processing
 const processPayment = async (amount, paymentDetails = {}) => {
   try {
-    // Validate amount
+    // In a real app, this would integrate with a payment gateway
     const paymentAmount = parseFloat(amount);
     if (isNaN(paymentAmount) || paymentAmount <= 0) {
-      return {
-        success: false,
-        message: 'Invalid payment amount',
-        details: { amount: paymentAmount }
-      };
+      throw new Error('Invalid payment amount');
     }
 
     // In a real app, this would integrate with a payment gateway
     return {
       success: true,
-      transactionId: paymentDetails.transactionId || `txn_${uuidv4()}`,
+      transactionId: paymentDetails.transactionId || `txn_${Math.random().toString(36).substring(2, 15)}`,
       amount: paymentAmount,
       timestamp: new Date(),
       paymentMethod: paymentDetails.method || 'card',
-      currency: paymentDetails.currency || 'USD'
+      currency: paymentDetails.currency || 'USD',
+      status: 'succeeded'
     };
   } catch (error) {
     console.error('Payment processing error:', error);
     return {
       success: false,
-      message: 'Payment processing failed',
-      details: error.message
+      error: error.message || 'Payment processing failed',
+      transactionId: null
+    };
+  }
+};
+
+// Mock refund processing - Always succeeds for demo purposes
+const processRefund = async (refundDetails) => {
+  try {
+    const { paymentId, amount, reason } = refundDetails;
+    console.log('Processing refund:', { paymentId, amount, reason });
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Always return success for demo purposes
+    return {
+      success: true,
+      refundId: `re_${Math.random().toString(36).substring(2, 15)}`,
+      amount: amount,
+      currency: 'USD',
+      status: 'succeeded',
+      reason: reason,
+      processedAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Refund processing error:', error);
+    // Even if there's an error, we'll still proceed with the cancellation
+    // but log the error for debugging
+    return {
+      success: false,
+      error: error.message || 'Refund processing failed',
+      refundId: null,
+      status: 'failed',
+      // Include these fields to ensure the cancellation can still proceed
+      amount: refundDetails.amount,
+      currency: 'USD',
+      reason: refundDetails.reason,
+      processedAt: new Date().toISOString()
     };
   }
 };
@@ -358,15 +392,37 @@ router.post('/:id/cancel', checkJwt, async (req, res) => {
     // Process refund if payment was made
     let refundResult = null;
     if (booking.payment && booking.payment.status === 'succeeded') {
-      refundResult = await processRefund({
-        paymentId: booking.payment.id,
-        amount: booking.payment.amount,
-        reason: 'cancellation'
-      });
+      try {
+        refundResult = await processRefund({
+          paymentId: booking.payment.transactionId || booking.payment.id || `pay_${booking._id}`,
+          amount: booking.payment.amount,
+          reason: 'cancellation'
+        });
 
-      if (!refundResult.success) {
-        console.error('Refund failed:', refundResult.error);
-        // Continue with cancellation even if refund fails, but log it
+        if (!refundResult.success) {
+          console.error('Refund failed but continuing with cancellation:', refundResult.error);
+          // Use the refund result even if it failed, as it contains the necessary fields
+          refundResult = {
+            ...refundResult,
+            amount: booking.payment.amount,
+            status: 'failed',
+            reason: 'cancellation',
+            processedAt: new Date().toISOString()
+          };
+        }
+      } catch (error) {
+        console.error('Error processing refund:', error);
+        // Create a failed refund result to continue with cancellation
+        refundResult = {
+          success: false,
+          error: error.message || 'Refund processing error',
+          refundId: null,
+          status: 'failed',
+          amount: booking.payment.amount,
+          currency: 'USD',
+          reason: 'cancellation',
+          processedAt: new Date().toISOString()
+        };
       }
     }
 
@@ -386,10 +442,10 @@ router.post('/:id/cancel', checkJwt, async (req, res) => {
     try {
       await sendBookingCancellationEmail({
         to: booking.user.email,
-        movieName: booking.show.title,
+        movieName: booking.show?.title || 'Your movie',
         bookingId: booking.bookingReference || booking._id.toString(),
-        refundAmount: refundResult?.amount || 0,
-        showTime: booking.showTime
+        refundAmount: refundResult?.amount || (booking.payment?.amount || 0),
+        showTime: booking.showTime || booking.show?.showTime
       });
     } catch (emailError) {
       console.error('Failed to send cancellation email:', emailError);
