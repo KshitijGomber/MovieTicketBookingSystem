@@ -31,7 +31,6 @@ const ShowDetails = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { token } = useAuth();
-  const { subtotal, tax, total, seatCount } = calculateTotal();
   const [selectedShowTime, setSelectedShowTime] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [snackbar, setSnackbar] = useState({ 
@@ -39,6 +38,20 @@ const ShowDetails = () => {
     message: '', 
     severity: 'info' 
   });
+  
+  // Calculate total price
+  const calculateTotal = () => {
+    const subtotal = selectedSeats.length * 10; // $10 per seat
+    const tax = subtotal * 0.1; // 10% tax
+    return {
+      subtotal: subtotal.toFixed(2),
+      tax: tax.toFixed(2),
+      total: (subtotal + tax).toFixed(2),
+      seatCount: selectedSeats.length
+    };
+  };
+  
+  const { subtotal, tax, total, seatCount } = calculateTotal();
 
   // Extract and validate showId
   const showId = useMemo(() => {
