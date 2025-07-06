@@ -93,14 +93,36 @@ export async function fetchShow(showId) {
     
     // If not in mock data, try the API
     const response = await fetchWithTimeout(`${API_URL}/shows/${showId}`);
-    if (!response.ok) throw new Error('Failed to fetch show');
-    return await response.json();
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to fetch show');
+    }
+    
+    const data = await response.json();
+    
+    // Check if we got a valid show object
+    if (!data || typeof data !== 'object' || !data._id) {
+      console.error('Invalid show data received:', data);
+      throw new Error('Invalid show data received from server');
+    }
+    
+    return data;
   } catch (error) {
-    console.error('Error fetching show:', error.message);
+    console.error('Error in fetchShow:', error);
+    
     // Try to find in mock data as fallback
     const mockShow = mockShows.find(show => show._id === showId);
-    if (mockShow) return mockShow;
+    if (mockShow) {
+      console.log('Using mock data as fallback');
+      return mockShow;
+    }
     
-    throw new Error('Show not found');
+    // If we have a specific error message, use it
+    if (error.message) {
+      throw error;
+    }
+    
+    throw new Error('Show not found. Please check the show ID and try again.');
   }
 }

@@ -122,27 +122,76 @@ const ShowDetails = () => {
     );
   };
 
-  if (isLoading || isLoadingSeats) {
+  if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
+      <Box display="flex" flexDirection="column" alignItems="center" my={4}>
         <CircularProgress />
+        <Typography variant="body1" mt={2}>
+          Loading show details...
+        </Typography>
       </Box>
     );
   }
 
   if (isError) {
+    console.error('Error loading show:', error);
     return (
-      <Alert severity="error" sx={{ my: 2 }}>
-        {error.message || 'Failed to load show details'}
-      </Alert>
+      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          }
+        >
+          <Typography variant="subtitle1" fontWeight="bold">
+            Error loading show details
+          </Typography>
+          <Typography variant="body2">
+            {error.message || 'Please check your connection and try again.'}
+          </Typography>
+        </Alert>
+        <Button 
+          component={Link} 
+          to="/" 
+          startIcon={<ArrowBack />}
+          sx={{ mt: 2 }}
+        >
+          Back to Shows
+        </Button>
+      </Box>
     );
   }
 
   if (!show) {
     return (
-      <Alert severity="warning" sx={{ my: 2 }}>
-        Show not found
-      </Alert>
+      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+        <Alert 
+          severity="warning" 
+          sx={{ mb: 3 }}
+        >
+          <Typography variant="subtitle1" fontWeight="bold">
+            Show Not Found
+          </Typography>
+          <Typography variant="body2">
+            The show you're looking for doesn't exist or may have been removed.
+          </Typography>
+        </Alert>
+        <Button 
+          component={Link} 
+          to="/" 
+          startIcon={<ArrowBack />}
+          sx={{ mt: 2 }}
+        >
+          Back to Shows
+        </Button>
+      </Box>
     );
   }
 
