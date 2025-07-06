@@ -16,6 +16,16 @@ router.get('/', async (req, res) => {
 // GET /api/shows/:id - Get a specific show
 router.get('/:id', async (req, res) => {
   try {
+    // Check if ID is provided and valid
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ message: 'Show ID is required' });
+    }
+
+    // Check if ID is a valid MongoDB ObjectId (24 character hex string)
+    if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid show ID format' });
+    }
+
     const show = await Show.findById(req.params.id);
     if (!show) {
       return res.status(404).json({ message: 'Show not found' });
@@ -23,6 +33,9 @@ router.get('/:id', async (req, res) => {
     res.json(show);
   } catch (error) {
     console.error('Error fetching show:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid show ID' });
+    }
     res.status(500).json({ message: 'Error fetching show' });
   }
 });

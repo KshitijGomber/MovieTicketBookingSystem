@@ -57,7 +57,14 @@ const ShowDetails = () => {
 
   const { data: show, isLoading, isError, error } = useQuery({
     queryKey: ['show', showId],
-    queryFn: () => fetchShow(showId),
+    queryFn: () => {
+      if (!showId || showId === 'undefined') {
+        throw new Error('Show ID is missing');
+      }
+      return fetchShow(showId);
+    },
+    enabled: !!showId && showId !== 'undefined',
+    retry: false
   });
 
   const { data: bookedSeatsData, isLoading: isLoadingSeats } = useQuery({
