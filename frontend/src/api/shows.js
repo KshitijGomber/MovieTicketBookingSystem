@@ -112,17 +112,8 @@ export async function fetchShow(showId) {
     const apiUrl = `${apiBaseUrl}/shows/${showId}`;
     debugLog('2. Using API URL:', { apiUrl });
     
-    // First try to find in mock data
-    const mockShow = mockShows.find(show => show._id === showId);
-    if (mockShow) {
-      debugLog('3. Found show in mock data:', mockShow);
-      return mockShow;
-    }
-    
-    debugLog('4. Show not found in mock data, trying API...');
-    
-    // Make the API request
-    debugLog('5. Making API request...');
+    // Try to fetch from API first
+    debugLog('3. Trying to fetch from API...');
     let response;
     try {
       response = await fetch(apiUrl, {
@@ -133,43 +124,56 @@ export async function fetchShow(showId) {
           'Pragma': 'no-cache'
         }
       });
-      debugLog('6. Received response status:', { status: response.status });
-    } catch (fetchError) {
-      debugLog('6. Fetch error:', { error: fetchError.message });
-      throw new Error(`Network error: ${fetchError.message}`);
-    }
-    
-    // Check if response is ok
-    if (!response.ok) {
+      debugLog('4. Received response status:', { status: response.status });
+      
+      // If API call is successful, process the response
+      if (response.ok) {
+        const data = await response.json();
+        debugLog('5. Successfully parsed API response:', data);
+        
+        // Validate the response data
+        if (data && typeof data === 'object' && data._id) {
+          debugLog('6. Successfully fetched show from API:', { 
+            showId: data._id, 
+            title: data.title,
+            price: data.price
+          });
+          return data;
+        } else {
+          debugLog('6. Invalid show data received from API:', data);
+          throw new Error('Invalid show data received from API');
+        }
+      }
+      
+      // If we get here, the API call failed but didn't throw an error
       let errorMessage = `Server returned ${response.status} status`;
       try {
         const errorData = await response.json();
-        debugLog('7. Error response data:', errorData);
+        debugLog('5. Error response data:', errorData);
         errorMessage = errorData.message || errorMessage;
       } catch (parseError) {
-        debugLog('7. Could not parse error response:', { error: parseError.message });
+        debugLog('5. Could not parse error response:', { error: parseError.message });
       }
       throw new Error(errorMessage);
+      
+    } catch (apiError) {
+      debugLog('4. API fetch error:', { error: apiError.message });
+      console.warn('Falling back to mock data due to API error:', apiError.message);
+      
+      // Only use mock data as a fallback if the API fails
+      const mockShow = mockShows.find(show => show._id === showId);
+      if (mockShow) {
+        debugLog('6. Using mock data as fallback:', { 
+          showId: mockShow._id, 
+          title: mockShow.title,
+          price: mockShow.price
+        });
+        return mockShow;
+      }
+      
+      // If we have a specific error message, use it
+      throw apiError;
     }
-    
-    // Parse the response
-    let data;
-    try {
-      data = await response.json();
-      debugLog('8. Successfully parsed response data:', data);
-    } catch (parseError) {
-      debugLog('8. Error parsing JSON response:', { error: parseError.message });
-      throw new Error('Invalid JSON response from server');
-    }
-    
-    // Validate the response data
-    if (!data || typeof data !== 'object' || !data._id) {
-      debugLog('9. Invalid show data received:', data);
-      throw new Error('Invalid show data received from server');
-    }
-    
-    debugLog('10. Successfully fetched show:', { showId: data._id, title: data.title });
-    return data;
   } catch (error) {
     console.error('Error in fetchShow:', error);
     
