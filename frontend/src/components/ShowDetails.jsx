@@ -25,7 +25,7 @@ const ShowDetails = () => {
   const params = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [selectedShowTime, setSelectedShowTime] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
