@@ -52,13 +52,36 @@ export default function BookingConfirmation() {
           throw new Error('No booking information found');
         }
         
+        // Format seats data - handle both array of strings and array of objects
+        const formatSeats = (seats) => {
+          if (!seats) return [];
+          return seats.map(seat => 
+            typeof seat === 'string' ? seat : 
+            seat.seatNumber || seat.number || `Seat ${Math.random().toString(36).substr(2, 5)}`
+          );
+        };
+
+        // Format show time - handle both string and Date objects
+        const formatShowTime = (time) => {
+          if (!time) return 'Time not specified';
+          const date = new Date(time);
+          return isNaN(date) ? time : date.toLocaleString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        };
+
         // Set booking details from the booking object
         setBookingDetails({
-          show: bookingData.show,
-          showTime: bookingData.showTime,
-          seats: bookingData.seats,
-          total: bookingData.totalAmount || 0,
-          bookingId: bookingData.bookingReference || bookingId,
+          show: bookingData.show || {},
+          showTime: formatShowTime(bookingData.showTime || bookingData.time || bookingData.dateTime),
+          seats: formatSeats(bookingData.seats || []),
+          total: bookingData.totalAmount || bookingData.total || 0,
+          bookingId: bookingData.bookingReference || bookingData.id || bookingId || 'N/A',
           bookingDate: bookingData.createdAt || new Date().toISOString(),
           payment: bookingData.payment || {}
         });
@@ -188,7 +211,9 @@ export default function BookingConfirmation() {
                   <ListItemIcon><TicketIcon /></ListItemIcon>
                   <ListItemText 
                     primary="Seats" 
-                    secondary={bookingDetails.seats?.join(', ') || 'No seats selected'} 
+                    secondary={Array.isArray(bookingDetails.seats) ? 
+                      bookingDetails.seats.join(', ') : 
+                      'No seats selected'} 
                   />
                 </ListItem>
                 <ListItem>

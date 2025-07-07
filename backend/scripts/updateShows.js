@@ -47,7 +47,7 @@ const updatedShows = [
     _id: '68548601467ac59650bff6c5',
     title: 'Everything Everywhere All at Once',
     description: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what matters to her by connecting with the lives she could have led in other universes.',
-    image: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jEuqLp.jpg',
+    image: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',
     duration: 139,
     genre: 'Action',
     language: 'English',

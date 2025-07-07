@@ -263,6 +263,24 @@ const ShowDetails = () => {
           refetchBookedSeats();
         }
 
+        // Format the show time for display
+        const formatShowTime = (timeString) => {
+          const [time, period] = timeString.split(' ');
+          const [hours, minutes] = time.split(':').map(Number);
+          const date = new Date();
+          
+          // Set the time based on AM/PM
+          if (period === 'PM' && hours < 12) {
+            date.setHours(hours + 12, minutes);
+          } else if (period === 'AM' && hours === 12) {
+            date.setHours(0, minutes);
+          } else {
+            date.setHours(hours, minutes);
+          }
+          
+          return date.toISOString();
+        };
+
         // Prepare navigation state with all necessary booking details
         const navigationState = {
           booking: {
@@ -273,10 +291,16 @@ const ShowDetails = () => {
               _id: show._id,
               title: show.title,
               image: show.image,
-              duration: show.duration
+              duration: show.duration,
+              description: show.description
             },
-            showTime: selectedShowTime,
-            seats: selectedSeats.map(seat => ({
+            // Pass both formatted and raw show time for flexibility
+            showTime: formatShowTime(selectedShowTime),
+            time: selectedShowTime, // Keep the original format
+            // Pass seats as an array of strings for display
+            seats: selectedSeats,
+            // Also include the detailed seat information
+            seatDetails: selectedSeats.map(seat => ({
               seatNumber: seat,
               price: show.price
             })),
