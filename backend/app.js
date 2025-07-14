@@ -110,11 +110,15 @@ const authRoutes = require('./routes/auth');
 const showRoutes = require('./routes/shows');
 const bookingRoutes = require('./routes/bookings');
 const passwordResetRoutes = require('./routes/passwordReset');
+const theaterRoutes = require('./routes/theaters');
+const showtimeRoutes = require('./routes/showtimes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/theaters', theaterRoutes);
+app.use('/api/showtimes', showtimeRoutes);
 
 // Log all requests for debugging
 app.use((req, res, next) => {
