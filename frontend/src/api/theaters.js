@@ -15,8 +15,10 @@ export async function getTheaters(params = {}) {
   const queryParams = new URLSearchParams();
   
   Object.keys(params).forEach(key => {
-    if (params[key]) {
-      queryParams.append(key, params[key]);
+    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+      // Ensure we convert objects to strings appropriately
+      const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
+      queryParams.append(key, value);
     }
   });
 
@@ -51,8 +53,10 @@ export async function getTheaterShowtimes(theaterId, params = {}) {
   const queryParams = new URLSearchParams();
   
   Object.keys(params).forEach(key => {
-    if (params[key]) {
-      queryParams.append(key, params[key]);
+    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+      // Ensure we convert objects to strings appropriately
+      const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
+      queryParams.append(key, value);
     }
   });
 
@@ -74,8 +78,10 @@ export async function getTheatersForMovie(movieId, params = {}) {
   const queryParams = new URLSearchParams();
   
   Object.keys(params).forEach(key => {
-    if (params[key]) {
-      queryParams.append(key, params[key]);
+    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+      // Ensure we convert objects to strings appropriately
+      const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
+      queryParams.append(key, value);
     }
   });
 

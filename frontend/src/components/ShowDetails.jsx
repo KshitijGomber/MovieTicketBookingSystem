@@ -681,7 +681,7 @@ const ShowDetails = () => {
                 )}
               </Box>
 
-              {selectedShowTime && (
+              {selectedShowtime && (
                 <>
                   <Typography variant="h6" gutterBottom>
                     Select Seats

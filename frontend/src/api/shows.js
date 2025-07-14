@@ -86,9 +86,27 @@ export async function fetchShows(theaterId = '') {
     let url = `${API_URL}/shows`;
     
     // Ensure theaterId is a string ID, not an object
-    const theaterIdString = typeof theaterId === 'object' && theaterId?._id 
-      ? theaterId._id 
-      : String(theaterId || '').trim();
+    let theaterIdString = '';
+    
+    if (theaterId) {
+      if (typeof theaterId === 'object') {
+        // If it's an object, try to extract the _id
+        if (theaterId && theaterId._id) {
+          theaterIdString = String(theaterId._id).trim();
+        } else {
+          console.warn('Invalid theater object passed to fetchShows:', theaterId);
+          theaterIdString = '';
+        }
+      } else {
+        theaterIdString = String(theaterId).trim();
+      }
+      
+      // Additional validation - check for problematic values
+      if (theaterIdString === '[object Object]' || theaterIdString.includes('[object') || theaterIdString === 'undefined' || theaterIdString === 'null') {
+        console.warn('Invalid theaterId detected, ignoring:', theaterIdString);
+        theaterIdString = '';
+      }
+    }
       
     if (theaterIdString) {
       url += `?theaterId=${encodeURIComponent(theaterIdString)}`;

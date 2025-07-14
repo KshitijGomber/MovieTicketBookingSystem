@@ -8,15 +8,40 @@ router.get('/', async (req, res) => {
     const { theaterId } = req.query;
     let query = {};
     
+    // Validate and handle theaterId parameter
     if (theaterId) {
+      // Check for invalid values like "[object Object]"
+      if (theaterId === '[object Object]' || theaterId.includes('[object') || theaterId.includes('Object]')) {
+        console.warn('Invalid theaterId received:', theaterId);
+        return res.status(400).json({ 
+          message: 'Invalid theater ID format',
+          details: 'Theater ID must be a valid string, not an object'
+        });
+      }
+      
+      // Check if it's a valid MongoDB ObjectId format
+      if (!/^[0-9a-fA-F]{24}$/.test(theaterId)) {
+        console.warn('Invalid theaterId format:', theaterId);
+        return res.status(400).json({ 
+          message: 'Invalid theater ID format',
+          details: 'Theater ID must be a valid MongoDB ObjectId'
+        });
+      }
+      
       query['theaters.theater'] = theaterId;
     }
     
+    console.log('Fetching shows with query:', query);
     const shows = await Show.find(query).populate('theaters.theater', 'name location');
+    
+    console.log(`Found ${shows.length} shows`);
     res.json(shows);
   } catch (error) {
     console.error('Error fetching shows:', error);
-    res.status(500).json({ message: 'Error fetching shows' });
+    res.status(500).json({ 
+      message: 'Error fetching shows',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
