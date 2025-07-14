@@ -107,56 +107,59 @@ router.get('/movie/:movieId', async (req, res) => {
     const { date, city } = req.query;
     const movieId = req.params.movieId;
     
-    // Build showtime query
-    const showtimeQuery = { show: movieId };
+    console.log('Fetching theaters for movie:', movieId);
     
-    if (date) {
-      const startDate = new Date(date);
-      const endDate = new Date(date);
-      endDate.setDate(endDate.getDate() + 1);
-      showtimeQuery.showDate = { $gte: startDate, $lt: endDate };
-    } else {
-      showtimeQuery.showDate = { $gte: new Date() };
+    // Check if movieId is valid
+    if (!movieId || !/^[0-9a-fA-F]{24}$/.test(movieId)) {
+      return res.status(400).json({ message: 'Invalid movie ID format' });
     }
     
-    // Get showtimes and populate theater info
-    const showtimes = await Showtime.find(showtimeQuery)
-      .populate('theater')
-      .sort({ 'theater.name': 1, showTime: 1 });
+    // Find the show with theater information
+    const show = await Show.findById(movieId).populate('theaters.theater');
     
-    // Group by theater
-    const theaterMap = new Map();
+    if (!show) {
+      console.log('Show not found for ID:', movieId);
+      return res.status(404).json({ message: 'Movie not found' });
+    }
     
-    showtimes.forEach(showtime => {
-      const theater = showtime.theater;
-      if (!theater || !theater.isActive) return;
-      
-      // Filter by city if specified
-      if (city && !theater.location.city.toLowerCase().includes(city.toLowerCase())) {
+    console.log('Found show:', show.title, 'with', show.theaters.length, 'theaters');
+    
+    // Extract theaters with their showtimes
+    const theaters = [];
+    
+    show.theaters.forEach(theaterEntry => {
+      const theater = theaterEntry.theater;
+      if (!theater || !theater.isActive) {
+        console.log('Skipping inactive theater:', theater?.name || 'null');
         return;
       }
       
-      if (!theaterMap.has(theater._id.toString())) {
-        theaterMap.set(theater._id.toString(), {
-          ...theater.toObject(),
-          showtimes: []
-        });
+      // Filter by city if specified
+      if (city && !theater.location.city.toLowerCase().includes(city.toLowerCase())) {
+        console.log('Skipping theater not in city:', theater.name, 'in', theater.location.city);
+        return;
       }
       
-      theaterMap.get(theater._id.toString()).showtimes.push({
-        _id: showtime._id,
-        showTime: showtime.showTime,
-        showDate: showtime.showDate,
-        price: showtime.price,
-        availableSeats: showtime.availableSeats,
-        format: showtime.format,
-        language: showtime.language,
-        screen: showtime.screen
+      console.log('Adding theater:', theater.name);
+      
+      theaters.push({
+        _id: theater._id,
+        name: theater.name,
+        location: theater.location,
+        amenities: theater.amenities,
+        screens: theater.screens,
+        contactInfo: theater.contactInfo,
+        isActive: theater.isActive,
+        showtimes: theaterEntry.showTimes.map(time => ({
+          showTime: time,
+          showDate: new Date(), // For now, use current date
+          availableSeats: theaterEntry.availableSeats,
+          price: show.price
+        }))
       });
     });
     
-    const theaters = Array.from(theaterMap.values());
-    
+    console.log('Returning', theaters.length, 'theaters');
     res.json(theaters);
   } catch (error) {
     console.error('Error fetching theaters for movie:', error);
