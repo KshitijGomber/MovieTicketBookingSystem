@@ -31,10 +31,12 @@ const BookingPage = () => {
   // Debug logging
   console.log('BookingPage - showId from URL:', showId);
   console.log('BookingPage - Auth state:', { user: !!user, token: !!token });
-  console.log('BookingPage - Location state:', { movie: !!movie, theater: !!theater, showtime: !!showtime });
   
   // Get data from navigation state (passed from MovieDetailsPage)
   const { movie, theater, showtime } = location.state || {};
+  
+  // Debug location state after destructuring
+  console.log('BookingPage - Location state:', { movie: !!movie, theater: !!theater, showtime: !!showtime });
 
   // Redirect if missing required data
   useEffect(() => {
