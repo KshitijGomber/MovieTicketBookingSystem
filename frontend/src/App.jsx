@@ -16,6 +16,9 @@ import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
 import BookingPage from './pages/BookingPage';
 import BookingConfirmation from './pages/BookingConfirmation';
+import HomePage from './pages/HomePage';
+import MovieListPage from './pages/MovieListPage';
+import MovieDetailsPage from './pages/MovieDetailsPage';
 
 
 function App() {
@@ -63,7 +66,38 @@ function App() {
               </Typography>
             </RouterLink>
 
-            <Box sx={{ flexGrow: 1 }} />
+            {/* Navigation Links */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
+              <Button
+                component={RouterLink}
+                to="/"
+                color="inherit"
+                startIcon={<Home />}
+                sx={{ mr: 2 }}
+              >
+                Home
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/movies"
+                color="inherit"
+                startIcon={<Movie />}
+                sx={{ mr: 2 }}
+              >
+                Movies
+              </Button>
+              {token && (
+                <Button
+                  component={RouterLink}
+                  to="/my-bookings"
+                  color="inherit"
+                  startIcon={<ConfirmationNumber />}
+                  sx={{ mr: 2 }}
+                >
+                  My Bookings
+                </Button>
+              )}
+            </Box>
             
             {token ? (
               <div>
@@ -102,14 +136,17 @@ function App() {
       </AppBar>
       <Container sx={{ mt: '80px' }}>
         <Routes>
-          <Route path="/" element={<ShowList />} />
-          <Route path="/shows" element={<ShowList />} />
+          {/* New Page Structure */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/movies" element={<MovieListPage />} />
+          <Route path="/movies/:id" element={<MovieDetailsPage />} />
           
-          {/* Handle both /shows/:id and /show/:id routes */}
-          <Route path="/shows/:id" element={<ShowDetails />} />
-          <Route path="/show/:id" element={<ShowDetails />} />
+          {/* Legacy routes - redirect to new structure */}
+          <Route path="/shows" element={<Navigate to="/movies" replace />} />
+          <Route path="/shows/:id" element={<Navigate to="/movies/:id" replace />} />
+          <Route path="/show/:id" element={<Navigate to="/movies/:id" replace />} />
           
-          {/* New Booking Flow */}
+          {/* Booking Flow */}
           <Route path="/book/:showId" element={
             <ProtectedRoute>
               <BookingPage />
