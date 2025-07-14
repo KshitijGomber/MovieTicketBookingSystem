@@ -617,32 +617,31 @@ const ShowDetails = () => {
                 Select Showtime
               </Typography>
               <Box display="flex" flexWrap="wrap" gap={2} mb={4}>
-      {/* Theater Selection */}
-      {isLoadingTheaters ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
-      ) : theaters && theaters.length > 0 ? (
-        <Paper elevation={4} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
-          <TheaterSelection
-            theaters={theaters}
-            selectedTheater={selectedTheater}
-            onTheaterSelect={handleTheaterSelect}
-            selectedShowtime={selectedShowtime}
-            onShowtimeSelect={handleShowtimeSelect}
-          />
-        </Paper>
-      ) : (
-        <Alert severity="info" sx={{ mb: 4 }}>
-          No theaters found for this movie. Please check back later.
-        </Alert>
-      )}
+                {/* Theater Selection */}
+                {isLoadingTheaters ? (
+                  <Box display="flex" justifyContent="center" my={4}>
+                    <CircularProgress />
+                  </Box>
+                ) : theaters && theaters.length > 0 ? (
+                  <Paper elevation={4} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
+                    <TheaterSelection
+                      theaters={theaters}
+                      selectedTheater={selectedTheater}
+                      onTheaterSelect={handleTheaterSelect}
+                      selectedShowtime={selectedShowtime}
+                      onShowtimeSelect={handleShowtimeSelect}
+                    />
+                  </Paper>
+                ) : (
+                  <Alert severity="info" sx={{ mb: 4 }}>
+                    No theaters found for this movie. Please check back later.
+                  </Alert>
+                )}
 
                 {show?.showTimes?.length > 0 ? (
                   show.showTimes.map((time, index) => (
                     <Button
-      {/* Seat Selection - only show if showtime is selected */}
-      {selectedShowtime && (
+                      key={index}
                       onClick={() => setSelectedShowTime(time)}
                       sx={{
                         minWidth: 100,
