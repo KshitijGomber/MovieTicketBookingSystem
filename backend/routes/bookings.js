@@ -187,7 +187,7 @@ router.post('/', checkJwt, async (req, res) => {
     const existingBookings = await Booking.find({
       show: showId,
       theater: theaterId,
-      seat: { $in: seats },
+      seats: { $in: seats },
       showTime: {
         $gte: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate()),
         $lt: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate() + 1)
@@ -196,7 +196,9 @@ router.post('/', checkJwt, async (req, res) => {
     }).session(session);
 
     if (existingBookings.length > 0) {
-      const bookedSeats = existingBookings.map(b => b.seat);
+      const bookedSeats = existingBookings.reduce((acc, booking) => {
+        return acc.concat(booking.seats.filter(seat => seats.includes(seat)));
+      }, []);
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({ 
@@ -210,29 +212,26 @@ router.post('/', checkJwt, async (req, res) => {
       return `BK-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
     };
 
-    // Create bookings for each seat
-    const seatPrice = (paymentDetails.amount / seats.length).toFixed(2);
-    const bookingPromises = seats.map(seat => {
-      const bookingReference = generateBookingReference();
-      const booking = new Booking({
-        user: userId,
-        show: showId,
-        theater: theaterId,
-        seat,
-        showTime: showDateTime,
-        status: 'booked',
-        bookingReference,
-        payment: {
-          id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          amount: parseFloat(seatPrice),
-          method: paymentDetails?.method || 'card',
-          status: 'succeeded',
-          transactionId: paymentResult.transactionId,
-          paymentDate: new Date()
-        }
-      });
-      return booking.save({ session });
+    // Create a single booking for all seats
+    const bookingReference = generateBookingReference();
+    const booking = new Booking({
+      user: userId,
+      show: showId,
+      theater: theaterId,
+      seats, // Array of seat identifiers like ["A1", "A2"]
+      showTime: showDateTime,
+      status: 'booked',
+      bookingReference,
+      payment: {
+        id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        amount: parseFloat(paymentResult.amount),
+        method: paymentDetails?.method || 'card',
+        status: 'succeeded',
+        gateway: paymentResult.gateway || 'dummy'
+      }
     });
+
+    const savedBooking = await booking.save({ session });
 
     // Update available seats for the specific theater
     await Show.findOneAndUpdate(
@@ -246,13 +245,12 @@ router.post('/', checkJwt, async (req, res) => {
       { session, new: true }
     );
 
-    // Execute all operations in transaction
-    const bookings = await Promise.all(bookingPromises);
+    // Commit the transaction
     await session.commitTransaction();
     session.endSession();
     
     console.log('Booking created successfully:', {
-      bookingIds: bookings.map(b => b._id),
+      bookingId: savedBooking._id,
       seats,
       showTime: showDateTime
     });
@@ -269,9 +267,9 @@ router.post('/', checkJwt, async (req, res) => {
           movieName: show.title,
           showTime: showDateTime, // Use the Date object for consistent formatting
           seats: seats,
-          totalAmount: amount,
-          bookingId: bookings[0]?.bookingReference || 'N/A',
-          paymentId: paymentResult.transactionId,
+          totalAmount: paymentResult.amount,
+          bookingId: savedBooking.bookingReference,
+          paymentId: savedBooking.payment.id,
           theatreName: 'Cineplex' // Default theatre name
         });
       } catch (emailError) {
@@ -280,10 +278,9 @@ router.post('/', checkJwt, async (req, res) => {
       }
     }
 
-    // Get the first booking to include in the response
-    const firstBooking = bookings[0];
+    // Prepare the booking response
     const bookingResponse = {
-      ...firstBooking.toObject(),
+      ...savedBooking.toObject(),
       show: show ? {
         _id: show._id,
         title: show.title,
@@ -296,8 +293,8 @@ router.post('/', checkJwt, async (req, res) => {
         email: user.email
       } : null,
       showTime: showTime, // Include the original showTime string
-      totalAmount: amount,
-      transactionId: paymentResult.transactionId,
+      totalAmount: paymentResult.amount,
+      transactionId: savedBooking.payment.id,
       paymentStatus: 'completed'
     };
     
@@ -353,13 +350,13 @@ router.post('/check-seats', async (req, res) => {
 
     const existingBookings = await Booking.find({
       show: showId,
-      seat: { $in: seats },
+      seats: { $in: seats },
       showTime: showTime,
       status: 'booked'
     });
 
     if (existingBookings.length > 0) {
-      const bookedSeats = existingBookings.map(b => b.seat);
+      const bookedSeats = existingBookings.flatMap(b => b.seats);
       return res.status(200).json({ 
         available: false, 
         message: `Seat(s) ${bookedSeats.join(', ')} are already booked`,
@@ -476,17 +473,22 @@ router.post('/:id/cancel', checkJwt, async (req, res) => {
       await booking.save({ session });
 
       // Update the show's bookedSeats array
-      if (booking.show && booking.seat) {
+      if (booking.show && booking.seats && booking.seats.length > 0) {
+        // Remove all seats from the booking
+        const seatsToRemove = booking.seats.map(seat => ({
+          seatNumber: seat,
+          showTime: booking.showTime
+        }));
+        
         await Show.updateOne(
           { _id: booking.show },
           { 
             $pull: { 
               bookedSeats: { 
-                seatNumber: booking.seat,
-                showTime: booking.showTime
+                $in: seatsToRemove
               } 
             },
-            $inc: { availableSeats: 1 }
+            $inc: { availableSeats: booking.seats.length }
           },
           { session }
         );
@@ -604,10 +606,10 @@ router.get('/show/:showId/seats', async (req, res) => {
         $lte: endTime
       },
       status: { $in: ['booked', 'pending_payment'] }
-    }).select('seat');
+    }).select('seats');
 
     // Combine and deduplicate seat numbers from both sources
-    const seatNumbersFromBookings = bookings.map(booking => booking.seat);
+    const seatNumbersFromBookings = bookings.flatMap(booking => booking.seats);
     const allBookedSeats = [...new Set([...bookedSeatsFromShow, ...seatNumbersFromBookings])];
     
     console.log('Booked seats:', {

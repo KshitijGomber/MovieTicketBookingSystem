@@ -44,10 +44,10 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Theater',
     required: true
   },
-  seat: { 
-    type: Number, 
+  seats: [{ 
+    type: String, 
     required: true 
-  },
+  }],
   showTime: { 
     type: Date, 
     required: true 
