@@ -28,15 +28,15 @@ const BookingPage = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Debug logging
-  console.log('BookingPage - showId from URL:', showId);
-  console.log('BookingPage - Auth state:', { user: !!user, token: !!token });
-  
   // Get data from navigation state (passed from MovieDetailsPage)
   const { movie, theater, showtime } = location.state || {};
   
-  // Debug location state after destructuring
-  console.log('BookingPage - Location state:', { movie: !!movie, theater: !!theater, showtime: !!showtime });
+  // Debug logging (moved after destructuring to avoid hoisting issues)
+  React.useEffect(() => {
+    console.log('BookingPage - showId from URL:', showId);
+    console.log('BookingPage - Auth state:', { user: !!user, token: !!token });
+    console.log('BookingPage - Location state:', { movie: !!movie, theater: !!theater, showtime: !!showtime });
+  }, [showId, user, token, movie, theater, showtime]);
 
   // Redirect if missing required data
   useEffect(() => {
