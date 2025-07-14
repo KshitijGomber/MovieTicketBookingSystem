@@ -79,7 +79,8 @@ router.get('/', checkJwt, async (req, res) => {
   try {
     const userId = req.user.id;
     const bookings = await Booking.find({ user: userId })
-      .populate('show', 'title posterUrl duration')
+      .populate('show', 'title image duration')
+      .populate('theater', 'name location')
       .sort({ createdAt: -1 }); // Most recent first
     res.json(bookings);
   } catch (error) {
@@ -108,13 +109,16 @@ router.post('/', checkJwt, async (req, res) => {
   session.startTransaction();
   
   try {
-    const { showId, seats, showTime, paymentDetails } = req.body;
+    const { showId, theaterId, seats, showTime, paymentDetails } = req.body;
     const userId = req.user.id;
     
-    console.log('Processing booking:', { showId, seats, showTime, userId });
+    console.log('Processing booking:', { showId, theaterId, seats, showTime, userId });
     
     if (!showId) {
       throw new Error('Missing required field: showId');
+    }
+    if (!theaterId) {
+      throw new Error('Missing required field: theaterId');
     }
     if (!seats || !Array.isArray(seats) || !seats.length) {
       throw new Error('Invalid or missing seats array');
@@ -136,10 +140,24 @@ router.post('/', checkJwt, async (req, res) => {
       });
     }
 
-    // Check if the show exists
-    const showDetails = await Show.findById(showId);
+    // Check if the show exists and has the theater
+    const showDetails = await Show.findById(showId).populate('theaters.theater');
     if (!showDetails) {
       return res.status(404).json({ message: 'Show not found' });
+    }
+
+    // Find the specific theater for this show
+    const theaterShowData = showDetails.theaters.find(
+      t => t.theater._id.toString() === theaterId
+    );
+    
+    if (!theaterShowData) {
+      return res.status(400).json({ message: 'Show not available in this theater' });
+    }
+
+    // Check if the showtime is valid for this theater
+    if (!theaterShowData.showTimes.includes(showTime)) {
+      return res.status(400).json({ message: 'Invalid showtime for this theater' });
     }
 
     // Convert showTime string to a Date object
@@ -168,6 +186,7 @@ router.post('/', checkJwt, async (req, res) => {
     // Check if any of the seats are already booked
     const existingBookings = await Booking.find({
       show: showId,
+      theater: theaterId,
       seat: { $in: seats },
       showTime: {
         $gte: new Date(showDateTime.getFullYear(), showDateTime.getMonth(), showDateTime.getDate()),
@@ -186,11 +205,6 @@ router.post('/', checkJwt, async (req, res) => {
       });
     }
 
-    // Check if the showtime is valid
-    if (!showDetails.showTimes.includes(showTime)) {
-      return res.status(400).json({ message: 'Invalid showtime' });
-    }
-
     // Generate a unique booking reference
     const generateBookingReference = () => {
       return `BK-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -203,6 +217,7 @@ router.post('/', checkJwt, async (req, res) => {
       const booking = new Booking({
         user: userId,
         show: showId,
+        theater: theaterId,
         seat,
         showTime: showDateTime,
         status: 'booked',
@@ -219,20 +234,14 @@ router.post('/', checkJwt, async (req, res) => {
       return booking.save({ session });
     });
 
-    // Update available seats and mark seats as booked
-    await Show.findByIdAndUpdate(
-      showId,
+    // Update available seats for the specific theater
+    await Show.findOneAndUpdate(
       { 
-        $inc: { availableSeats: -seats.length },
-        $addToSet: { 
-          bookedSeats: { 
-            $each: seats.map(seat => ({
-              seatNumber: seat,
-              showTime: showDateTime,
-              bookingDate: new Date()
-            }))
-          }
-        }
+        _id: showId,
+        'theaters.theater': theaterId
+      },
+      { 
+        $inc: { 'theaters.$.availableSeats': -seats.length }
       },
       { session, new: true }
     );
@@ -545,11 +554,15 @@ const parseShowTime = (timeStr) => {
 // Public route - Get booked seats for a show (no authentication required)
 router.get('/show/:showId/seats', async (req, res) => {
   try {
-    const { showTime } = req.query;
+    const { showTime, theaterId } = req.query;
     const { showId } = req.params;
     
     if (!showTime) {
       return res.status(400).json({ message: 'Showtime is required' });
+    }
+    
+    if (!theaterId) {
+      return res.status(400).json({ message: 'Theater ID is required' });
     }
 
     // Parse the showTime string to a Date object
@@ -585,6 +598,7 @@ router.get('/show/:showId/seats', async (req, res) => {
     // Get seats from Bookings collection
     const bookings = await Booking.find({
       show: showId,
+      theater: theaterId,
       showTime: {
         $gte: startTime,
         $lte: endTime

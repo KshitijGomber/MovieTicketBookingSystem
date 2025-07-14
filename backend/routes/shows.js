@@ -5,7 +5,14 @@ const Show = require('../models/Show');
 // GET /api/shows - Get all shows
 router.get('/', async (req, res) => {
   try {
-    const shows = await Show.find();
+    const { theaterId } = req.query;
+    let query = {};
+    
+    if (theaterId) {
+      query['theaters.theater'] = theaterId;
+    }
+    
+    const shows = await Show.find(query).populate('theaters.theater', 'name location');
     res.json(shows);
   } catch (error) {
     console.error('Error fetching shows:', error);
@@ -26,7 +33,7 @@ router.get('/:id', async (req, res) => {
       return res.status(400).json({ message: 'Invalid show ID format' });
     }
 
-    const show = await Show.findById(req.params.id);
+    const show = await Show.findById(req.params.id).populate('theaters.theater', 'name location screens');
     if (!show) {
       return res.status(404).json({ message: 'Show not found' });
     }

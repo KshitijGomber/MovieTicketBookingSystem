@@ -39,6 +39,11 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Show', 
     required: true 
   },
+  theater: { // Reference to Theater
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Theater',
+    required: true
+  },
   seat: { 
     type: Number, 
     required: true 
@@ -77,6 +82,6 @@ const bookingSchema = new mongoose.Schema({
 
 // Indexes for faster queries
 bookingSchema.index({ user: 1, status: 1 });
-bookingSchema.index({ show: 1, showTime: 1, status: 1 });
+bookingSchema.index({ show: 1, theater: 1, showTime: 1, status: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema); 

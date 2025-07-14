@@ -41,11 +41,11 @@ export async function getBooking(bookingId, token) {
   return Array.isArray(data) ? data[0] : data; // Handle both array and single object responses
 }
 
-export async function checkSeatAvailability({ showId, seats, showTime }) {
+export async function checkSeatAvailability({ showId, theaterId, seats, showTime }) {
   const res = await fetch(`${API_URL}/bookings/check-seats`, {
     method: 'POST',
     headers: getAuthHeader(),
-    body: JSON.stringify({ showId, seats, showTime })
+    body: JSON.stringify({ showId, theaterId, seats, showTime })
   });
 
   const data = await res.json();
@@ -77,9 +77,14 @@ const formatTimeForApi = (timeString) => {
   });
 };
 
-export async function getBookedSeats(showId, showTime) {
+export async function getBookedSeats(showId, showTime, theaterId) {
   if (!showTime) {
     console.error('Show time is required');
+    return { bookedSeats: [] };
+  }
+  
+  if (!theaterId) {
+    console.error('Theater ID is required');
     return { bookedSeats: [] };
   }
 
@@ -87,7 +92,7 @@ export async function getBookedSeats(showId, showTime) {
     const formattedTime = formatTimeForApi(showTime);
     const headers = getAuthHeader();
     const res = await fetch(
-      `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(formattedTime)}`,
+      `${API_URL}/bookings/show/${showId}/seats?showTime=${encodeURIComponent(formattedTime)}&theaterId=${theaterId}`,
       { headers }
     );
 

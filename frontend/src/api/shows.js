@@ -81,9 +81,14 @@ const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
   ]);
 };
 
-export async function fetchShows() {
+export async function fetchShows(theaterId = '') {
   try {
-    const response = await fetchWithTimeout(`${API_URL}/shows`);
+    let url = `${API_URL}/shows`;
+    if (theaterId) {
+      url += `?theaterId=${theaterId}`;
+    }
+    
+    const response = await fetchWithTimeout(url);
     if (!response.ok) throw new Error('Failed to fetch shows');
     return await response.json();
   } catch (error) {

@@ -19,6 +19,8 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButto
 import { createBooking, processPayment } from '../api/bookings';
 import { fetchShow } from '../api/shows';
 import { getBookedSeats } from '../api/bookings';
+import { getTheatersForMovie } from '../api/theaters';
+import TheaterSelection from './TheaterSelection';
 
 const ShowDetails = () => {
   const location = useLocation();
@@ -26,7 +28,8 @@ const ShowDetails = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { token, user } = useAuth();
-  const [selectedShowTime, setSelectedShowTime] = useState('');
+  const [selectedTheater, setSelectedTheater] = useState(null);
+  const [selectedShowtime, setSelectedShowtime] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState({
@@ -48,12 +51,20 @@ const ShowDetails = () => {
     queryFn: () => fetchShow(params.id)
   });
 
+  // Fetch theaters for this movie
+  const { data: theaters, isLoading: isLoadingTheaters } = useQuery({
+    queryKey: ['theaters', params.id],
+    queryFn: () => getTheatersForMovie(params.id),
+    enabled: !!params.id
+  });
+
   // Fetch booked seats for the selected showtime
   const { data: bookedSeatsResponse, refetch: refetchBookedSeats } = useQuery({
-    queryKey: ['bookedSeats', show?._id, selectedShowTime],
+    queryKey: ['bookedSeats', selectedShowtime?._id],
     queryFn: async () => {
       try {
-        const response = await getBookedSeats(show?._id, selectedShowTime);
+        if (!selectedShowtime) return [];
+        const response = await getBookedSeats(selectedShowtime.show, selectedShowtime.showTime);
         // Ensure we always return an array, even if the response is malformed
         return Array.isArray(response) ? response : [];
       } catch (error) {
@@ -61,7 +72,7 @@ const ShowDetails = () => {
         return [];
       }
     },
-    enabled: !!(show?._id && selectedShowTime),
+    enabled: !!selectedShowtime,
     onError: (error) => {
       console.error('Error in booked seats query:', error);
       setSnackbar({
@@ -77,26 +88,25 @@ const ShowDetails = () => {
 
   // Reset selected seats and refetch booked seats when showtime changes or component mounts
   useEffect(() => {
-    // If we have a show time and show ID, fetch the latest booked seats
-    if (selectedShowTime && show?._id) {
-      console.log('Refreshing booked seats for show:', show._id, 'at', selectedShowTime);
+    // If we have a showtime, fetch the latest booked seats
+    if (selectedShowtime) {
+      console.log('Refreshing booked seats for showtime:', selectedShowtime._id);
       refetchBookedSeats()
         .then(() => console.log('Booked seats refreshed successfully'))
         .catch(err => console.error('Error refreshing booked seats:', err));
     } else {
-      console.log('Show ID or show time not available for fetching booked seats');
+      console.log('No showtime selected for fetching booked seats');
     }
     
-    // Clear any selected seats when show time changes
+    // Clear any selected seats when showtime changes
     setSelectedSeats([]);
-  }, [selectedShowTime, show?._id, refetchBookedSeats]);
+  }, [selectedShowtime, refetchBookedSeats]);
   
   // Calculate total price
   const { subtotal, tax, total, seatCount } = useMemo(() => {
-    console.log('Show price:', show?.price); // Debug log
-    const price = parseFloat(show?.price) || 0;
+    const price = selectedShowtime?.price?.base || parseFloat(show?.price) || 10;
     if (isNaN(price)) {
-      console.error('Invalid price value:', show?.price);
+      console.error('Invalid price value:', price);
       return {
         subtotal: '0.00',
         tax: '0.00',
@@ -113,7 +123,17 @@ const ShowDetails = () => {
       seatCount: selectedSeats.length,
       pricePerSeat: price
     };
-  }, [selectedSeats, show?.price]);
+  }, [selectedSeats, selectedShowtime, show?.price]);
+
+  const handleTheaterSelect = (theater) => {
+    setSelectedTheater(theater);
+    setSelectedSeats([]); // Clear selected seats when theater changes
+  };
+
+  const handleShowtimeSelect = (showtime) => {
+    setSelectedShowtime(showtime);
+    setSelectedSeats([]); // Clear selected seats when showtime changes
+  };
 
   const handleSeatClick = (seatId) => {
     try {
@@ -126,10 +146,10 @@ const ShowDetails = () => {
         return;
       }
 
-      if (!selectedShowTime) {
+      if (!selectedShowtime) {
         setSnackbar({
           open: true,
-          message: 'Please select a showtime first',
+          message: 'Please select a theater and showtime first',
           severity: 'warning'
         });
         return;
@@ -166,10 +186,10 @@ const ShowDetails = () => {
   };
 
   const handleBookNow = () => {
-    if (!selectedShowTime) {
+    if (!selectedShowtime) {
       setSnackbar({
         open: true,
-        message: 'Please select a showtime',
+        message: 'Please select a theater and showtime',
         severity: 'warning'
       });
       return;
@@ -231,8 +251,10 @@ const ShowDetails = () => {
       // Create booking data in the format expected by the backend
       const bookingData = {
         showId: show._id,
+        theaterId: selectedTheater._id,
+        showtimeId: selectedShowtime._id,
         seats: selectedSeats, // Array of seat numbers
-        showTime: selectedShowTime,
+        showTime: selectedShowtime.showTime,
         paymentDetails: {
           transactionId: paymentResult.transactionId,
           method: 'card',
@@ -259,27 +281,9 @@ const ShowDetails = () => {
         // Clear selected seats after successful booking
         setSelectedSeats([]);
         // Refetch booked seats to ensure UI is up to date
-        if (show?._id && selectedShowTime) {
+        if (selectedShowtime) {
           refetchBookedSeats();
         }
-
-        // Format the show time for display
-        const formatShowTime = (timeString) => {
-          const [time, period] = timeString.split(' ');
-          const [hours, minutes] = time.split(':').map(Number);
-          const date = new Date();
-          
-          // Set the time based on AM/PM
-          if (period === 'PM' && hours < 12) {
-            date.setHours(hours + 12, minutes);
-          } else if (period === 'AM' && hours === 12) {
-            date.setHours(0, minutes);
-          } else {
-            date.setHours(hours, minutes);
-          }
-          
-          return date.toISOString();
-        };
 
         // Prepare navigation state with all necessary booking details
         const navigationState = {
@@ -294,15 +298,15 @@ const ShowDetails = () => {
               duration: show.duration,
               description: show.description
             },
-            // Pass both formatted and raw show time for flexibility
-            showTime: formatShowTime(selectedShowTime),
-            time: selectedShowTime, // Keep the original format
+            theater: selectedTheater,
+            showtime: selectedShowtime,
+            showTime: selectedShowtime.showTime,
             // Pass seats as an array of strings for display
             seats: selectedSeats,
             // Also include the detailed seat information
             seatDetails: selectedSeats.map(seat => ({
               seatNumber: seat,
-              price: show.price
+              price: selectedShowtime.price?.base || show.price
             })),
             totalAmount: parseFloat(totalAmount.toFixed(2)),
             payment: {
@@ -613,11 +617,31 @@ const ShowDetails = () => {
                 Select Showtime
               </Typography>
               <Box display="flex" flexWrap="wrap" gap={2} mb={4}>
+                {/* Theater Selection */}
+                {isLoadingTheaters ? (
+                  <Box display="flex" justifyContent="center" my={4}>
+                    <CircularProgress />
+                  </Box>
+                ) : theaters && theaters.length > 0 ? (
+                  <Paper elevation={4} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
+                    <TheaterSelection
+                      theaters={theaters}
+                      selectedTheater={selectedTheater}
+                      onTheaterSelect={handleTheaterSelect}
+                      selectedShowtime={selectedShowtime}
+                      onShowtimeSelect={handleShowtimeSelect}
+                    />
+                  </Paper>
+                ) : (
+                  <Alert severity="info" sx={{ mb: 4 }}>
+                    No theaters found for this movie. Please check back later.
+                  </Alert>
+                )}
+
                 {show?.showTimes?.length > 0 ? (
                   show.showTimes.map((time, index) => (
                     <Button
                       key={index}
-                      variant={selectedShowTime === time ? 'contained' : 'outlined'}
                       onClick={() => setSelectedShowTime(time)}
                       sx={{
                         minWidth: 100,
@@ -753,13 +777,16 @@ const ShowDetails = () => {
             </IconButton>
           </Box>
           <Typography variant="body2" color="textSecondary">
-            {show?.title} - {selectedShowTime}
+            {show?.title} - {selectedShowtime?.showTime}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            {selectedTheater?.name}
           </Typography>
           <Typography variant="subtitle2">
             Seats: {selectedSeats.join(', ')}
           </Typography>
           <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-            Total: ${total}
+            Total: ₹{total}
           </Typography>
         </DialogTitle>
         
