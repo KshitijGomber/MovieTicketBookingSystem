@@ -153,7 +153,8 @@ router.get('/movie/:movieId', async (req, res) => {
         showtimes: theaterEntry.showTimes.map(time => ({
           showTime: time,
           showDate: new Date(), // For now, use current date
-          availableSeats: theaterEntry.availableSeats,
+          availableSeats: 30, // 30 seats per showtime
+          totalSeats: 30,
           price: show.price
         }))
       });
