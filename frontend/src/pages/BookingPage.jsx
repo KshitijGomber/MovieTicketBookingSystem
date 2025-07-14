@@ -30,6 +30,8 @@ const BookingPage = () => {
   
   // Debug logging
   console.log('BookingPage - showId from URL:', showId);
+  console.log('BookingPage - Auth state:', { user: !!user, token: !!token });
+  console.log('BookingPage - Location state:', { movie: !!movie, theater: !!theater, showtime: !!showtime });
   
   // Get data from navigation state (passed from MovieDetailsPage)
   const { movie, theater, showtime } = location.state || {};
@@ -43,6 +45,16 @@ const BookingPage = () => {
       });
     }
   }, [movie, theater, showtime, showId, navigate]);
+
+  // Check authentication
+  useEffect(() => {
+    if (!token || !user) {
+      alert('Please sign in to book tickets.');
+      navigate('/signin', { 
+        state: { from: location.pathname, returnData: location.state }
+      });
+    }
+  }, [token, user, navigate, location]);
 
   // Fetch booked seats for this specific showtime and theater
   const { data: bookedSeats = [], isLoading: isLoadingSeats } = useQuery({
@@ -82,7 +94,6 @@ const BookingPage = () => {
       const bookingData = {
         showId: movie._id,
         theaterId: theater._id,
-        showtimeId: showtime._id,
         seats: selectedSeats,
         showTime: showtime.showTime,
         totalAmount: parseFloat(pricing.total),
@@ -107,7 +118,17 @@ const BookingPage = () => {
       });
     } catch (error) {
       console.error('Booking failed:', error);
-      alert('Booking failed. Please try again.');
+      
+      // More specific error messages
+      if (error.message.includes('Invalid token') || error.message.includes('401')) {
+        alert('Please sign in to book tickets.');
+        navigate('/signin');
+      } else if (error.message.includes('Theater ID is required')) {
+        alert('Please select a theater and showtime first.');
+        navigate(`/movies/${showId}`);
+      } else {
+        alert(`Booking failed: ${error.message}. Please try again.`);
+      }
     } finally {
       setIsProcessing(false);
     }

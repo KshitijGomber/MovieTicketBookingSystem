@@ -127,6 +127,9 @@ export async function processPayment({ amount, paymentDetails }) {
 
 export async function createBooking(bookingData) {
   try {
+    console.log('Creating booking with data:', bookingData);
+    console.log('Auth token exists:', !!localStorage.getItem('token'));
+    
     const response = await fetch(`${API_URL}/bookings`, {
       method: 'POST',
       headers: getAuthHeader(),
@@ -136,7 +139,10 @@ export async function createBooking(bookingData) {
       })
     });
 
+    console.log('Booking response status:', response.status);
+    
     const responseData = await response.json();
+    console.log('Booking response data:', responseData);
     
     if (!response.ok) {
       throw new Error(responseData.message || 'Failed to create booking');
