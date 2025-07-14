@@ -63,7 +63,7 @@ export const mockShows = [
 ];
 
 // Use hardcoded API URL for now to avoid env issues
-const API_URL = 'https://movieticketbookingsystem-7suc.onrender.com';
+const API_URL = 'https://movieticketbookingsystem-7suc.onrender.com/api';
 
 // Helper function to handle fetch with timeout
 const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
@@ -84,8 +84,14 @@ const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
 export async function fetchShows(theaterId = '') {
   try {
     let url = `${API_URL}/shows`;
-    if (theaterId) {
-      url += `?theaterId=${theaterId}`;
+    
+    // Ensure theaterId is a string ID, not an object
+    const theaterIdString = typeof theaterId === 'object' && theaterId?._id 
+      ? theaterId._id 
+      : String(theaterId || '').trim();
+      
+    if (theaterIdString) {
+      url += `?theaterId=${encodeURIComponent(theaterIdString)}`;
     }
     
     const response = await fetchWithTimeout(url);

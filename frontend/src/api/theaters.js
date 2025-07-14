@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'https://movieticketbookingsystem-7suc.onrender.com/api';
 
 function getAuthHeader() {
   const token = localStorage.getItem('token');

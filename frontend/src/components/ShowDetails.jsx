@@ -642,7 +642,17 @@ const ShowDetails = () => {
                   show.showTimes.map((time, index) => (
                     <Button
                       key={index}
-                      onClick={() => setSelectedShowTime(time)}
+                      onClick={() => {
+                        // Create a mock showtime object for legacy support
+                        const mockShowtime = {
+                          _id: `${show._id}-${time}`,
+                          showTime: time,
+                          show: show._id,
+                          availableSeats: show.availableSeats || 100,
+                          price: { base: show.price || 10 }
+                        };
+                        setSelectedShowtime(mockShowtime);
+                      }}
                       sx={{
                         minWidth: 100,
                         borderRadius: 2,
@@ -654,7 +664,7 @@ const ShowDetails = () => {
                           backgroundColor: 'primary.main',
                           color: 'white',
                         },
-                        ...(selectedShowTime === time && {
+                        ...(selectedShowtime?.showTime === time && {
                           backgroundColor: 'primary.main',
                           color: 'white',
                           '&:hover': {
