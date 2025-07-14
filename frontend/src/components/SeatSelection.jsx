@@ -1,32 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Grid, Paper, CircularProgress } from '@mui/material';
-import { getBookedSeats } from '../api/bookings';
 
-const SeatSelection = ({ showId, showTime, onSelectSeats, onTimeSelect }) => {
-  const [selectedSeats, setSelectedSeats] = useState([]);
-  const [bookedSeats, setBookedSeats] = useState([]);
-  const [loading, setLoading] = useState(true);
+const SeatSelection = ({ totalSeats = 30, bookedSeats = [], onSeatSelection, selectedSeats = [] }) => {
+  const [internalSelectedSeats, setInternalSelectedSeats] = useState(selectedSeats);
 
+  // Update internal state when external selectedSeats change
   useEffect(() => {
-    const fetchBookedSeats = async () => {
-      if (!showId || !showTime) return;
-      
-      try {
-        const booked = await getBookedSeats(showId, showTime);
-        console.log('Fetched booked seats:', booked);
-        setBookedSeats(booked);
-      } catch (error) {
-        console.error('Error fetching booked seats:', error);
-        // Don't update state on error to prevent UI flicker
-      }
-    };
-    
-    fetchBookedSeats();
-    
-    const intervalId = setInterval(fetchBookedSeats, 10000); // Poll every 10 seconds
-    
-    return () => clearInterval(intervalId); // Clean up on unmount
-  }, [showId, showTime]);
+    setInternalSelectedSeats(selectedSeats);
+  }, [selectedSeats]);
 
   const isSeatBooked = (seatNumber) => {
     return Array.isArray(bookedSeats) 
@@ -35,32 +16,29 @@ const SeatSelection = ({ showId, showTime, onSelectSeats, onTimeSelect }) => {
             ? seat === seatNumber 
             : seat.seatNumber === seatNumber || seat === seatNumber
         )
-      : bookedSeats === seatNumber; // Fallback for non-array values
+      : bookedSeats === seatNumber;
   };
 
   const toggleSeat = (seatNumber) => {
     if (isSeatBooked(seatNumber)) return;
     
-    setSelectedSeats(prev => {
-      const newSelectedSeats = prev.includes(seatNumber)
-        ? prev.filter(seat => seat !== seatNumber)
-        : [...prev, seatNumber];
-      
-      // Call onSelectSeats with the updated seats
-      if (onSelectSeats) {
-        onSelectSeats(newSelectedSeats);
-      }
-      
-      return newSelectedSeats;
-    });
+    const newSelectedSeats = internalSelectedSeats.includes(seatNumber)
+      ? internalSelectedSeats.filter(seat => seat !== seatNumber)
+      : [...internalSelectedSeats, seatNumber];
+    
+    setInternalSelectedSeats(newSelectedSeats);
+    
+    // Call the parent callback
+    if (onSeatSelection) {
+      onSeatSelection(newSelectedSeats);
+    }
   };
-
   const renderSeat = (seatNumber) => {
-    const isSelected = selectedSeats.includes(seatNumber);
-    const isBooked = bookedSeats.includes(seatNumber);
+    const isSelected = internalSelectedSeats.includes(seatNumber);
+    const isBooked = isSeatBooked(seatNumber);
     
     return (
-      <Grid item xs={2} key={seatNumber}>
+      <Grid item xs={1.2} key={seatNumber}>
         <Paper
           onClick={() => !isBooked && toggleSeat(seatNumber)}
           sx={{
@@ -68,7 +46,12 @@ const SeatSelection = ({ showId, showTime, onSelectSeats, onTimeSelect }) => {
             textAlign: 'center',
             cursor: isBooked ? 'not-allowed' : 'pointer',
             bgcolor: isBooked ? 'error.light' : isSelected ? 'primary.main' : 'grey.200',
-            color: isSelected ? 'white' : 'inherit',
+            color: isSelected || isBooked ? 'white' : 'inherit',
+            minHeight: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.8rem',
             '&:hover': {
               bgcolor: isBooked ? 'error.light' : isSelected ? 'primary.dark' : 'grey.300',
             },
@@ -83,68 +66,68 @@ const SeatSelection = ({ showId, showTime, onSelectSeats, onTimeSelect }) => {
   const renderSeatLayout = () => {
     const rows = [];
     const seatsPerRow = 10;
-    const totalSeats = 50;
+    const actualTotalSeats = Math.min(totalSeats, 50); // Cap at 50 seats for UI
 
-    for (let i = 0; i < totalSeats; i += seatsPerRow) {
+    for (let i = 0; i < actualTotalSeats; i += seatsPerRow) {
       const rowSeats = [];
-      for (let j = 1; j <= seatsPerRow; j++) {
-        const seatNumber = i + j;
+      const rowLetter = String.fromCharCode(65 + Math.floor(i / seatsPerRow)); // A, B, C, etc.
+      
+      for (let j = 1; j <= seatsPerRow && (i + j - 1) < actualTotalSeats; j++) {
+        const seatNumber = `${rowLetter}${j}`;
         rowSeats.push(renderSeat(seatNumber));
       }
+      
       rows.push(
-        <Grid container spacing={1} key={`row-${i}`} sx={{ mb: 1 }}>
-          {rowSeats}
-        </Grid>
+        <Box key={`row-${i}`} sx={{ mb: 1 }}>
+          <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
+            Row {rowLetter}
+          </Typography>
+          <Grid container spacing={1} justifyContent="center">
+            {rowSeats}
+          </Grid>
+        </Box>
       );
     }
     return rows;
   };
 
-  if (loading) return <CircularProgress />;
-  if (error) return <Typography color="error">{error}</Typography>;
-
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Select Seats
-      </Typography>
-      
-      <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 20, height: 20, bgcolor: 'grey.200', borderRadius: 1 }} />
-            <Typography variant="body2">Available</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 20, height: 20, bgcolor: 'primary.main', borderRadius: 1 }} />
-            <Typography variant="body2">Selected</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 20, height: 20, bgcolor: 'error.light', borderRadius: 1 }} />
-            <Typography variant="body2">Booked</Typography>
-          </Box>
+      {/* Screen */}
+      <Box sx={{ mb: 3 }}>
+        <Paper 
+          sx={{ 
+            p: 2, 
+            textAlign: 'center', 
+            bgcolor: 'grey.800', 
+            color: 'white',
+            borderRadius: '20px 20px 5px 5px',
+            mb: 4
+          }}
+        >
+          <Typography variant="h6">SCREEN</Typography>
+        </Paper>
+      </Box>
+
+      {/* Legend */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 20, height: 20, bgcolor: 'grey.200', borderRadius: 1 }} />
+          <Typography variant="body2">Available</Typography>
         </Box>
-        
-        <Box sx={{ maxWidth: 500, mx: 'auto' }}>
-          <Paper sx={{ p: 2, mb: 2, textAlign: 'center' }}>
-            Screen
-          </Paper>
-          {renderSeatLayout()}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 20, height: 20, bgcolor: 'primary.main', borderRadius: 1 }} />
+          <Typography variant="body2">Selected</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 20, height: 20, bgcolor: 'error.light', borderRadius: 1 }} />
+          <Typography variant="body2">Booked</Typography>
         </Box>
       </Box>
       
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <Typography>
-          Selected: {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''} 
-          (${selectedSeats.length * 10})
-        </Typography>
-        <Button
-          variant="contained"
-          disabled={selectedSeats.length === 0}
-          onClick={() => onSeatsSelected(selectedSeats)}
-        >
-          Proceed to Payment
-        </Button>
+      {/* Seat Layout */}
+      <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+        {renderSeatLayout()}
       </Box>
     </Box>
   );

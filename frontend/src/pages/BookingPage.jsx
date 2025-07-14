@@ -186,7 +186,7 @@ const BookingPage = () => {
               </Box>
             ) : (
               <SeatSelection
-                totalSeats={showtime.availableSeats || 100}
+                totalSeats={30} // Fixed 30 seats per showtime
                 bookedSeats={bookedSeats}
                 onSeatSelection={handleSeatSelection}
                 selectedSeats={selectedSeats}
