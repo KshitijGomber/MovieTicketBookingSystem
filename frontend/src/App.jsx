@@ -1,4 +1,4 @@
-import { Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
+import { Routes, Route, Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Alert, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { useState } from 'react';
 import './App.css';
@@ -20,6 +20,11 @@ import HomePage from './pages/HomePage';
 import MovieListPage from './pages/MovieListPage';
 import MovieDetailsPage from './pages/MovieDetailsPage';
 
+// Redirect component for legacy URLs
+const ShowRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/movies/${id}`} replace />;
+};
 
 function App() {
   const { user, token } = useAuth();
@@ -143,8 +148,8 @@ function App() {
           
           {/* Legacy routes - redirect to new structure */}
           <Route path="/shows" element={<Navigate to="/movies" replace />} />
-          <Route path="/shows/:id" element={<Navigate to="/movies/:id" replace />} />
-          <Route path="/show/:id" element={<Navigate to="/movies/:id" replace />} />
+          <Route path="/shows/:id" element={<ShowRedirect />} />
+          <Route path="/show/:id" element={<ShowRedirect />} />
           
           {/* Booking Flow */}
           <Route path="/book/:showId" element={

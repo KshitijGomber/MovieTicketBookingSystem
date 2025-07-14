@@ -26,6 +26,9 @@ const MovieDetailsPage = () => {
   const [selectedTheater, setSelectedTheater] = useState(null);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
 
+  // Debug logging
+  console.log('MovieDetailsPage - ID from URL:', id);
+
   // Fetch movie details
   const { data: movie, isLoading: isLoadingMovie, error: movieError } = useQuery({
     queryKey: ['movie', id],

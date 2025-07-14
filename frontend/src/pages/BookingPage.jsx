@@ -28,6 +28,9 @@ const BookingPage = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Debug logging
+  console.log('BookingPage - showId from URL:', showId);
+  
   // Get data from navigation state (passed from MovieDetailsPage)
   const { movie, theater, showtime } = location.state || {};
 

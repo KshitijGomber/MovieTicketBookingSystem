@@ -76,7 +76,7 @@ const MovieGrid = ({ movies, loading }) => {
                 }
               }}
               component={Link}
-              to={`/shows/${movie._id}`}
+              to={`/movies/${movie._id}`}
               style={{ textDecoration: 'none' }}
             >
               <Box sx={{ position: 'relative', overflow: 'hidden' }}>
