@@ -9,7 +9,7 @@ import {
   Paper
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { Movie, PlayArrow, ChevronDown } from '@mui/icons-material';
+import { Movie, PlayArrow, ExpandMore } from '@mui/icons-material';
 
 const Hero = () => {
   const ref = useRef(null);
@@ -386,7 +386,7 @@ const Hero = () => {
           style={{ cursor: 'pointer' }}
           onClick={() => handleNavClick('features')}
         >
-          <ChevronDown 
+          <ExpandMore 
             sx={{ 
               fontSize: 40, 
               color: 'white',
