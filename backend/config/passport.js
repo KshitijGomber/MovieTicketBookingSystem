@@ -5,7 +5,7 @@ const User = require('../models/User');
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || `${process.env.API_URL || 'http://localhost:5000'}/api/auth/google/callback`,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/google/callback`,
     proxy: true // Required for production with proxy
   },
   async (accessToken, refreshToken, profile, done) => {
@@ -20,12 +20,16 @@ passport.use(new GoogleStrategy({
           name: profile.displayName,
           email: profile.emails[0].value,
           username: profile.emails[0].value.split('@')[0],
-          isVerified: true
+          isVerified: true,
+          profilePicture: profile.photos && profile.photos[0] ? profile.photos[0].value : null
         });
         await user.save();
       } else if (!user.googleId) {
         // Update existing user with Google ID if not set
         user.googleId = profile.id;
+        if (profile.photos && profile.photos[0] && !user.profilePicture) {
+          user.profilePicture = profile.photos[0].value;
+        }
         await user.save();
       }
       

@@ -36,6 +36,7 @@ import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LogoutButton from './Auth/LogoutButton';
 import ThemeToggle from './ThemeToggle';
+import UserMenu from './UserMenu';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -182,28 +183,7 @@ const Header = () => {
               {user ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ThemeToggle />
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <IconButton
-                      onClick={handleUserMenuOpen}
-                      sx={{
-                        color: isScrolled ? 'text.primary' : 'white',
-                        background: isScrolled 
-                          ? 'rgba(102, 126, 234, 0.08)' 
-                          : 'rgba(255, 255, 255, 0.1)',
-                        ml: 1,
-                        '&:hover': {
-                          background: isScrolled 
-                            ? 'rgba(102, 126, 234, 0.15)' 
-                            : 'rgba(255, 255, 255, 0.2)',
-                        }
-                      }}
-                    >
-                      <AccountCircle />
-                    </IconButton>
-                  </motion.div>
+                  <UserMenu isScrolled={isScrolled} />
                 </Box>
               ) : (
                 <Box sx={{ display: 'flex', gap: 1.5, ml: 2 }}>
@@ -274,28 +254,7 @@ const Header = () => {
             <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, alignItems: 'center' }}>
               <ThemeToggle sx={{ mr: 1 }} />
               {user && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <IconButton
-                    onClick={handleUserMenuOpen}
-                    size="small"
-                    sx={{
-                      color: isScrolled ? 'text.primary' : 'white',
-                      background: isScrolled 
-                        ? 'rgba(102, 126, 234, 0.08)' 
-                        : 'rgba(255, 255, 255, 0.1)',
-                      '&:hover': {
-                        background: isScrolled 
-                          ? 'rgba(102, 126, 234, 0.15)' 
-                          : 'rgba(255, 255, 255, 0.2)',
-                      }
-                    }}
-                  >
-                    <AccountCircle />
-                  </IconButton>
-                </motion.div>
+                <UserMenu isScrolled={isScrolled} />
               )}
               <motion.div
                 whileHover={{ scale: 1.05 }}

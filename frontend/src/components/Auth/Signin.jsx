@@ -33,6 +33,7 @@ const Signin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -271,12 +272,13 @@ const Signin = () => {
                   fontSize: '1rem',
                   fontWeight: 600,
                   textTransform: 'none',
-                  borderColor: 'divider',
+                  borderColor: isScrolled ? 'divider' : 'rgba(255,255,255,0.3)',
+                  color: isScrolled ? 'text.primary' : 'white',
                   borderRadius: 3,
                   transition: 'all 0.3s ease',
                   '&:hover': {
                     borderColor: 'primary.main',
-                    backgroundColor: 'primary.50',
+                    backgroundColor: isScrolled ? 'rgba(102,126,234,0.08)' : 'rgba(255,255,255,0.1)',
                     transform: 'translateY(-1px)',
                     boxShadow: '0 4px 12px rgba(102,126,234,0.2)'
                   }
