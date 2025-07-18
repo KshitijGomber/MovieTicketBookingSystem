@@ -22,12 +22,3 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
-
-              <App />
-            </ThemeProvider>
-          </QueryClientProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </Auth0Provider>
-  </StrictMode>,
-)
