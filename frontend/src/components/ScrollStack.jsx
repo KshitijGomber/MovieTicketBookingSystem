@@ -1,9 +1,30 @@
 import { useLayoutEffect, useRef, useCallback } from "react";
 import Lenis from "lenis";
-import "./ScrollStack.css";
+import { Box } from '@mui/material';
 
-export const ScrollStackItem = ({ children, itemClassName = "" }) => (
-  <div className={`scroll-stack-card ${itemClassName}`.trim()}>{children}</div>
+export const ScrollStackItem = ({ children, sx = {} }) => (
+  <Box 
+    sx={{
+      transformOrigin: 'top center',
+      willChange: 'transform, filter',
+      backfaceVisibility: 'hidden',
+      transformStyle: 'preserve-3d',
+      boxShadow: '0 0 30px rgba(0, 0, 0, 0.1)',
+      height: '20rem',
+      width: '100%',
+      margin: '30px 0',
+      padding: '3rem',
+      borderRadius: '40px',
+      boxSizing: 'border-box',
+      WebkitTransform: 'translateZ(0)',
+      transform: 'translateZ(0)',
+      position: 'relative',
+      ...sx
+    }}
+    className="scroll-stack-card"
+  >
+    {children}
+  </Box>
 );
 
 const ScrollStack = ({
@@ -54,6 +75,7 @@ const ScrollStack = ({
     const endElement = scroller.querySelector('.scroll-stack-end');
     const endElementTop = endElement ? endElement.offsetTop : 0;
 
+    const cards = Array.from(scroller.querySelectorAll(".scroll-stack-card"));
     cardsRef.current.forEach((card, i) => {
       if (!card) return;
 
@@ -153,7 +175,7 @@ const ScrollStack = ({
 
     const lenis = new Lenis({
       wrapper: scroller,
-      content: scroller.querySelector('.scroll-stack-inner'),
+      content: scroller.firstElementChild, // Direct reference to scroll-stack-inner
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
@@ -234,16 +256,35 @@ const ScrollStack = ({
   ]);
 
   return (
-    <div
-      className={`scroll-stack-scroller ${className}`.trim()}
+    <Box
       ref={scrollerRef}
+      sx={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+        overflowX: 'visible',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        scrollBehavior: 'smooth',
+        WebkitTransform: 'translateZ(0)',
+        transform: 'translateZ(0)',
+        willChange: 'scroll-position',
+      }}
+      className="scroll-stack-scroller"
     >
-      <div className="scroll-stack-inner">
+      <Box 
+        sx={{
+          padding: '20vh 5rem 50rem',
+          minHeight: '100vh',
+        }}
+        className="scroll-stack-inner"
+      >
         {children}
         {/* Spacer so the last pin can release cleanly */}
-        <div className="scroll-stack-end" />
-      </div>
-    </div>
+        <Box sx={{ width: '100%', height: '1px' }} className="scroll-stack-end" />
+      </Box>
+    </Box>
   );
 };
 
