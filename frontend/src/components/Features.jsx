@@ -16,6 +16,7 @@ import {
   Security
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import AnimatedCard from './AnimatedCard';
 
 const Features = () => {
   const ref = useRef(null);
@@ -174,7 +175,6 @@ const Features = () => {
                   initial={{ opacity: 0, y: 80, scale: 0.9 }}
                   animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 80, scale: 0.9 }}
                   transition={{ duration: 0.8, delay: feature.delay }}
-                  whileHover={{ y: -10, scale: 1.02 }}
                   style={{ height: '100%' }}
                 >
                   <Paper
@@ -189,9 +189,12 @@ const Features = () => {
                       position: 'relative',
                       overflow: 'hidden',
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      cursor: 'pointer',
+                      transformStyle: 'preserve-3d',
                       '&:hover': {
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+                        boxShadow: '0 25px 80px rgba(0,0,0,0.15)',
                         border: '1px solid rgba(255,255,255,1)',
+                        transform: 'perspective(1000px) rotateX(3deg) rotateY(-3deg) translateY(-10px) scale(1.02)',
                         '& .feature-icon': {
                           transform: 'scale(1.1) rotate(5deg)',
                         },
@@ -268,9 +271,8 @@ const Features = () => {
                         }}
                       >
                         {feature.description}
-                      </Typography>
-                    </Box>
-                  </Paper>
+                      </Typography>                      </Box>
+                    </Paper>
                 </motion.div>
               </Grid>
             ))}
