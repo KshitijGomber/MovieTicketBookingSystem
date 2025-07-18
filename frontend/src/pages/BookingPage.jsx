@@ -110,7 +110,7 @@ const BookingPage = () => {
         totalAmount: parseFloat(pricing.total),
         paymentDetails: {
           method: 'card', // Mock payment
-          status: 'completed'
+          status: 'completed',
           transactionId: paymentResult.transactionId
         }
       };
