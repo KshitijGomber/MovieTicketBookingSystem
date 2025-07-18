@@ -1,36 +1,49 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Typography,
   Card,
   CardContent,
+  Typography,
   Button,
   Chip,
   Grid,
   Rating,
+  Avatar,
   Divider,
   IconButton,
   Collapse,
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Badge,
+  Paper
 } from '@mui/material';
 import {
   LocationOn,
-  Phone,
   AccessTime,
-  LocalParking,
-  Restaurant,
-  Accessible,
-  AcUnit,
   Star,
+  Phone,
   ExpandMore,
   ExpandLess,
+  LocalParking,
+  Restaurant,
+  Wifi,
+  AcUnit,
+  Accessible,
+  LocalAtm,
+  Security,
+  EventSeat,
   CheckCircle
 } from '@mui/icons-material';
 
-const TheaterSelection = ({ theaters, selectedTheater, onTheaterSelect, onShowtimeSelect, selectedShowtime }) => {
+const TheaterSelection = ({ 
+  theaters, 
+  selectedTheater, 
+  onTheaterSelect, 
+  selectedShowtime, 
+  onShowtimeSelect 
+}) => {
   const [expandedTheater, setExpandedTheater] = useState(null);
 
   const handleTheaterExpand = (theaterId) => {
@@ -41,177 +54,255 @@ const TheaterSelection = ({ theaters, selectedTheater, onTheaterSelect, onShowti
     const iconMap = {
       'Parking': <LocalParking />,
       'Food Court': <Restaurant />,
+      'WiFi': <Wifi />,
+      'AC': <AcUnit />,
+      'Air Conditioning': <AcUnit />,
       'Wheelchair Accessible': <Accessible />,
-      'Air Conditioning': <AcUnit />
+      'ATM': <LocalAtm />,
+      'Security': <Security />,
     };
-    return iconMap[amenity] || <CheckCircle />;
+    return iconMap[amenity] || <Star />;
   };
 
-  const formatPrice = (price) => {
-    if (typeof price === 'object') {
-      return `₹${price.base} - ₹${price.vip || price.premium || price.base + 100}`;
-    }
-    return `₹${price}`;
-  };
+  if (!theaters || theaters.length === 0) {
+    return (
+      <Box textAlign="center" py={4}>
+        <Typography variant="h6" color="text.secondary">
+          No theaters available for this movie
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
-        Select Theater & Showtime
-      </Typography>
-
-      {theaters.map((theater) => (
-        <Card 
-          key={theater._id} 
-          sx={{ 
-            mb: 2,
-            border: selectedTheater?._id === theater._id ? 2 : 1,
-            borderColor: selectedTheater?._id === theater._id ? 'primary.main' : 'divider',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {theater.name}
-                </Typography>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {theater.fullAddress || `${theater.location.address}, ${theater.location.city}`}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Star sx={{ color: '#FFD700', fontSize: 16, mr: 0.5 }} />
-                    <Typography variant="body2">
-                      {theater.rating}/5 ({theater.totalReviews} reviews)
-                    </Typography>
-                  </Box>
+      <Grid container spacing={3}>
+        {theaters.map((theater) => (
+          <Grid item xs={12} key={theater._id}>
+            <Card 
+              elevation={selectedTheater?._id === theater._id ? 8 : 2}
+              sx={{ 
+                borderRadius: 3,
+                border: selectedTheater?._id === theater._id ? 2 : 0,
+                borderColor: 'primary.main',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  elevation: 6,
+                  transform: 'translateY(-2px)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                {/* Theater Header */}
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
+                  <Avatar
+                    sx={{ 
+                      width: 56, 
+                      height: 56, 
+                      bgcolor: 'primary.main',
+                      mr: 2,
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {theater.name.charAt(0)}
+                  </Avatar>
                   
-                  {theater.priceRange && (
-                    <Typography variant="body2" color="primary">
-                      {formatPrice(theater.priceRange)}
-                    </Typography>
-                  )}
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 2 }}>
+                        {theater.name}
+                      </Typography>
+                      {selectedTheater?._id === theater._id && (
+                        <CheckCircle color="primary" sx={{ ml: 1 }} />
+                      )}
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <LocationOn sx={{ fontSize: '1rem', color: 'text.secondary', mr: 0.5 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {theater.location}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Rating
+                        value={theater.rating || 4.5}
+                        precision={0.1}
+                        size="small"
+                        readOnly
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {theater.rating || 4.5} • {theater.reviews || 120} reviews
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <IconButton
+                    onClick={() => handleTheaterExpand(theater._id)}
+                    sx={{ 
+                      bgcolor: 'background.paper',
+                      '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                  >
+                    {expandedTheater === theater._id ? <ExpandLess /> : <ExpandMore />}
+                  </IconButton>
                 </Box>
 
-                {/* Amenities */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-                  {theater.amenities?.slice(0, 4).map((amenity) => (
+                {/* Quick Info */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                  {theater.amenities?.slice(0, 3).map((amenity) => (
                     <Chip
                       key={amenity}
+                      icon={getAmenityIcon(amenity)}
                       label={amenity}
                       size="small"
                       variant="outlined"
-                      sx={{ fontSize: '0.7rem' }}
+                      sx={{ 
+                        borderRadius: 2,
+                        '& .MuiChip-icon': { fontSize: '1rem' }
+                      }}
                     />
                   ))}
-                  {theater.amenities?.length > 4 && (
+                  {theater.amenities?.length > 3 && (
                     <Chip
-                      label={`+${theater.amenities.length - 4} more`}
+                      label={`+${theater.amenities.length - 3} more`}
                       size="small"
-                      variant="outlined"
-                      sx={{ fontSize: '0.7rem' }}
+                      variant="filled"
+                      color="primary"
+                      sx={{ borderRadius: 2 }}
                     />
                   )}
                 </Box>
-              </Box>
 
-              <IconButton
-                onClick={() => handleTheaterExpand(theater._id)}
-                sx={{ ml: 2 }}
-              >
-                {expandedTheater === theater._id ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
-            </Box>
-
-            {/* Showtimes */}
-            {theater.showtimes && theater.showtimes.length > 0 && (
-              <Box>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                  Available Showtimes:
-                </Typography>
-                <Grid container spacing={1}>
-                  {theater.showtimes.map((showtime) => (
-                    <Grid item key={showtime._id}>
-                      <Button
-                        variant={selectedShowtime?._id === showtime._id ? 'contained' : 'outlined'}
-                        size="small"
-                        onClick={() => {
-                          onTheaterSelect(theater);
-                          onShowtimeSelect(showtime);
-                        }}
-                        sx={{
-                          minWidth: 80,
-                          fontSize: '0.8rem',
-                          textTransform: 'none'
-                        }}
-                      >
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="caption" display="block">
-                            {showtime.showTime}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            {showtime.availableSeats} seats
-                          </Typography>
-                        </Box>
-                      </Button>
+                {/* Showtimes */}
+                {theater.showtimes && theater.showtimes.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                      Available Showtimes
+                    </Typography>
+                    <Grid container spacing={1.5}>
+                      {theater.showtimes.map((showtime) => (
+                        <Grid item key={showtime._id}>
+                          <Paper
+                            elevation={selectedShowtime?._id === showtime._id ? 4 : 1}
+                            sx={{
+                              p: 2,
+                              minWidth: 100,
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              borderRadius: 2,
+                              border: selectedShowtime?._id === showtime._id ? 2 : 1,
+                              borderColor: selectedShowtime?._id === showtime._id ? 'primary.main' : 'divider',
+                              bgcolor: selectedShowtime?._id === showtime._id ? 'primary.50' : 'background.paper',
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                bgcolor: 'primary.50',
+                                transform: 'translateY(-1px)',
+                                boxShadow: 3
+                              }
+                            }}
+                            onClick={() => {
+                              onTheaterSelect(theater);
+                              onShowtimeSelect(showtime);
+                            }}
+                          >
+                            <Typography 
+                              variant="subtitle2" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: selectedShowtime?._id === showtime._id ? 'primary.main' : 'text.primary'
+                              }}
+                            >
+                              {showtime.showTime}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5 }}>
+                              <EventSeat sx={{ fontSize: '0.9rem', mr: 0.5, color: 'text.secondary' }} />
+                              <Typography variant="caption" color="text.secondary">
+                                {showtime.availableSeats}
+                              </Typography>
+                            </Box>
+                            {showtime.price && (
+                              <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                  fontWeight: 'bold',
+                                  color: 'success.main',
+                                  display: 'block',
+                                  mt: 0.5
+                                }}
+                              >
+                                ${showtime.price}
+                              </Typography>
+                            )}
+                          </Paper>
+                        </Grid>
+                      ))}
                     </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
+                  </Box>
+                )}
 
-            {/* Expanded Details */}
-            <Collapse in={expandedTheater === theater._id}>
-              <Divider sx={{ my: 2 }} />
-              
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Contact Information
-                  </Typography>
-                  <List dense>
-                    {theater.contactInfo?.phone && (
-                      <ListItem>
-                        <ListItemIcon><Phone fontSize="small" /></ListItemIcon>
-                        <ListItemText primary={theater.contactInfo.phone} />
-                      </ListItem>
-                    )}
-                    <ListItem>
-                      <ListItemIcon><AccessTime fontSize="small" /></ListItemIcon>
-                      <ListItemText 
-                        primary="Operating Hours" 
-                        secondary="9:00 AM - 11:00 PM (Daily)"
-                      />
-                    </ListItem>
-                  </List>
-                </Grid>
+                {/* Expanded Details */}
+                <Collapse in={expandedTheater === theater._id}>
+                  <Divider sx={{ my: 2 }} />
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        Contact Information
+                      </Typography>
+                      <List dense sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
+                        {theater.contactInfo?.phone && (
+                          <ListItem>
+                            <ListItemIcon><Phone fontSize="small" color="primary" /></ListItemIcon>
+                            <ListItemText 
+                              primary={theater.contactInfo.phone}
+                              secondary="Phone Number"
+                            />
+                          </ListItem>
+                        )}
+                        <ListItem>
+                          <ListItemIcon><AccessTime fontSize="small" color="primary" /></ListItemIcon>
+                          <ListItemText 
+                            primary="9:00 AM - 11:00 PM"
+                            secondary="Operating Hours (Daily)"
+                          />
+                        </ListItem>
+                      </List>
+                    </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Amenities
-                  </Typography>
-                  <List dense>
-                    {theater.amenities?.slice(0, 6).map((amenity) => (
-                      <ListItem key={amenity}>
-                        <ListItemIcon>
-                          {getAmenityIcon(amenity)}
-                        </ListItemIcon>
-                        <ListItemText primary={amenity} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-              </Grid>
-            </Collapse>
-          </CardContent>
-        </Card>
-      ))}
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        All Amenities
+                      </Typography>
+                      <Grid container spacing={1}>
+                        {theater.amenities?.map((amenity) => (
+                          <Grid item xs={6} key={amenity}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              p: 1,
+                              bgcolor: 'background.paper',
+                              borderRadius: 1,
+                              border: '1px solid',
+                              borderColor: 'divider'
+                            }}>
+                              {getAmenityIcon(amenity)}
+                              <Typography variant="caption" sx={{ ml: 1 }}>
+                                {amenity}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Collapse>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };
