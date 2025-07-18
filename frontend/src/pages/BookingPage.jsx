@@ -18,6 +18,8 @@ import {
 import { ArrowBack, EventSeat, AccessTime, LocationOn } from '@mui/icons-material';
 import SeatSelection from '../components/SeatSelection';
 import { useAuth } from '../context/AuthContext';
+import { SeatSelectionSkeleton } from '../components/LoadingSkeleton';
+import PaymentModal from '../components/PaymentModal';
 
 const BookingPage = () => {
   const { showId } = useParams();
@@ -27,6 +29,7 @@ const BookingPage = () => {
   
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   // Get data from navigation state (passed from MovieDetailsPage)
   const { movie, theater, showtime } = location.state || {};
@@ -89,7 +92,13 @@ const BookingPage = () => {
       return;
     }
 
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async (paymentResult) => {
+    setShowPaymentModal(false);
     setIsProcessing(true);
+    
     try {
       const pricing = calculateTotal();
       
@@ -102,6 +111,7 @@ const BookingPage = () => {
         paymentDetails: {
           method: 'card', // Mock payment
           status: 'completed'
+          transactionId: paymentResult.transactionId
         }
       };
 
@@ -204,9 +214,7 @@ const BookingPage = () => {
             </Typography>
             
             {isLoadingSeats ? (
-              <Box display="flex" justifyContent="center" py={4}>
-                <CircularProgress />
-              </Box>
+              <SeatSelectionSkeleton />
             ) : (
               <SeatSelection
                 totalSeats={30} // Fixed 30 seats per showtime
@@ -286,6 +294,19 @@ const BookingPage = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+        bookingDetails={{
+          movieTitle: movie?.title,
+          seats: selectedSeats,
+          totalAmount: parseFloat(pricing.total)
+        }}
+        isProcessing={isProcessing}
+      />
     </Container>
   );
 };

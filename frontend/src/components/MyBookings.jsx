@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBookings, cancelBooking } from '../api/bookings';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { BookingsSkeleton } from './LoadingSkeleton';
 import {
   Event,
   AccessTime,
@@ -93,26 +94,7 @@ const MyBookings = () => {
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          minHeight: '60vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          <LocalMovies sx={{ fontSize: 48, color: 'primary.main' }} />
-        </motion.div>
-        <Typography variant="h6" color="text.secondary">
-          Loading your bookings...
-        </Typography>
-      </Box>
+      <BookingsSkeleton count={6} />
     );
   }
 

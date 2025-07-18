@@ -15,27 +15,12 @@ import {
   Stack
 } from '@mui/material';
 import { PlayArrow, Star, AccessTime, LocalMovies } from '@mui/icons-material';
+import { MovieCardSkeleton } from './LoadingSkeleton';
 
 const MovieGrid = ({ movies, loading }) => {
   if (loading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        mt: 4,
-        minHeight: 200 
-      }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          <LocalMovies sx={{ fontSize: 48, color: 'primary.main' }} />
-        </motion.div>
-        <Typography sx={{ ml: 2, fontSize: '1.125rem', color: 'text.secondary' }}>
-          Loading amazing movies...
-        </Typography>
-      </Box>
+      <MovieCardSkeleton count={8} />
     );
   }
 

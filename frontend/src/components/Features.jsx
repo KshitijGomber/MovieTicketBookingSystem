@@ -19,10 +19,12 @@ import {
   Star,
   Security
 } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
 const Features = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: false, amount: 0.2 });
+  const theme = useTheme();
 
   const features = [
     {
@@ -81,7 +83,9 @@ const Features = () => {
       sx={{ 
         py: { xs: 8, md: 12 }, 
         position: 'relative',
-        background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
+       background: theme.palette.mode === 'dark'
+         ? 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)'
+         : 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
         overflow: 'hidden'
       }}
     >

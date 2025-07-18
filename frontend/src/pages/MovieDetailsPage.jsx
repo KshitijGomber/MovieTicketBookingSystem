@@ -18,6 +18,7 @@ import { ArrowBack, AccessTime, Star, AttachMoney, PlayArrow } from '@mui/icons-
 import { fetchShow } from '../api/shows';
 import { getTheatersForMovie } from '../api/theaters';
 import TheaterSelection from '../components/TheaterSelection';
+import { MovieDetailsSkeleton } from '../components/LoadingSkeleton';
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
@@ -74,9 +75,7 @@ const MovieDetailsPage = () => {
 
   if (isLoadingMovie) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress size={60} />
-      </Box>
+      <MovieDetailsSkeleton />
     );
   }
 

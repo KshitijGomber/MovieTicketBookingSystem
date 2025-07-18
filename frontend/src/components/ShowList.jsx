@@ -5,6 +5,7 @@ import { Box, CircularProgress, Typography, Container } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MovieGrid from './MovieGrid';
 import { fetchShows } from '../api/shows';
+import { MovieCardSkeleton } from './LoadingSkeleton';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(6, 2),
@@ -59,40 +60,32 @@ const ShowList = () => {
 
   if (isLoading) {
     return (
-      <LoadingWrapper
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
+      <StyledContainer maxWidth="xl">
         <motion.div
-          animate={{ 
-            rotate: 360,
-            scale: [1, 1.1, 1]
-          }}
-          transition={{ 
-            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-            scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-          }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          <CircularProgress 
-            size={60} 
-            sx={{ 
-              color: 'white',
-              filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))'
-            }} 
-          />
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 2,
+                fontSize: { xs: '2rem', md: '3rem' },
+              }}
+            >
+              🎬 Now Showing
+            </Typography>
+          </Box>
+          <MovieCardSkeleton count={8} />
         </motion.div>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            mt: 2, 
-            fontWeight: 600,
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-          }}
-        >
-          Loading amazing movies...
-        </Typography>
-      </LoadingWrapper>
+      </StyledContainer>
     );
   }
 

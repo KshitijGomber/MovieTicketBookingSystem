@@ -35,6 +35,7 @@ import {
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LogoutButton from './Auth/LogoutButton';
+import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -179,30 +180,34 @@ const Header = () => {
 
               {/* User Menu or Auth Buttons */}
               {user ? (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <IconButton
-                    onClick={handleUserMenuOpen}
-                    sx={{
-                      color: isScrolled ? 'text.primary' : 'white',
-                      background: isScrolled 
-                        ? 'rgba(102, 126, 234, 0.08)' 
-                        : 'rgba(255, 255, 255, 0.1)',
-                      ml: 1,
-                      '&:hover': {
-                        background: isScrolled 
-                          ? 'rgba(102, 126, 234, 0.15)' 
-                          : 'rgba(255, 255, 255, 0.2)',
-                      }
-                    }}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ThemeToggle />
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <AccountCircle />
-                  </IconButton>
-                </motion.div>
+                    <IconButton
+                      onClick={handleUserMenuOpen}
+                      sx={{
+                        color: isScrolled ? 'text.primary' : 'white',
+                        background: isScrolled 
+                          ? 'rgba(102, 126, 234, 0.08)' 
+                          : 'rgba(255, 255, 255, 0.1)',
+                        ml: 1,
+                        '&:hover': {
+                          background: isScrolled 
+                            ? 'rgba(102, 126, 234, 0.15)' 
+                            : 'rgba(255, 255, 255, 0.2)',
+                        }
+                      }}
+                    >
+                      <AccountCircle />
+                    </IconButton>
+                  </motion.div>
+                </Box>
               ) : (
                 <Box sx={{ display: 'flex', gap: 1.5, ml: 2 }}>
+                  <ThemeToggle />
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -267,6 +272,7 @@ const Header = () => {
 
             {/* Mobile Menu Button */}
             <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, alignItems: 'center' }}>
+              <ThemeToggle sx={{ mr: 1 }} />
               {user && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}

@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { Movie, PlayArrow, ExpandMore } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
 const Hero = () => {
   const ref = useRef(null);
@@ -22,6 +23,7 @@ const Hero = () => {
   
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
+  const theme = useTheme();
 
   const handleNavClick = (targetId) => {
     const targetElement = document.getElementById(targetId);
@@ -53,7 +55,9 @@ const Hero = () => {
         sx={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 100%)',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)'
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 100%)',
           '&::before': {
             content: '""',
             position: 'absolute',

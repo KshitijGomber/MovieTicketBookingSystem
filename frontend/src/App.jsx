@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { useState } from 'react';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 import './App.css';
 import ShowList from './components/ShowList';
 import ShowDetails from './components/ShowDetails';
@@ -28,6 +29,7 @@ const ShowRedirect = () => {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const theme = useMuiTheme();
 
   // Initialize Lenis smooth scroll
   useLenis();
@@ -45,7 +47,14 @@ function App() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-pink-100 to-rose-100 text-gray-800">
+    <div style={{
+      minHeight: '100vh',
+      background: theme.palette.mode === 'dark' 
+        ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 40%, #2a2a2a 100%)'
+        : 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 40%, #e8e8e8 100%)',
+      color: theme.palette.text.primary,
+      transition: 'all 0.3s ease'
+    }}>
       {/* Scroll Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 z-50 origin-left"
