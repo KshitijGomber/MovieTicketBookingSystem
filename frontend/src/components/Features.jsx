@@ -1,12 +1,8 @@
-import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import React from 'react';
 import { 
   Box, 
   Typography, 
   Container,
-  Grid,
-  Card,
-  CardContent,
   Paper
 } from '@mui/material';
 import { 
@@ -14,16 +10,13 @@ import {
   EventSeat, 
   AccessTime, 
   Payment,
-  LocalMovies,
   Smartphone,
-  Star,
   Security
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import ScrollStack, { ScrollStackItem } from './ScrollStack';
 
 const Features = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.2 });
   const theme = useTheme();
 
   const features = [
@@ -81,12 +74,12 @@ const Features = () => {
     <Box 
       id="features"
       sx={{ 
-        py: { xs: 8, md: 12 }, 
         position: 'relative',
-       background: theme.palette.mode === 'dark'
-         ? 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)'
-         : 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
-        overflow: 'hidden'
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)'
+          : 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
+        overflow: 'hidden',
+        height: '100vh'
       }}
     >
       {/* Background decorative elements */}
@@ -99,7 +92,8 @@ const Features = () => {
           height: 200,
           background: 'radial-gradient(circle, rgba(102,126,234,0.08) 0%, transparent 70%)',
           borderRadius: '50%',
-          filter: 'blur(40px)'
+          filter: 'blur(40px)',
+          zIndex: 1
         }}
       />
       
@@ -112,173 +106,158 @@ const Features = () => {
           height: 150,
           background: 'radial-gradient(circle, rgba(255,107,107,0.08) 0%, transparent 70%)',
           borderRadius: '50%',
-          filter: 'blur(30px)'
+          filter: 'blur(30px)',
+          zIndex: 1
         }}
       />
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-        <motion.div
-          ref={ref}
-          initial={{ opacity: 0, y: 100 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 100 }}
-          transition={{ duration: 0.8 }}
-        >
-          {/* Section Header */}
-          <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Typography
-                variant="h2"
-                sx={{
-                  fontWeight: 900,
-                  fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  mb: 3,
-                  letterSpacing: '-0.02em'
-                }}
-              >
-                Why Choose Us?
-              </Typography>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <Typography
-                variant="h5"
-                sx={{
-                  color: 'text.secondary',
-                  fontWeight: 300,
-                  maxWidth: 600,
-                  mx: 'auto',
-                  lineHeight: 1.6,
-                  fontSize: { xs: '1.125rem', md: '1.375rem' }
-                }}
-              >
-                Experience the future of movie booking with our comprehensive platform designed for movie lovers
-              </Typography>
-            </motion.div>
-          </Box>
+      {/* Header Section */}
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2, pt: 8 }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 900,
+              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              mb: 3,
+              letterSpacing: '-0.02em'
+            }}
+          >
+            Why Choose Us?
+          </Typography>
+          
+          <Typography
+            variant="h5"
+            sx={{
+              color: 'text.secondary',
+              fontWeight: 300,
+              maxWidth: 600,
+              mx: 'auto',
+              lineHeight: 1.6,
+              fontSize: { xs: '1.125rem', md: '1.375rem' }
+            }}
+          >
+            Experience the future of movie booking with our comprehensive platform
+          </Typography>
+        </Box>
+      </Container>
 
-          {/* Features Grid */}
-          <Grid container spacing={{ xs: 3, md: 4 }}>
-            {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 80, scale: 0.9 }}
-                  animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 80, scale: 0.9 }}
-                  transition={{ duration: 0.8, delay: feature.delay }}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  style={{ height: '100%' }}
-                >
-                  <Paper
-                    elevation={0}
+      {/* Scroll Stack Section */}
+      <Box sx={{ height: 'calc(100vh - 200px)', position: 'relative', zIndex: 2 }}>
+        <ScrollStack
+          itemDistance={120}
+          itemScale={0.05}
+          itemStackDistance={40}
+          stackPosition="25%"
+          scaleEndPosition="15%"
+          baseScale={0.88}
+          rotationAmount={2}
+          blurAmount={1}
+        >
+          {features.map((feature, index) => (
+            <ScrollStackItem key={index}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  height: '100%',
+                  borderRadius: 4,
+                  background: feature.bgColor,
+                  border: '1px solid rgba(255,255,255,0.8)',
+                  backdropFilter: 'blur(20px)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+                    border: '1px solid rgba(255,255,255,1)',
+                    '& .feature-icon': {
+                      transform: 'scale(1.1) rotate(5deg)',
+                    },
+                    '& .feature-bg': {
+                      opacity: 0.8,
+                      transform: 'scale(1.1)',
+                    }
+                  }
+                }}
+              >
+                {/* Background Icon */}
+                <Box
+                  className="feature-bg"
+                  sx={{
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 120,
+                    height: 120,
+                    background: feature.color,
+                    borderRadius: '50%',
+                    opacity: 0.4,
+                    filter: 'blur(30px)',
+                    transition: 'all 0.4s ease',
+                    transform: 'scale(1)',
+                  }}
+                />
+
+                {/* Content */}
+                <Box sx={{ position: 'relative', zIndex: 2 }}>
+                  {/* Icon */}
+                  <Box
+                    className="feature-icon"
                     sx={{
-                      p: { xs: 3, md: 4 },
-                      height: '100%',
-                      borderRadius: 4,
-                      background: feature.bgColor,
-                      border: '1px solid rgba(255,255,255,0.8)',
-                      backdropFilter: 'blur(20px)',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover': {
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
-                        border: '1px solid rgba(255,255,255,1)',
-                        '& .feature-icon': {
-                          transform: 'scale(1.1) rotate(5deg)',
-                        },
-                        '& .feature-bg': {
-                          opacity: 0.8,
-                          transform: 'scale(1.1)',
-                        }
+                      width: 80,
+                      height: 80,
+                      borderRadius: 3,
+                      background: feature.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 3,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                      transition: 'all 0.3s ease',
+                      '& svg': {
+                        color: 'white',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                       }
                     }}
                   >
-                    {/* Background Icon */}
-                    <Box
-                      className="feature-bg"
-                      sx={{
-                        position: 'absolute',
-                        top: -20,
-                        right: -20,
-                        width: 120,
-                        height: 120,
-                        background: feature.color,
-                        borderRadius: '50%',
-                        opacity: 0.4,
-                        filter: 'blur(30px)',
-                        transition: 'all 0.4s ease',
-                        transform: 'scale(1)',
-                      }}
-                    />
+                    {feature.icon}
+                  </Box>
 
-                    {/* Content */}
-                    <Box sx={{ position: 'relative', zIndex: 2 }}>
-                      {/* Icon */}
-                      <Box
-                        className="feature-icon"
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 3,
-                          background: feature.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mb: 3,
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                          transition: 'all 0.3s ease',
-                          '& svg': {
-                            color: 'white',
-                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                          }
-                        }}
-                      >
-                        {feature.icon}
-                      </Box>
+                  {/* Title */}
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 700,
+                      mb: 2,
+                      color: 'text.primary',
+                      fontSize: { xs: '1.5rem', md: '2rem' }
+                    }}
+                  >
+                    {feature.title}
+                  </Typography>
 
-                      {/* Title */}
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 700,
-                          mb: 2,
-                          color: 'text.primary',
-                          fontSize: { xs: '1.25rem', md: '1.375rem' }
-                        }}
-                      >
-                        {feature.title}
-                      </Typography>
-
-                      {/* Description */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: 'text.secondary',
-                          lineHeight: 1.7,
-                          fontSize: { xs: '0.875rem', md: '1rem' }
-                        }}
-                      >
-                        {feature.description}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
-      </Container>
+                  {/* Description */}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: 'text.secondary',
+                      lineHeight: 1.7,
+                      fontSize: { xs: '1rem', md: '1.25rem' }
+                    }}
+                  >
+                    {feature.description}
+                  </Typography>
+                </Box>
+              </Paper>
+            </ScrollStackItem>
+          ))}
+        </ScrollStack>
+      </Box>
     </Box>
   );
 };
