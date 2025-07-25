@@ -473,7 +473,7 @@ const BookingForm = () => {
 
           <Grid container spacing={4}>
             {/* Booking Summary */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -520,7 +520,7 @@ const BookingForm = () => {
             </Grid>
 
             {/* Payment Form */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
