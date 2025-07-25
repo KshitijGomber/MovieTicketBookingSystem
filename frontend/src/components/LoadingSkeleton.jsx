@@ -12,7 +12,7 @@ export const MovieCardSkeleton = ({ count = 8 }) => {
   return (
     <Grid container spacing={3}>
       {Array.from({ length: count }).map((_, index) => (
-        <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={index}>
           <Card>
             <Skeleton 
               variant="rectangular" 
@@ -68,7 +68,7 @@ export const MovieDetailsSkeleton = () => {
       <Skeleton variant="text" width={120} height={40} sx={{ mb: 3 }} />
       
       <Grid container spacing={4}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Skeleton 
             variant="rectangular" 
             height={600} 
@@ -76,7 +76,7 @@ export const MovieDetailsSkeleton = () => {
           />
         </Grid>
         
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Skeleton variant="text" height={60} width="70%" sx={{ mb: 2 }} />
           
           <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
@@ -114,7 +114,7 @@ export const BookingsSkeleton = ({ count = 6 }) => {
       
       <Grid container spacing={3}>
         {Array.from({ length: count }).map((_, index) => (
-          <Grid item xs={12} md={6} lg={4} key={index}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>

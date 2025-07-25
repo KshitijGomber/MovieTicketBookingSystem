@@ -171,7 +171,7 @@ const BookingPage = () => {
         {/* Movie & Theater Info */}
         <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <img 
                 src={movie.image} 
                 alt={movie.title}
@@ -183,7 +183,7 @@ const BookingPage = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={9}>
+            <Grid size={{ xs: 12, md: 9 }}>
               <Typography variant="h5" gutterBottom>{movie.title}</Typography>
               <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
                 <Chip icon={<LocationOn />} label={theater.name} />
@@ -207,7 +207,7 @@ const BookingPage = () => {
 
       <Grid container spacing={4}>
         {/* Seat Selection */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <EventSeat /> Select Your Seats
@@ -227,7 +227,7 @@ const BookingPage = () => {
         </Grid>
 
         {/* Booking Summary */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Paper elevation={2} sx={{ p: 3, position: 'sticky', top: 100 }}>
             <Typography variant="h6" gutterBottom>
               Booking Summary

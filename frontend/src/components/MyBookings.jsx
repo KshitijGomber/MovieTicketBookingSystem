@@ -201,7 +201,7 @@ const MyBookings = () => {
             <Grid container spacing={3} sx={{ mb: 6 }}>
               <AnimatePresence>
                 {activeBookings.map((booking, index) => (
-                  <Grid item xs={12} md={6} lg={4} key={booking._id}>
+                  <Grid size={{ xs: 12, md: 6, lg: 4 }} key={booking._id}>
                     <motion.div
                       initial={{ opacity: 0, y: 50, scale: 0.9 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -427,7 +427,7 @@ const MyBookings = () => {
 
             <Grid container spacing={3}>
               {cancelledBookings.map((booking, index) => (
-                <Grid item xs={12} md={6} lg={4} key={booking._id}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={booking._id}>
                   <motion.div
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}

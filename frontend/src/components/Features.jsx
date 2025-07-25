@@ -170,7 +170,7 @@ const Features = () => {
           {/* Features Grid */}
           <Grid container spacing={{ xs: 3, md: 4 }}>
             {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={index}>
                 <motion.div
                   initial={{ opacity: 0, y: 80, scale: 0.9 }}
                   animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 80, scale: 0.9 }}
