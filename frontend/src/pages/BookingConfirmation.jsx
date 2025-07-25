@@ -96,7 +96,7 @@ export default function BookingConfirmation() {
 
       <Grid container spacing={4}>
         {/* Movie & Theater Details */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           {/* Movie Information */}
           <Card elevation={2} sx={{ mb: 3 }}>
             <CardContent>
@@ -104,7 +104,7 @@ export default function BookingConfirmation() {
                 <MovieIcon color="primary" /> Movie Details
               </Typography>
               <Grid container spacing={3} alignItems="center">
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <img 
                     src={movie?.image} 
                     alt={movie?.title}
@@ -116,7 +116,7 @@ export default function BookingConfirmation() {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                   <Typography variant="h4" gutterBottom fontWeight="bold">
                     {movie?.title}
                   </Typography>
@@ -141,7 +141,7 @@ export default function BookingConfirmation() {
                 <LocationIcon color="primary" /> Theater & Show Details
               </Typography>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Box mb={2}>
                     <Typography variant="h6" gutterBottom>{theater?.name}</Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -154,7 +154,7 @@ export default function BookingConfirmation() {
                     <Typography variant="body1">{showtime?.screen || 'Screen 1'}</Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Box mb={2}>
                     <Typography variant="subtitle2" color="text.secondary">Show Date & Time</Typography>
                     <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -188,7 +188,7 @@ export default function BookingConfirmation() {
         </Grid>
 
         {/* Booking Summary & Receipt */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Card elevation={2} sx={{ position: 'sticky', top: 100 }}>
             <CardContent>
               <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

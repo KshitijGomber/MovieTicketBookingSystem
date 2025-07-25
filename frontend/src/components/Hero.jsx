@@ -134,7 +134,7 @@ const Hero = () => {
         >
           
           {/* Left Content - Text */}
-          <Grid item xs={12} md={6} lg={7}>
+          <Grid size={{ xs: 12, md: 6, lg: 7 }}>
             <motion.div
               initial={{ opacity: 0, x: -100 }}
               animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -100 }}
@@ -296,7 +296,7 @@ const Hero = () => {
           </Grid>
 
           {/* Right Content - Visual Elements */}
-          <Grid item xs={12} md={6} lg={5}>
+          <Grid size={{ xs: 12, md: 6, lg: 5 }}>
             <motion.div
               initial={{ opacity: 0, x: 100, scale: 0.9 }}
               animate={isInView ? { opacity: 1, x: 0, scale: 1 } : { opacity: 0, x: 100, scale: 0.9 }}

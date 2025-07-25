@@ -132,7 +132,7 @@ const SeatSelection = ({ totalSeats = 30, bookedSeats = [], onSeatSelection, sel
     const isBooked = isSeatBooked(seatNumber);
     
     return (
-      <Grid item xs={2} sm={1.5} md={1.2} key={seatNumber}>
+      <Grid size={{ xs: 2, sm: 1.5, md: 1.2 }} key={seatNumber}>
         <SeatButton
           isSelected={isSelected}
           isBooked={isBooked}

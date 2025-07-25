@@ -89,7 +89,7 @@ const MovieGrid = ({ movies, loading }) => {
       >
         <Grid container spacing={{ xs: 2, md: 3 }}>
           {movies?.map((movie, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={movie._id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={movie._id}>
               <motion.div
                 variants={{
                   hidden: { opacity: 0, y: 60, scale: 0.9 },
