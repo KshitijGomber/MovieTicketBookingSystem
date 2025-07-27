@@ -8,13 +8,20 @@ import {
   Grid, 
   Alert, 
   CircularProgress,
-  Chip,
   Paper,
   Container,
   Divider
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
-import { ArrowBack, AccessTime, Star, AttachMoney, PlayArrow } from '@mui/icons-material';
+import { 
+  ArrowBack, 
+  AccessTime, 
+  AttachMoney, 
+  PlayArrow, 
+  Movie as MovieIcon,
+  Language as LanguageIcon,
+  Category as GenreIcon
+} from '@mui/icons-material';
 import { fetchShow } from '../api/shows';
 import { getTheatersForMovie } from '../api/theaters';
 import TheaterSelection from '../components/TheaterSelection';
@@ -37,12 +44,6 @@ const MovieDetailsPage = () => {
     cacheTime: 1000 * 60 * 30, // 30 minutes
   });
 
-  // Debug logging - moved after declaration
-  console.log('MovieDetailsPage - ID from URL:', id);
-  console.log('MovieDetailsPage - Movie data:', movie);
-  console.log('MovieDetailsPage - Is loading movie:', isLoadingMovie);
-  console.log('MovieDetailsPage - Movie error:', movieError);
-
   // Fetch theaters for this movie
   const { data: theaters, isLoading: isLoadingTheaters, error: theatersError } = useQuery({
     queryKey: ['theaters', id],
@@ -54,12 +55,46 @@ const MovieDetailsPage = () => {
     enabled: !!id, // Only run if id exists
   });
 
-  // Debug logging for theaters
-  console.log('MovieDetailsPage - Theaters data:', theaters);
-  console.log('MovieDetailsPage - Is loading theaters:', isLoadingTheaters);
-  console.log('MovieDetailsPage - Theaters error:', theatersError);
-    enabled: !!id
+  // Debug logging
+  console.log('MovieDetailsPage Debug:', {
+    id,
+    movie,
+    isLoadingMovie,
+    movieError,
+    theaters,
+    isLoadingTheaters,
+    theatersError
   });
+
+  // Component for movie info cards
+  const InfoCard = ({ icon, label, value, color = 'primary.main' }) => (
+    <Grid item xs={6} sm={3}>
+      <Paper 
+        elevation={1} 
+        sx={{ 
+          p: 2.5, 
+          borderRadius: 2, 
+          textAlign: 'center',
+          border: '1px solid',
+          borderColor: 'divider',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            elevation: 3,
+            borderColor: color,
+            transform: 'translateY(-2px)'
+          }
+        }}
+      >
+        {icon && React.cloneElement(icon, { sx: { color, mb: 1, fontSize: '1.5rem' } })}
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+          {label}
+        </Typography>
+        <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+          {value}
+        </Typography>
+      </Paper>
+    </Grid>
+  );
 
   const handleTheaterSelect = (theater) => {
     setSelectedTheater(theater);
@@ -135,15 +170,25 @@ const MovieDetailsPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Back Button */}
-      <Button 
-        startIcon={<ArrowBack />} 
-        onClick={() => navigate('/movies')}
-        sx={{ mb: 3 }}
-      >
-        Back to Movies
-      </Button>
+      {/* Header Section */}
+      <Box sx={{ mb: 4 }}>
+        <Button 
+          startIcon={<ArrowBack />} 
+          onClick={() => navigate('/movies')}
+          sx={{ 
+            mb: 3,
+            color: 'text.secondary',
+            '&:hover': {
+              color: 'primary.main',
+              bgcolor: 'primary.50'
+            }
+          }}
+        >
+          Back to Movies
+        </Button>
+      </Box>
 
+      {/* Main Content */}
       <Grid container spacing={4}>
         {/* Movie Poster */}
         <Grid item xs={12} md={5} lg={4}>
@@ -154,21 +199,37 @@ const MovieDetailsPage = () => {
               overflow: 'hidden',
               position: 'relative',
               height: { xs: 450, md: 600 },
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               '&:hover': {
                 transform: 'scale(1.02)',
                 transition: 'transform 0.3s ease-in-out'
               }
             }}
           >
-            <img 
-              src={movie?.image} 
-              alt={movie?.title}
-              style={{ 
-                width: '100%', 
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
+            {movie?.image ? (
+              <img 
+                src={movie.image} 
+                alt={movie.title}
+                style={{ 
+                  width: '100%', 
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            ) : (
+              <Box 
+                sx={{ 
+                  width: '100%', 
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white'
+                }}
+              >
+                <MovieIcon sx={{ fontSize: '4rem' }} />
+              </Box>
+            )}
           </Paper>
         </Grid>
 
@@ -180,133 +241,144 @@ const MovieDetailsPage = () => {
             flexDirection: 'column',
             pl: { md: 2 }
           }}>
-            {/* Title */}
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 'bold',
-                color: 'primary.main',
-                mb: 3,
-                fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' }
-              }}
-            >
-              {movie?.title}
-            </Typography>
+            {/* Title Section */}
+            <Box sx={{ mb: 3 }}>
+              <Typography 
+                variant="h3" 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1,
+                  fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' }
+                }}
+              >
+                {movie?.title}
+              </Typography>
+            </Box>
 
             {/* Movie Info Cards */}
             <Box sx={{ mb: 4 }}>
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
-                  <Box sx={{ 
-                    p: 2, 
-                    borderRadius: 2, 
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    textAlign: 'center'
-                  }}>
-                    <AccessTime sx={{ color: 'primary.main', mb: 1 }} />
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Duration
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {movie?.duration} min
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Box sx={{ 
-                    p: 2, 
-                    borderRadius: 2, 
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Genre
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {movie?.genre}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Box sx={{ 
-                    p: 2, 
-                    borderRadius: 2, 
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Language
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {movie?.language}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Box sx={{ 
-                    p: 2, 
-                    borderRadius: 2, 
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    textAlign: 'center'
-                  }}>
-                    <AttachMoney sx={{ color: 'success.main', mb: 1 }} />
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      From
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      ${movie?.price}
-                    </Typography>
-                  </Box>
-                </Grid>
+                <InfoCard 
+                  icon={<AccessTime />}
+                  label="Duration"
+                  value={`${movie?.duration} min`}
+                  color="primary.main"
+                />
+                <InfoCard 
+                  icon={<GenreIcon />}
+                  label="Genre"
+                  value={movie?.genre}
+                  color="secondary.main"
+                />
+                <InfoCard 
+                  icon={<LanguageIcon />}
+                  label="Language"
+                  value={movie?.language}
+                  color="info.main"
+                />
+                <InfoCard 
+                  icon={<AttachMoney />}
+                  label="From"
+                  value={`$${movie?.price}`}
+                  color="success.main"
+                />
               </Grid>
             </Box>
 
-            {/* Synopsis - Moved to right side */}
-            <Box sx={{ mb: 4, flex: 1 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+            {/* Synopsis Section */}
+            <Paper 
+              elevation={1} 
+              sx={{ 
+                p: 3, 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                flex: 1,
+                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
+              }}
+            >
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  mb: 2,
+                  color: 'primary.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
+                <MovieIcon sx={{ fontSize: '1.2rem' }} />
                 Synopsis
               </Typography>
               <Typography 
                 variant="body1" 
-                paragraph 
                 color="text.secondary" 
                 sx={{ 
                   lineHeight: 1.8,
-                  fontSize: { xs: '0.95rem', md: '1rem' }
+                  fontSize: { xs: '0.95rem', md: '1rem' },
+                  textAlign: 'justify'
                 }}
               >
-                {movie?.description}
+                {movie?.description || 'No description available for this movie.'}
               </Typography>
-            </Box>
+            </Paper>
 
           </Box>
         </Grid>
       </Grid>
 
-      {/* Theater Selection Section - Full Width */}
+      {/* Theater Selection Section */}
       <Box sx={{ mt: 6 }}>
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ 
+          my: 4,
+          '&::before, &::after': {
+            borderColor: 'primary.light',
+          }
+        }} />
 
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-          Select Theater & Showtime
-        </Typography>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 'bold', 
+              background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              mb: 1
+            }}
+          >
+            Select Theater & Showtime
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Choose your preferred theater and showtime to continue booking
+          </Typography>
+        </Box>
         
         {isLoadingTheaters ? (
-          <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress />
-          </Box>
+          <Paper elevation={2} sx={{ p: 6, borderRadius: 3, textAlign: 'center' }}>
+            <CircularProgress size={48} sx={{ mb: 2 }} />
+            <Typography variant="body1" color="text.secondary">
+              Loading available theaters...
+            </Typography>
+          </Paper>
         ) : theaters && theaters.length > 0 ? (
-          <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 4, 
+              borderRadius: 3,
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%)',
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
             <TheaterSelection
               theaters={theaters}
               selectedTheater={selectedTheater}
@@ -316,30 +388,69 @@ const MovieDetailsPage = () => {
             />
           </Paper>
         ) : (
-          <Alert severity="info" sx={{ mb: 4 }}>
-            No theaters found for this movie. Please check back later.
-          </Alert>
+          <Paper elevation={2} sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+            <Alert 
+              severity="info" 
+              sx={{ 
+                borderRadius: 2,
+                '& .MuiAlert-icon': {
+                  fontSize: '2rem'
+                }
+              }}
+            >
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                No theaters available
+              </Typography>
+              <Typography variant="body2">
+                No theaters found for this movie at the moment. Please check back later or contact support.
+              </Typography>
+            </Alert>
+          </Paper>
         )}
 
         {/* Book Now Button */}
         {selectedTheater && selectedShowtime && (
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<PlayArrow />}
-              onClick={handleBookNow}
-              sx={{
-                py: 2,
-                px: 6,
-                fontSize: '1.1rem',
+          <Box sx={{ mt: 6, textAlign: 'center' }}>
+            <Paper 
+              elevation={4}
+              sx={{ 
+                p: 4, 
                 borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 'bold'
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white'
               }}
             >
-              Book Now - {selectedTheater?.name}
-            </Button>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                🎬 Ready to Book!
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 3, opacity: 0.9 }}>
+                {selectedTheater?.name} • {selectedShowtime}
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<PlayArrow />}
+                onClick={handleBookNow}
+                sx={{
+                  py: 2,
+                  px: 6,
+                  fontSize: '1.2rem',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  bgcolor: 'white',
+                  color: 'primary.main',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                  '&:hover': {
+                    bgcolor: 'grey.100',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 25px rgba(0,0,0,0.3)'
+                  }
+                }}
+              >
+                Book Now
+              </Button>
+            </Paper>
           </Box>
         )}
       </Box>
