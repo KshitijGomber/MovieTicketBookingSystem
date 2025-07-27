@@ -83,7 +83,7 @@ const MovieGrid = ({ movies, loading }) => {
           }
         }}
       >
-        <Grid container spacing={{ xs: 1.5, md: 2 }}>
+        <Grid container spacing={{ xs: 1, md: 1.5 }}>
           {movies?.map((movie, index) => (
             <Grid item xs={4} sm={4} md={4} lg={4} xl={4} key={movie._id}>
               <motion.div
