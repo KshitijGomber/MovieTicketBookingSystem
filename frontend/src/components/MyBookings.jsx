@@ -88,15 +88,19 @@ const MyBookings = () => {
               }}
             >
               <ListItemText
-                primary={booking.show.title}
+                primary={booking.show?.title || booking.movieTitle || 'Movie Title Not Available'}
                 secondary={
                   <>
                     <Typography component="span" variant="body2" color="text.primary">
-                      Showtime: {booking.showTime} | Seat: {booking.seat}
+                      Showtime: {booking.showTime} | Seats: {Array.isArray(booking.seats) ? booking.seats.join(', ') : booking.seat || booking.seats}
                     </Typography>
                     <br />
                     <Typography component="span" variant="body2" color="text.secondary">
-                      Booked on: {new Date(booking.createdAt).toLocaleDateString()}
+                      Theater: {booking.theater?.name || 'Theater Not Specified'} | Booked on: {new Date(booking.createdAt).toLocaleDateString()}
+                    </Typography>
+                    <br />
+                    <Typography component="span" variant="body2" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                      Total: ${booking.totalAmount || 'N/A'}
                     </Typography>
                   </>
                 }

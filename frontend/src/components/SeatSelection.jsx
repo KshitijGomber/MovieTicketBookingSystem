@@ -242,44 +242,35 @@ const SeatSelection = ({ showId, showTime, theaterId, onSelectSeats, onSeatsSele
       {/* Selection Summary */}
       <Box sx={{ 
         display: 'flex', 
-        justifyContent: 'space-between', 
+        justifyContent: 'center', 
         alignItems: 'center', 
         mt: 3,
         p: 3,
-        bgcolor: 'background.paper',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider'
+        bgcolor: selectedSeats.length > 0 ? 'primary.50' : 'background.paper',
+        borderRadius: 3,
+        border: '2px solid',
+        borderColor: selectedSeats.length > 0 ? 'primary.main' : 'divider',
+        transition: 'all 0.3s ease'
       }}>
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            Selected: {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''}
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+            {selectedSeats.length === 0 ? (
+              'Please select your seats'
+            ) : (
+              <>Selected: {selectedSeats.join(', ')}</>
+            )}
           </Typography>
-          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 'bold' }}>
-            ${(selectedSeats.length * 9.99).toFixed(2)}
-          </Typography>
+          {selectedSeats.length > 0 && (
+            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
+              {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''} × ${(9.99).toFixed(2)} = ${(selectedSeats.length * 9.99).toFixed(2)}
+            </Typography>
+          )}
+          {selectedSeats.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Click on available seats to select them
+            </Typography>
+          )}
         </Box>
-        <Button
-          variant="contained"
-          size="large"
-          disabled={selectedSeats.length === 0}
-          onClick={() => onSeatsSelected && onSeatsSelected(selectedSeats)}
-          sx={{ 
-            minWidth: 160,
-            py: 1.5,
-            borderRadius: 2,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-            },
-            '&:disabled': {
-              bgcolor: 'grey.300',
-              color: 'grey.500'
-            }
-          }}
-        >
-          {selectedSeats.length === 0 ? 'Select Seats' : 'Proceed to Payment'}
-        </Button>
       </Box>
     </Box>
   );

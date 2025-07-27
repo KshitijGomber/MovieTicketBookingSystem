@@ -42,7 +42,25 @@ export default function BookingConfirmation() {
   const formatDateTime = (dateTime) => {
     if (!dateTime) return 'Not specified';
     try {
+      // Handle both string showtimes like "4:00 PM" and full datetime
+      if (typeof dateTime === 'string' && dateTime.includes(':') && dateTime.includes('M')) {
+        // For times like "4:00 PM", combine with current date
+        const today = new Date().toDateString();
+        const fullDateTime = new Date(`${today} ${dateTime}`);
+        return fullDateTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) + ` at ${dateTime}`;
+      }
+      
       const date = new Date(dateTime);
+      if (isNaN(date.getTime())) {
+        // If it's just a time string, return it as-is
+        return dateTime;
+      }
+      
       return date.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -54,6 +72,23 @@ export default function BookingConfirmation() {
     } catch {
       return dateTime;
     }
+  };
+
+  // Format showtime specifically
+  const formatShowtime = (showtime) => {
+    if (!showtime) return 'Not specified';
+    
+    // If it's an object with showTime property
+    if (typeof showtime === 'object' && showtime.showTime) {
+      return showtime.showTime;
+    }
+    
+    // If it's already a formatted time string
+    if (typeof showtime === 'string') {
+      return showtime;
+    }
+    
+    return 'Not specified';
   };
 
   // If no data available, redirect to home
@@ -466,7 +501,7 @@ export default function BookingConfirmation() {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <TimeIcon sx={{ color: theme.palette.success.main }} />
                             <Typography variant="h6" fontWeight="medium">
-                              {formatDateTime(showtime?.showTime)}
+                              {formatDateTime(new Date().toDateString() + ' ' + formatShowtime(showtime))}
                             </Typography>
                           </Box>
                         </Box>

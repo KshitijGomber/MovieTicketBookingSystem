@@ -249,20 +249,22 @@ const TheaterSelection = ({
                     {displayShowTimes.map((showtime, index) => {
                       // Ensure showtime is a string
                       const safeShowtime = typeof showtime === 'string' ? showtime : String(showtime);
+                      // Create unique identifier for theater + showtime combination
+                      const isThisShowtimeSelected = selectedTheater?._id === theater._id && selectedShowtime === safeShowtime;
                       
                       return (
                         <Grid item key={index}>
                           <Paper
-                            elevation={selectedShowtime === safeShowtime ? 4 : 1}
+                            elevation={isThisShowtimeSelected ? 4 : 1}
                             sx={{
                               p: 2,
                               minWidth: 100,
                               textAlign: 'center',
                               cursor: 'pointer',
                               borderRadius: 2,
-                              border: selectedShowtime === safeShowtime ? 2 : 1,
-                              borderColor: selectedShowtime === safeShowtime ? 'primary.main' : 'divider',
-                              bgcolor: selectedShowtime === safeShowtime ? 'primary.50' : 'background.paper',
+                              border: isThisShowtimeSelected ? 2 : 1,
+                              borderColor: isThisShowtimeSelected ? 'primary.main' : 'divider',
+                              bgcolor: isThisShowtimeSelected ? 'primary.50' : 'background.paper',
                               transition: 'all 0.2s ease',
                               '&:hover': {
                                 bgcolor: 'primary.50',
@@ -279,7 +281,7 @@ const TheaterSelection = ({
                               variant="subtitle2" 
                               sx={{ 
                                 fontWeight: 'bold',
-                                color: selectedShowtime === safeShowtime ? 'primary.main' : 'text.primary'
+                                color: isThisShowtimeSelected ? 'primary.main' : 'text.primary'
                               }}
                             >
                               {safeShowtime}

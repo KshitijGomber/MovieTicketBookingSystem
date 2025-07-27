@@ -454,74 +454,91 @@ const BookingPage = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     Selected Seats:
                   </Typography>
-                  <Typography variant="h6" fontWeight="bold" color={theme.palette.primary.main}>
-                    {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
-                  </Typography>
+                  {selectedSeats.length > 0 ? (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {selectedSeats.map((seat) => (
+                        <Chip
+                          key={seat}
+                          label={seat}
+                          sx={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            '& .MuiChip-label': { fontSize: '0.9rem' }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body1" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                      No seats selected
+                    </Typography>
+                  )}
                 </Box>
 
                 <Divider sx={{ my: 3 }} />
 
-                <Box sx={{ mb: 3 }}>
-                  <Box display="flex" justifyContent="space-between" mb={2}>
-                    <Typography variant="body1">
-                      {pricing.seatCount} seat(s) × ${pricing.pricePerSeat}
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      ${pricing.subtotal}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between" mb={2}>
-                    <Typography variant="body1">Tax (10%)</Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      ${pricing.tax}
-                    </Typography>
-                  </Box>
-                </Box>
+                {selectedSeats.length > 0 && (
+                  <>
+                    <Box sx={{ mb: 3 }}>
+                      <Box display="flex" justifyContent="space-between" mb={2}>
+                        <Typography variant="body1">
+                          {pricing.seatCount} seat(s) × ${pricing.pricePerSeat}
+                        </Typography>
+                        <Typography variant="body1" fontWeight="medium">
+                          ${pricing.subtotal}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" justifyContent="space-between" mb={2}>
+                        <Typography variant="body1">Tax (10%)</Typography>
+                        <Typography variant="body1" fontWeight="medium">
+                          ${pricing.tax}
+                        </Typography>
+                      </Box>
+                    </Box>
 
-                <Divider sx={{ my: 3 }} />
+                    <Divider sx={{ my: 3 }} />
 
-                <Box display="flex" justifyContent="space-between" mb={4}>
-                  <Typography variant="h5" fontWeight="bold">
-                    Total
-                  </Typography>
-                  <Typography variant="h5" fontWeight="bold" color="primary">
-                    ${pricing.total}
-                  </Typography>
-                </Box>
+                    <Box display="flex" justifyContent="space-between" mb={4}>
+                      <Typography variant="h5" fontWeight="bold">
+                        Total
+                      </Typography>
+                      <Typography variant="h5" fontWeight="bold" color="primary">
+                        ${pricing.total}
+                      </Typography>
+                    </Box>
 
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    onClick={handleBooking}
-                    disabled={selectedSeats.length === 0 || isProcessing}
-                    sx={{
-                      py: 2.5,
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      borderRadius: 3,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                        boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)',
-                        transform: 'translateY(-2px)'
-                      },
-                      '&:disabled': {
-                        background: alpha(theme.palette.action.disabled, 0.12),
-                        color: theme.palette.action.disabled
-                      },
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {isProcessing ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      `Book ${selectedSeats.length} Seat${selectedSeats.length !== 1 ? 's' : ''}`
-                    )}
-                  </Button>
-                </motion.div>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        onClick={handleBooking}
+                        disabled={isProcessing}
+                        sx={{
+                          py: 2.5,
+                          fontSize: '1.2rem',
+                          fontWeight: 'bold',
+                          borderRadius: 3,
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                            boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)',
+                            transform: 'translateY(-2px)'
+                          },
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        {isProcessing ? (
+                          <CircularProgress size={24} color="inherit" />
+                        ) : (
+                          `🎬 Book ${selectedSeats.length} Seat${selectedSeats.length !== 1 ? 's' : ''} Now`
+                        )}
+                      </Button>
+                    </motion.div>
+                  </>
+                )}
 
                 {selectedSeats.length === 0 && (
                   <motion.div
@@ -529,17 +546,14 @@ const BookingPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Alert 
-                      severity="info" 
-                      sx={{ 
-                        mt: 3,
-                        borderRadius: 2,
-                        background: alpha(theme.palette.info.main, 0.1),
-                        border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
-                      }}
-                    >
-                      Please select at least one seat to continue.
-                    </Alert>
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                        Select your seats to continue
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Choose from the available seats on the left to see your booking summary
+                      </Typography>
+                    </Box>
                   </motion.div>
                 )}
               </Paper>

@@ -74,17 +74,35 @@ const sendBookingConfirmationEmail = async ({ to, movieName, showTime, seats, to
   const subtotal = totalAmount / 1.1; // Reverse calculate subtotal from total (which includes 10% tax)
   const tax = totalAmount - subtotal;
   
-  // Format the show time for display
-  const showDate = showTime ? new Date(showTime) : new Date();
-  const formattedTime = showDate.toLocaleString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  // Format the show time for display - handle both time strings and full datetime
+  let formattedTime;
+  if (showTime) {
+    // If showTime is just a time like "4:00 PM", combine with today's date
+    if (typeof showTime === 'string' && showTime.includes(':') && showTime.includes('M')) {
+      const today = new Date();
+      const timeStr = showTime;
+      formattedTime = `${today.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })} at ${timeStr}`;
+    } else {
+      // If it's a full datetime, format it normally
+      const showDate = new Date(showTime);
+      formattedTime = showDate.toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+  } else {
+    formattedTime = 'Time not specified';
+  }
 
   const mailOptions = {
     from: `"${process.env.APP_NAME || 'Movie Ticket Booking'}" <${process.env.SMTP_USER}>`,

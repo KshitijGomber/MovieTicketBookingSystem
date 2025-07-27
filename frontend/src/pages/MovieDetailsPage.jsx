@@ -210,14 +210,20 @@ const MovieDetailsPage = () => {
 
         {/* Movie Details - Right Side */}
         <Grid item xs={12} md={8}>
-          <Box sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            pl: { md: 3 }
-          }}>
+          <Paper
+            elevation={2}
+            sx={{
+              height: { md: 600 },
+              p: 4,
+              borderRadius: 3,
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%)',
+              border: '2px solid #4CAF50', // Green border as shown in the image
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
             {/* Title Section */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 3 }}>
               <Typography 
                 variant="h3" 
                 component="h1" 
@@ -339,8 +345,7 @@ const MovieDetailsPage = () => {
                 {movie?.description || 'No description available for this movie.'}
               </Typography>
             </Box>
-
-          </Box>
+          </Paper>
         </Grid>
       </Grid>
 
