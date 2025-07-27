@@ -1,5 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL || 'https://movieticketbookingsystem-7suc.onrender.com/api';
 
+console.log('API Configuration:', {
+  API_URL,
+  env: import.meta.env.MODE,
+  isDev: import.meta.env.DEV,
+  isProd: import.meta.env.PROD
+});
+
 // Mock theater data for fallback - structured to match API response
 const mockTheaters = [
   {
