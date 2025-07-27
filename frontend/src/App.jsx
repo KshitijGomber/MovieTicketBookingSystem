@@ -72,27 +72,6 @@ function App() {
       
       <LoadingScreen isVisible={isLoading} onFinish={handleLoadingFinish} />
       
-      {/* Floating elements - Always visible on main site */}
-      {!isLoading && (
-        <div className="fixed bottom-4 right-4 z-30" style={{ width: '32px', height: '32px' }}>
-          <motion.img 
-            src="/logo.png" 
-            alt="BookYourMovie Logo" 
-            className="object-contain hover:scale-110 transition-transform duration-300 bg-transparent pointer-events-none"
-            style={{ width: '32px', height: '32px', maxWidth: '32px', maxHeight: '32px' }}
-            animate={{ 
-              y: [0, -10, 0],
-              rotate: [0, 5, -5, 0]
-            }}
-            transition={{ 
-              duration: 6, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
-            }}
-          />
-        </div>
-      )}
-      
       {!isLoading && (
         <>
           <Header />
