@@ -186,9 +186,15 @@ const MovieDetailsPage = () => {
         </motion.div>
 
         {/* Main Content */}
-        <Grid container spacing={6}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' }, 
+            gap: 6 
+          }}
+        >
           {/* Movie Poster */}
-          <Grid item xs={12} md={5}>
+          <Box sx={{ flex: 5 }}>
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -235,10 +241,10 @@ const MovieDetailsPage = () => {
                 )}
               </Paper>
             </motion.div>
-          </Grid>
+          </Box>
 
           {/* Movie Details - Right Side */}
-          <Grid item xs={12} md={7}>
+          <Box sx={{ flex: 7 }}>
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -424,8 +430,8 @@ const MovieDetailsPage = () => {
                 </Box>
               </Paper>
             </motion.div>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Theater Selection Section */}
         <motion.div
