@@ -77,8 +77,14 @@ const TheaterSelection = ({
   return (
     <Box>
       <Grid container spacing={3}>
-        {theaters.map((theater) => (
-          <Grid item xs={12} key={theater._id}>
+        {theaters.map((theaterData) => {
+          // Handle both direct theater objects and nested theater.theater structure
+          const theater = theaterData.theater || theaterData;
+          const showTimes = theaterData.showTimes || theaterData.showTimes || [];
+          const availableSeats = theaterData.availableSeats;
+          
+          return (
+          <Grid item xs={12} key={theater._id || theater.id}>
             <Card 
               elevation={selectedTheater?._id === theater._id ? 8 : 2}
               sx={{ 
@@ -105,13 +111,13 @@ const TheaterSelection = ({
                       fontWeight: 'bold'
                     }}
                   >
-                    {theater.name.charAt(0)}
+                    {theater.name?.charAt(0) || 'T'}
                   </Avatar>
                   
                   <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 2 }}>
-                        {theater.name}
+                        {theater.name || 'Theater Name'}
                       </Typography>
                       {selectedTheater?._id === theater._id && (
                         <CheckCircle color="primary" sx={{ ml: 1 }} />
@@ -121,7 +127,11 @@ const TheaterSelection = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <LocationOn sx={{ fontSize: '1rem', color: 'text.secondary', mr: 0.5 }} />
                       <Typography variant="body2" color="text.secondary">
-                        {theater.location}
+                        {theater.location?.fullAddress || 
+                         theater.fullAddress ||
+                         `${theater.location?.address || ''}, ${theater.location?.city || ''}`.replace(/^,\s*/, '') ||
+                         'Location not specified'
+                        }
                       </Typography>
                     </Box>
 
@@ -176,25 +186,25 @@ const TheaterSelection = ({
                 </Box>
 
                 {/* Showtimes */}
-                {theater.showtimes && theater.showtimes.length > 0 && (
+                {showTimes && showTimes.length > 0 && (
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
                       Available Showtimes
                     </Typography>
                     <Grid container spacing={1.5}>
-                      {theater.showtimes.map((showtime) => (
-                        <Grid item key={showtime._id}>
+                      {showTimes.map((showtime, index) => (
+                        <Grid item key={index}>
                           <Paper
-                            elevation={selectedShowtime?._id === showtime._id ? 4 : 1}
+                            elevation={selectedShowtime === showtime ? 4 : 1}
                             sx={{
                               p: 2,
                               minWidth: 100,
                               textAlign: 'center',
                               cursor: 'pointer',
                               borderRadius: 2,
-                              border: selectedShowtime?._id === showtime._id ? 2 : 1,
-                              borderColor: selectedShowtime?._id === showtime._id ? 'primary.main' : 'divider',
-                              bgcolor: selectedShowtime?._id === showtime._id ? 'primary.50' : 'background.paper',
+                              border: selectedShowtime === showtime ? 2 : 1,
+                              borderColor: selectedShowtime === showtime ? 'primary.main' : 'divider',
+                              bgcolor: selectedShowtime === showtime ? 'primary.50' : 'background.paper',
                               transition: 'all 0.2s ease',
                               '&:hover': {
                                 bgcolor: 'primary.50',
@@ -204,37 +214,24 @@ const TheaterSelection = ({
                             }}
                             onClick={() => {
                               onTheaterSelect(theater);
-                              onShowtimeSelect(showtime);
+                              onShowtimeSelect && onShowtimeSelect(showtime);
                             }}
                           >
                             <Typography 
                               variant="subtitle2" 
                               sx={{ 
                                 fontWeight: 'bold',
-                                color: selectedShowtime?._id === showtime._id ? 'primary.main' : 'text.primary'
+                                color: selectedShowtime === showtime ? 'primary.main' : 'text.primary'
                               }}
                             >
-                              {showtime.showTime}
+                              {showtime}
                             </Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5 }}>
                               <EventSeat sx={{ fontSize: '0.9rem', mr: 0.5, color: 'text.secondary' }} />
                               <Typography variant="caption" color="text.secondary">
-                                {showtime.availableSeats}
+                                {availableSeats || '150'}
                               </Typography>
                             </Box>
-                            {showtime.price && (
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  fontWeight: 'bold',
-                                  color: 'success.main',
-                                  display: 'block',
-                                  mt: 0.5
-                                }}
-                              >
-                                ${showtime.price}
-                              </Typography>
-                            )}
                           </Paper>
                         </Grid>
                       ))}
@@ -301,7 +298,8 @@ const TheaterSelection = ({
               </CardContent>
             </Card>
           </Grid>
-        ))}
+          );
+        })}
       </Grid>
     </Box>
   );
