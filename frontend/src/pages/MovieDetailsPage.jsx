@@ -158,23 +158,7 @@ const MovieDetailsPage = () => {
         maxWidth="xl" 
         sx={{ 
           py: 4,
-          minHeight: '100vh',
-          backgroundImage: movie?.image ? `url(${movie.image})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          position: 'relative',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            bgcolor: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(8px)',
-            zIndex: -1,
-          }
+          minHeight: '100vh'
         }}
       >
         {/* Header Section */}
@@ -189,18 +173,10 @@ const MovieDetailsPage = () => {
               onClick={() => navigate('/movies')}
               sx={{ 
                 mb: 3,
-                color: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(10px)',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: 3,
-                px: 3,
-                py: 1,
-                textShadow: '0px 1px 3px rgba(0,0,0,0.6)',
+                color: 'text.secondary',
                 '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                  color: 'primary.main',
+                  bgcolor: 'primary.50'
                 }
               }}
             >
@@ -461,7 +437,7 @@ const MovieDetailsPage = () => {
             <Divider sx={{ 
               my: 6,
               '&::before, &::after': {
-                borderColor: 'rgba(255,255,255,0.3)',
+                borderColor: 'primary.light',
               }
             }} />
 
@@ -470,9 +446,11 @@ const MovieDetailsPage = () => {
                 variant="h3" 
                 sx={{ 
                   fontWeight: 'bold', 
-                  color: 'white',
+                  background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                   mb: 2,
-                  textShadow: '0px 2px 8px rgba(0,0,0,0.7)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -484,10 +462,7 @@ const MovieDetailsPage = () => {
               </Typography>
               <Typography 
                 variant="h6" 
-                sx={{ 
-                  color: 'rgba(255,255,255,0.8)',
-                  textShadow: '0px 1px 3px rgba(0,0,0,0.6)'
-                }}
+                color="text.secondary"
               >
                 Choose your preferred theater and showtime to continue booking
               </Typography>
