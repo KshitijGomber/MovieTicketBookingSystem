@@ -1,5 +1,45 @@
 const API_URL = import.meta.env.VITE_API_URL || 'https://movieticketbookingsystem-7suc.onrender.com/api';
 
+// Mock theater data for fallback
+const mockTheaters = [
+  {
+    id: '1',
+    name: 'Cineplex Downtown',
+    location: '123 Main St, Downtown',
+    distance: '2.1 km',
+    rating: 4.5,
+    amenities: ['Parking', 'Food Court', 'IMAX', 'Recliner Seats'],
+    showtimes: ['10:00 AM', '1:00 PM', '4:00 PM', '7:00 PM', '10:00 PM'],
+    contact: '+1 (555) 123-4567',
+    screens: 12,
+    features: ['Dolby Atmos', '4DX', 'Premium Seating']
+  },
+  {
+    id: '2',
+    name: 'Regal Cinema Plaza',
+    location: '456 Oak Ave, Midtown',
+    distance: '3.5 km',
+    rating: 4.2,
+    amenities: ['Parking', 'Concessions', 'Digital', 'Stadium Seating'],
+    showtimes: ['11:00 AM', '2:00 PM', '5:00 PM', '8:00 PM'],
+    contact: '+1 (555) 987-6543',
+    screens: 8,
+    features: ['Digital Projection', 'Surround Sound']
+  },
+  {
+    id: '3',
+    name: 'AMC Northgate',
+    location: '789 Pine St, Northside',
+    distance: '5.2 km',
+    rating: 4.7,
+    amenities: ['Parking', 'Restaurant', 'IMAX', 'Luxury Loungers'],
+    showtimes: ['9:30 AM', '12:30 PM', '3:30 PM', '6:30 PM', '9:30 PM'],
+    contact: '+1 (555) 456-7890',
+    screens: 16,
+    features: ['IMAX', 'Dolby Cinema', 'Reclining Seats']
+  }
+];
+
 function getAuthHeader() {
   const token = localStorage.getItem('token');
   const headers = {
@@ -12,28 +52,34 @@ function getAuthHeader() {
 }
 
 export async function getTheaters(params = {}) {
-  const queryParams = new URLSearchParams();
-  
-  Object.keys(params).forEach(key => {
-    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-      // Ensure we convert objects to strings appropriately
-      const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
-      queryParams.append(key, value);
-    }
-  });
+  try {
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        // Ensure we convert objects to strings appropriately
+        const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
+        queryParams.append(key, value);
+      }
+    });
 
-  const url = `${API_URL}/theaters${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  
-  const res = await fetch(url, {
-    headers: getAuthHeader()
-  });
-  
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to fetch theaters');
+    const url = `${API_URL}/theaters${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    const res = await fetch(url, {
+      headers: getAuthHeader()
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    
+    return res.json();
+  } catch (error) {
+    console.warn('Failed to fetch theaters from API, using fallback data:', error.message);
+    
+    // Return mock theaters data as fallback
+    return mockTheaters;
   }
-  
-  return res.json();
 }
 
 export async function getTheater(theaterId) {
@@ -75,28 +121,39 @@ export async function getTheaterShowtimes(theaterId, params = {}) {
 }
 
 export async function getTheatersForMovie(movieId, params = {}) {
-  const queryParams = new URLSearchParams();
-  
-  Object.keys(params).forEach(key => {
-    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-      // Ensure we convert objects to strings appropriately
-      const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
-      queryParams.append(key, value);
-    }
-  });
+  try {
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        // Ensure we convert objects to strings appropriately
+        const value = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
+        queryParams.append(key, value);
+      }
+    });
 
-  const url = `${API_URL}/theaters/movie/${movieId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  
-  const res = await fetch(url, {
-    headers: getAuthHeader()
-  });
-  
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to fetch theaters for movie');
+    const url = `${API_URL}/theaters/movie/${movieId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    console.log('Fetching theaters for movie:', movieId, 'from URL:', url);
+    
+    const res = await fetch(url, {
+      headers: getAuthHeader()
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    console.log('Theaters API response:', data);
+    
+    return data;
+  } catch (error) {
+    console.warn('Failed to fetch theaters from API, using fallback data:', error.message);
+    
+    // Return mock theaters data as fallback
+    return mockTheaters;
   }
-  
-  return res.json();
 }
 
 export async function createTheater(theaterData) {

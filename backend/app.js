@@ -35,7 +35,9 @@ mongoose.connect(process.env.MONGODB_URI)
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',  // Add local development URL
+  'http://localhost:5173',  // Vite dev server
   'http://127.0.0.1:3000',  // Add alternative localhost
+  'http://127.0.0.1:5173',  // Alternative Vite
   'https://movie-ticket-booking-system-two.vercel.app', // Vercel frontend
   'https://movieticketbookingsystem-7suc.onrender.com'  // Render backend
 ].filter(Boolean);  // Remove any undefined values
@@ -43,11 +45,17 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('CORS Origin Check:', { origin, allowedOrigins });
-    if (!origin || allowedOrigins.some(allowedOrigin => 
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in the allowed origins or matches a pattern
+    if (allowedOrigins.some(allowedOrigin => 
       origin === allowedOrigin || 
       origin.startsWith(allowedOrigin.replace('https://', 'http://')) ||
       origin.includes('vercel.app') ||
-      origin.includes('localhost')
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
     )) {
       callback(null, true);
     } else {

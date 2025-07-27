@@ -27,22 +27,37 @@ const MovieDetailsPage = () => {
   const [selectedTheater, setSelectedTheater] = useState(null);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
 
-  // Debug logging
+  // Fetch movie details
+  const { data: movie, isLoading: isLoadingMovie, error: movieError } = useQuery({
+    queryKey: ['movie', id],
+    queryFn: () => fetchShow(id),
+    retry: 1,
+    retryDelay: 1000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+  });
+
+  // Debug logging - moved after declaration
   console.log('MovieDetailsPage - ID from URL:', id);
   console.log('MovieDetailsPage - Movie data:', movie);
   console.log('MovieDetailsPage - Is loading movie:', isLoadingMovie);
   console.log('MovieDetailsPage - Movie error:', movieError);
 
-  // Fetch movie details
-  const { data: movie, isLoading: isLoadingMovie, error: movieError } = useQuery({
-    queryKey: ['movie', id],
-    queryFn: () => fetchShow(id)
-  });
-
   // Fetch theaters for this movie
-  const { data: theaters, isLoading: isLoadingTheaters } = useQuery({
+  const { data: theaters, isLoading: isLoadingTheaters, error: theatersError } = useQuery({
     queryKey: ['theaters', id],
     queryFn: () => getTheatersForMovie(id),
+    retry: 1,
+    retryDelay: 1000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    enabled: !!id, // Only run if id exists
+  });
+
+  // Debug logging for theaters
+  console.log('MovieDetailsPage - Theaters data:', theaters);
+  console.log('MovieDetailsPage - Is loading theaters:', isLoadingTheaters);
+  console.log('MovieDetailsPage - Theaters error:', theatersError);
     enabled: !!id
   });
 
@@ -83,6 +98,7 @@ const MovieDetailsPage = () => {
   }
 
   if (movieError) {
+    console.error('Movie fetch error:', movieError);
     return (
       <Container>
         <Alert severity="error" sx={{ mt: 4 }}>
@@ -99,7 +115,8 @@ const MovieDetailsPage = () => {
     );
   }
 
-  if (!movie) {
+  if (!movie && !isLoadingMovie) {
+    console.warn('No movie data found for ID:', id);
     return (
       <Container>
         <Alert severity="warning" sx={{ mt: 4 }}>
