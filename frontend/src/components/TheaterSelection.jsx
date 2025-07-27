@@ -95,20 +95,32 @@ const TheaterSelection = ({
         {theaters.map((theaterData) => {
           // Handle both direct theater objects and nested theater.theater structure
           const theater = theaterData.theater || theaterData;
-          const showTimes = theaterData.showTimes || theaterData.showtimes || theater.showTimes || theater.showtimes || [];
+          
+          // Extract showtimes - handle both array of strings and array of objects
+          let rawShowTimes = theaterData.showTimes || theaterData.showtimes || theater.showTimes || theater.showtimes || [];
+          
+          // Convert showtime objects to strings if needed
+          const showTimes = rawShowTimes.map(st => {
+            if (typeof st === 'string') {
+              return st; // Already a string
+            } else if (st && st.showTime) {
+              return st.showTime; // Extract showTime from object
+            } else {
+              return String(st); // Convert to string as fallback
+            }
+          });
+          
           const availableSeats = theaterData.availableSeats;
           
           // Debug logging for each theater
           console.log('Processing theater:', {
             theaterName: theater.name,
-            theaterData,
-            showTimes,
+            rawShowTimes,
+            processedShowTimes: showTimes,
             showTimesLength: showTimes.length,
             availableSeats,
-            rawShowTimes: theaterData.showTimes,
-            theaterShowTimes: theater.showTimes,
-            showtimesProperty: theaterData.showtimes,
-            theaterShowtimesProperty: theater.showtimes
+            firstShowtimeType: typeof rawShowTimes[0],
+            firstShowtimeValue: rawShowTimes[0]
           });
           
           // Force some dummy showtimes for testing if none found
