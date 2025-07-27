@@ -501,7 +501,12 @@ export default function BookingConfirmation() {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <TimeIcon sx={{ color: theme.palette.success.main }} />
                             <Typography variant="h6" fontWeight="medium">
-                              {formatDateTime(new Date().toDateString() + ' ' + formatShowtime(showtime))}
+                              {new Date().toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })} at {formatShowtime(showtime)}
                             </Typography>
                           </Box>
                         </Box>
