@@ -83,9 +83,9 @@ const MovieGrid = ({ movies, loading }) => {
           }
         }}
       >
-        <Grid container spacing={{ xs: 2, md: 2.5 }}>
+        <Grid container spacing={{ xs: 1, md: 1.5 }}>
           {movies?.map((movie, index) => (
-            <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={movie._id}>
+            <Grid item xs={4} sm={4} md={4} lg={4} xl={4} key={movie._id}>
               <motion.div
                 variants={{
                   hidden: { opacity: 0, y: 40, scale: 0.95 },
@@ -128,8 +128,8 @@ const MovieGrid = ({ movies, loading }) => {
                     <CardMedia
                       className="movie-image"
                       component="img"
-                      height="240"
-                      image={movie.image || movie.poster || `https://via.placeholder.com/240x360/667eea/ffffff?text=${encodeURIComponent(movie.title)}`}
+                      height="120"
+                      image={movie.image || movie.poster || `https://via.placeholder.com/120x180/667eea/ffffff?text=${encodeURIComponent(movie.title)}`}
                       alt={movie.title}
                       sx={{
                         objectFit: 'cover',
@@ -158,15 +158,15 @@ const MovieGrid = ({ movies, loading }) => {
                         to={`/movies/${movie._id}`}
                         sx={{
                           background: 'rgba(255,255,255,0.9)',
-                          width: 48,
-                          height: 48,
+                          width: 32,
+                          height: 32,
                           '&:hover': {
                             background: 'white',
                           },
                           transition: 'all 0.3s ease'
                         }}
                       >
-                        <PlayArrow sx={{ fontSize: 24, color: '#667eea' }} />
+                        <PlayArrow sx={{ fontSize: 16, color: '#667eea' }} />
                       </IconButton>
                     </Box>
 
@@ -174,23 +174,23 @@ const MovieGrid = ({ movies, loading }) => {
                     <Box
                       sx={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
+                        top: 6,
+                        right: 6,
                         background: 'rgba(0,0,0,0.7)',
                         borderRadius: 1,
-                        px: 1,
+                        px: 0.75,
                         py: 0.25,
                         backdropFilter: 'blur(8px)'
                       }}
                     >
                       <Stack direction="row" alignItems="center" spacing={0.25}>
-                        <Star sx={{ fontSize: 12, color: '#ffd700' }} />
+                        <Star sx={{ fontSize: 10, color: '#ffd700' }} />
                         <Typography
                           variant="caption" 
                           sx={{ 
                             color: 'white', 
                             fontWeight: 600,
-                            fontSize: '0.7rem'
+                            fontSize: '0.6rem'
                           }}
                         >
                           {movie.rating || '8.5'}
@@ -202,8 +202,8 @@ const MovieGrid = ({ movies, loading }) => {
                   {/* Card Content */}
                   <CardContent 
                     sx={{ 
-                      p: 2,
-                      paddingBottom: '16px !important'
+                      p: 1.5,
+                      paddingBottom: '12px !important'
                     }}
                   >
                     <Typography
@@ -212,7 +212,7 @@ const MovieGrid = ({ movies, loading }) => {
                       to={`/movies/${movie._id}`}
                       sx={{
                         fontWeight: 600,
-                        fontSize: '0.95rem',
+                        fontSize: '0.8rem',
                         color: 'text.primary',
                         textDecoration: 'none',
                         mb: 0.5,
@@ -232,8 +232,8 @@ const MovieGrid = ({ movies, loading }) => {
                       variant="body2"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '0.8rem',
-                        mb: 1
+                        fontSize: '0.7rem',
+                        mb: 0.5
                       }}
                     >
                       {movie.genre?.join(', ') || 'Action, Drama'}
@@ -243,7 +243,7 @@ const MovieGrid = ({ movies, loading }) => {
                       variant="caption"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '0.75rem'
+                        fontSize: '0.65rem'
                       }}
                     >
                       {movie.duration || '2h 30m'}
