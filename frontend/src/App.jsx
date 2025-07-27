@@ -17,6 +17,7 @@ import BookingConfirmation from './pages/BookingConfirmation';
 import HomePage from './pages/HomePage';
 import MovieListPage from './pages/MovieListPage';
 import MovieDetailsPage from './pages/MovieDetailsPage';
+import MovieCardDemo from './components/MovieCardDemo';
 import Header from './components/Header';
 import LoadingScreen from './components/LoadingScreen';
 import { useLenis } from './hooks/useLenis';
@@ -92,6 +93,9 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/movies" element={<MovieListPage />} />
               <Route path="/movies/:id" element={<MovieDetailsPage />} />
+              
+              {/* Movie Card Demo */}
+              <Route path="/demo/movie-cards" element={<MovieCardDemo />} />
               
               {/* Legacy routes - redirect to new structure */}
               <Route path="/shows" element={<Navigate to="/movies" replace />} />
