@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, CircularProgress, useTheme } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LocalMovies } from '@mui/icons-material';
 
-const LoadingScreen = ({ isVisible = true, message = "Loading..." }) => {
+const LoadingScreen = ({ isVisible = true, message = "Loading...", onFinish, duration = 2000 }) => {
   const theme = useTheme();
+
+  // Auto-hide loading screen after specified duration
+  useEffect(() => {
+    if (isVisible && onFinish) {
+      const timer = setTimeout(() => {
+        onFinish();
+      }, duration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onFinish, duration]);
 
   return (
     <AnimatePresence>

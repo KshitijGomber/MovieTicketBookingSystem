@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 import './App.css';
 import ShowList from './components/ShowList';
@@ -34,6 +34,15 @@ function App() {
 
   // Initialize Lenis smooth scroll
   useLenis();
+
+  // Safety timeout to ensure loading screen doesn't get stuck
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000); // Max 3 seconds loading time
+
+    return () => clearTimeout(safetyTimer);
+  }, []);
 
   const handleLoadingFinish = () => {
     setIsLoading(false);
