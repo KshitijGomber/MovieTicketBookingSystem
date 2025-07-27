@@ -236,7 +236,10 @@ const MovieGrid = ({ movies, loading }) => {
                         mb: 1
                       }}
                     >
-                      {movie.genre?.join(', ') || 'Action, Drama'}
+                      {Array.isArray(movie.genre) 
+                        ? movie.genre.join(', ') 
+                        : movie.genre || 'Action, Drama'
+                      }
                     </Typography>
 
                     <Typography

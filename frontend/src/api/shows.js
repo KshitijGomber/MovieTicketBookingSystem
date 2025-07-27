@@ -125,9 +125,28 @@ const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
   ]);
 };
 
-export async function fetchShows(theaterId = '') {
+export async function fetchShows(queryContext = null) {
   try {
     let url = `${API_URL}/shows`;
+    
+    // Handle TanStack Query context - extract theaterId from queryKey if it exists
+    let theaterId = '';
+    
+    if (queryContext) {
+      // If it's a TanStack Query context object, extract theaterId from queryKey
+      if (queryContext.queryKey && Array.isArray(queryContext.queryKey)) {
+        // queryKey format: ['shows'] or ['shows', theaterId]
+        if (queryContext.queryKey.length > 1) {
+          theaterId = queryContext.queryKey[1];
+        }
+      } else if (typeof queryContext === 'string') {
+        // Direct string parameter
+        theaterId = queryContext;
+      } else if (queryContext && queryContext._id) {
+        // Theater object
+        theaterId = queryContext._id;
+      }
+    }
     
     // Ensure theaterId is a string ID, not an object
     let theaterIdString = '';
