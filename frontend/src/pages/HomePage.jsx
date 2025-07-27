@@ -39,7 +39,7 @@ const HomePage = () => {
             position: 'relative'
           }}
         >
-          <Container maxWidth="xl" sx={{ position: 'relative' }}>
+          <Container maxWidth={false} sx={{ position: 'relative', maxWidth: '1400px', margin: '0 auto' }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

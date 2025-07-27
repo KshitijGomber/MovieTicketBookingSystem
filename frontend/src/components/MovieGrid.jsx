@@ -83,9 +83,12 @@ const MovieGrid = ({ movies, loading }) => {
           }
         }}
       >
-        <Grid container spacing={{ xs: 1, md: 1.5 }}>
+        <Grid container spacing={{ xs: 1, md: 1 }}>
           {movies?.map((movie, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={4} xl={4} key={movie._id}>
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={movie._id} sx={{ 
+              maxWidth: { xs: '100%', sm: '50%', md: '33.333%', lg: '25%', xl: '25%' },
+              flexBasis: { xs: '100%', sm: '50%', md: '33.333%', lg: '25%', xl: '25%' }
+            }}>
               <motion.div
                 variants={{
                   hidden: { opacity: 0, y: 40, scale: 0.95 },
@@ -105,6 +108,7 @@ const MovieGrid = ({ movies, loading }) => {
                   elevation={0}
                   sx={{
                     height: '100%',
+                    maxWidth: 200, // Force maximum width
                     borderRadius: 2,
                     overflow: 'hidden',
                     background: 'transparent',
@@ -112,6 +116,7 @@ const MovieGrid = ({ movies, loading }) => {
                     transition: 'all 0.3s ease',
                     position: 'relative',
                     cursor: 'pointer',
+                    margin: '0 auto', // Center the card
                     '&:hover': {
                       transform: 'translateY(-4px)',
                       '& .movie-overlay': {
@@ -128,7 +133,7 @@ const MovieGrid = ({ movies, loading }) => {
                     <CardMedia
                       className="movie-image"
                       component="img"
-                      height="90"
+                      height="60"
                       image={movie.image || movie.poster || `https://via.placeholder.com/120x180/667eea/ffffff?text=${encodeURIComponent(movie.title)}`}
                       alt={movie.title}
                       sx={{
@@ -202,8 +207,8 @@ const MovieGrid = ({ movies, loading }) => {
                   {/* Card Content */}
                   <CardContent 
                     sx={{ 
-                      p: 1,
-                      paddingBottom: '8px !important'
+                      p: 0.5,
+                      paddingBottom: '4px !important'
                     }}
                   >
                     <Typography
@@ -212,10 +217,10 @@ const MovieGrid = ({ movies, loading }) => {
                       to={`/movies/${movie._id}`}
                       sx={{
                         fontWeight: 600,
-                        fontSize: '0.7rem',
+                        fontSize: '0.6rem',
                         color: 'text.primary',
                         textDecoration: 'none',
-                        mb: 0.5,
+                        mb: 0.25,
                         display: '-webkit-box',
                         WebkitLineClamp: 1,
                         WebkitBoxOrient: 'vertical',
@@ -232,8 +237,8 @@ const MovieGrid = ({ movies, loading }) => {
                       variant="body2"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '0.6rem',
-                        mb: 0.5
+                        fontSize: '0.5rem',
+                        mb: 0.25
                       }}
                     >
                       {Array.isArray(movie.genre) 
@@ -246,7 +251,7 @@ const MovieGrid = ({ movies, loading }) => {
                       variant="caption"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '0.55rem'
+                        fontSize: '0.45rem'
                       }}
                     >
                       {movie.duration || '2h 30m'}
