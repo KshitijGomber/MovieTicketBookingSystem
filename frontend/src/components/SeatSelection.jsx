@@ -84,53 +84,68 @@ const SeatSelection = ({ showId, showTime, theaterId, onSelectSeats, onSeatsSele
     const isBooked = isSeatBooked(seatNumber);
     
     return (
-      <Grid item xs={2} key={seatNumber}>
-        <Paper
-          onClick={() => !isBooked && toggleSeat(seatNumber)}
-          sx={{
-            p: 1,
-            textAlign: 'center',
-            cursor: isBooked ? 'not-allowed' : 'pointer',
-            bgcolor: isBooked ? 'error.light' : isSelected ? 'primary.main' : 'grey.200',
-            color: isSelected || isBooked ? 'white' : 'inherit',
-            '&:hover': {
-              bgcolor: isBooked ? 'error.light' : isSelected ? 'primary.dark' : 'grey.300',
-            },
-            border: isBooked ? '2px solid' : '1px solid',
-            borderColor: isBooked ? 'error.main' : 'transparent'
-          }}
-        >
-          <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-            {seatNumber}
-          </Typography>
-        </Paper>
-      </Grid>
+      <Box
+        key={seatNumber}
+        onClick={() => !isBooked && toggleSeat(seatNumber)}
+        sx={{
+          width: 36,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 1,
+          cursor: isBooked ? 'not-allowed' : 'pointer',
+          bgcolor: isBooked ? 'error.main' : isSelected ? 'primary.main' : 'grey.300',
+          color: isSelected || isBooked ? 'white' : 'text.primary',
+          fontSize: '0.75rem',
+          fontWeight: 'bold',
+          border: '1px solid',
+          borderColor: isBooked ? 'error.dark' : isSelected ? 'primary.dark' : 'grey.400',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            bgcolor: isBooked ? 'error.main' : isSelected ? 'primary.dark' : 'grey.400',
+            transform: isBooked ? 'none' : 'scale(1.05)',
+          },
+          boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
+        }}
+      >
+        {seatNumber}
+      </Box>
     );
   };
 
   const renderSeatLayout = () => {
     const rows = [];
-    const seatsPerRow = 10;
-    const totalSeats = 100; // Increased for better theater experience
+    const seatsPerRow = 5; // Reduced for better UX
+    const totalRows = 4; // 4 rows = 20 seats total
+    const totalSeats = totalRows * seatsPerRow;
 
-    for (let i = 0; i < totalSeats; i += seatsPerRow) {
-      const rowLetter = String.fromCharCode(65 + Math.floor(i / seatsPerRow)); // A, B, C, etc.
+    for (let row = 0; row < totalRows; row++) {
+      const rowLetter = String.fromCharCode(65 + row); // A, B, C, D
       const rowSeats = [];
       
-      for (let j = 1; j <= seatsPerRow; j++) {
-        const seatNumber = `${rowLetter}${j}`;
+      for (let seat = 1; seat <= seatsPerRow; seat++) {
+        const seatNumber = `${rowLetter}${seat}`;
         rowSeats.push(renderSeat(seatNumber));
       }
       
       rows.push(
-        <Box key={`row-${rowLetter}`} sx={{ mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-            <Typography variant="caption" sx={{ minWidth: 20, fontWeight: 'bold' }}>
+        <Box key={`row-${rowLetter}`} sx={{ mb: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                minWidth: 20, 
+                fontWeight: 'bold',
+                color: 'text.secondary',
+                mr: 1
+              }}
+            >
               {rowLetter}
             </Typography>
-            <Grid container spacing={0.5} sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               {rowSeats}
-            </Grid>
+            </Box>
           </Box>
         </Box>
       );
@@ -162,41 +177,88 @@ const SeatSelection = ({ showId, showTime, theaterId, onSelectSeats, onSeatsSele
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'text.primary' }}>
         Select Seats
       </Typography>
       
-      <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 20, height: 20, bgcolor: 'grey.200', borderRadius: 1 }} />
-            <Typography variant="body2">Available</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 20, height: 20, bgcolor: 'primary.main', borderRadius: 1 }} />
-            <Typography variant="body2">Selected</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 20, height: 20, bgcolor: 'error.light', borderRadius: 1 }} />
-            <Typography variant="body2">Booked</Typography>
-          </Box>
+      {/* Legend */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center',
+        gap: 3, 
+        mb: 3,
+        p: 2,
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'grey.300', borderRadius: 0.5 }} />
+          <Typography variant="body2" color="text.secondary">Available</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'primary.main', borderRadius: 0.5 }} />
+          <Typography variant="body2" color="text.secondary">Selected</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'error.main', borderRadius: 0.5 }} />
+          <Typography variant="body2" color="text.secondary">Booked</Typography>
+        </Box>
+      </Box>
+      
+      {/* Theater Layout */}
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        {/* Screen */}
+        <Box sx={{ 
+          mb: 4,
+          p: 2,
+          bgcolor: 'grey.100',
+          borderRadius: 2,
+          border: '2px solid',
+          borderColor: 'grey.300',
+          maxWidth: 300,
+          mx: 'auto'
+        }}>
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>
+            SCREEN
+          </Typography>
         </Box>
         
-        <Box sx={{ maxWidth: 500, mx: 'auto' }}>
-          <Paper sx={{ p: 2, mb: 2, textAlign: 'center' }}>
-            Screen
-          </Paper>
+        {/* Seats */}
+        <Box sx={{ 
+          display: 'inline-block',
+          p: 3,
+          bgcolor: 'background.paper',
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)'
+        }}>
           {renderSeatLayout()}
         </Box>
       </Box>
       
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <Typography variant="h6">
-          Selected: {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''} 
-          <Typography component="span" color="primary.main" sx={{ ml: 1, fontWeight: 'bold' }}>
-            (₹{selectedSeats.length * 200})
+      {/* Selection Summary */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mt: 3,
+        p: 3,
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            Selected: {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''}
           </Typography>
-        </Typography>
+          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 'bold' }}>
+            ${(selectedSeats.length * 9.99).toFixed(2)}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           size="large"
@@ -204,8 +266,15 @@ const SeatSelection = ({ showId, showTime, theaterId, onSelectSeats, onSeatsSele
           onClick={() => onSeatsSelected && onSeatsSelected(selectedSeats)}
           sx={{ 
             minWidth: 160,
+            py: 1.5,
+            borderRadius: 2,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+            },
             '&:disabled': {
-              bgcolor: 'grey.300'
+              bgcolor: 'grey.300',
+              color: 'grey.500'
             }
           }}
         >

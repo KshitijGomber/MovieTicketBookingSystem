@@ -42,7 +42,14 @@ const BookingPage = () => {
   React.useEffect(() => {
     console.log('BookingPage - showId from URL:', showId);
     console.log('BookingPage - Auth state:', { user: !!user, token: !!token });
-    console.log('BookingPage - Location state:', { movie: !!movie, theater: !!theater, showtime: !!showtime });
+    console.log('BookingPage - Location state:', { 
+      movie: !!movie, 
+      theater: !!theater, 
+      showtime: !!showtime,
+      showtimeDetails: showtime 
+    });
+    console.log('BookingPage - Showtime object:', showtime);
+    console.log('BookingPage - Showtime showTime property:', showtime?.showTime);
   }, [showId, user, token, movie, theater, showtime]);
 
   // Redirect if missing required data
@@ -68,8 +75,17 @@ const BookingPage = () => {
   // Fetch booked seats for this specific showtime and theater
   const { data: bookedSeats = [], isLoading: isLoadingSeats } = useQuery({
     queryKey: ['bookedSeats', showtime?._id, theater?._id],
-    queryFn: () => getBookedSeats(showId, showtime?.showTime, theater?._id),
-    enabled: !!(showtime && theater && showId),
+    queryFn: () => {
+      const showtimeValue = typeof showtime === 'string' ? showtime : showtime?.showTime;
+      console.log('Query - fetching booked seats with:', {
+        showId,
+        showtimeValue,
+        theaterId: theater?._id,
+        originalShowtime: showtime
+      });
+      return getBookedSeats(showId, showtimeValue, theater?._id);
+    },
+    enabled: !!(showtime && theater && showId && (typeof showtime === 'string' || showtime?.showTime)),
     refetchInterval: 30000 // Refresh every 30 seconds
   });
 
@@ -89,7 +105,7 @@ const BookingPage = () => {
   };
 
   const calculateTotal = () => {
-    const seatPrice = showtime?.price?.base || movie?.price || 10;
+    const seatPrice = showtime?.price?.base || movie?.price || 9.99;
     const subtotal = selectedSeats.length * seatPrice;
     const tax = subtotal * 0.1; // 10% tax
     return {
@@ -117,7 +133,7 @@ const BookingPage = () => {
         showId: movie._id,
         theaterId: theater._id,
         seats: selectedSeats,
-        showTime: showtime.showTime,
+        showTime: typeof showtime === 'string' ? showtime : showtime?.showTime,
         totalAmount: parseFloat(pricing.total),
         paymentDetails: {
           method: 'card', // Mock payment
@@ -125,6 +141,8 @@ const BookingPage = () => {
           transactionId: paymentResult.transactionId
         }
       };
+
+      console.log('Final booking data being sent:', bookingData);
 
       const booking = await createBooking(bookingData);
       
@@ -396,7 +414,7 @@ const BookingPage = () => {
                 ) : (
                   <SeatSelection
                     showId={showId}
-                    showTime={showtime?.showTime}
+                    showTime={typeof showtime === 'string' ? showtime : showtime?.showTime}
                     theaterId={theater?._id}
                     onSelectSeats={handleSeatSelection}
                     onSeatsSelected={handleProceedToPayment}
