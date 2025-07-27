@@ -71,36 +71,6 @@ const MovieDetailsPage = () => {
     selectedShowtime
   });
 
-  // Component for movie info cards
-  const InfoCard = ({ icon, label, value, color = 'primary.main' }) => (
-    <Grid item xs={6} sm={3}>
-      <Paper 
-        elevation={1} 
-        sx={{ 
-          p: 2.5, 
-          borderRadius: 2, 
-          textAlign: 'center',
-          border: '1px solid',
-          borderColor: 'divider',
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            elevation: 3,
-            borderColor: color,
-            transform: 'translateY(-2px)'
-          }
-        }}
-      >
-        {icon && React.cloneElement(icon, { sx: { color, mb: 1, fontSize: '1.5rem' } })}
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-          {label}
-        </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-          {value}
-        </Typography>
-      </Paper>
-    </Grid>
-  );
-
   const handleTheaterSelect = (theater) => {
     setSelectedTheater(theater);
     setSelectedShowtime(null); // Reset showtime when theater changes
@@ -194,9 +164,9 @@ const MovieDetailsPage = () => {
       </Box>
 
       {/* Main Content */}
-      <Grid container spacing={4}>
+      <Grid container spacing={6}>
         {/* Movie Poster */}
-        <Grid item xs={12} md={5} lg={4}>
+        <Grid item xs={12} md={4}>
           <Paper 
             elevation={8} 
             sx={{ 
@@ -239,15 +209,15 @@ const MovieDetailsPage = () => {
         </Grid>
 
         {/* Movie Details - Right Side */}
-        <Grid item xs={12} md={7} lg={8}>
+        <Grid item xs={12} md={8}>
           <Box sx={{ 
             height: '100%', 
             display: 'flex', 
             flexDirection: 'column',
-            pl: { md: 2 }
+            pl: { md: 3 }
           }}>
             {/* Title Section */}
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 4 }}>
               <Typography 
                 variant="h3" 
                 component="h1" 
@@ -265,48 +235,83 @@ const MovieDetailsPage = () => {
               </Typography>
             </Box>
 
-            {/* Movie Info Cards */}
-            <Box sx={{ mb: 4 }}>
-              <Grid container spacing={2}>
-                <InfoCard 
-                  icon={<AccessTime />}
-                  label="Duration"
-                  value={`${movie?.duration} min`}
-                  color="primary.main"
-                />
-                <InfoCard 
-                  icon={<GenreIcon />}
-                  label="Genre"
-                  value={movie?.genre}
-                  color="secondary.main"
-                />
-                <InfoCard 
-                  icon={<LanguageIcon />}
-                  label="Language"
-                  value={movie?.language}
-                  color="info.main"
-                />
-                <InfoCard 
-                  icon={<AttachMoney />}
-                  label="From"
-                  value={`$${movie?.price}`}
-                  color="success.main"
-                />
+            {/* Movie Info Grid - Structured Layout */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Grid item xs={6} sm={3}>
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ fontWeight: 'medium', mb: 0.5 }}
+                  >
+                    Duration
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ fontWeight: 'bold', color: 'text.primary' }}
+                  >
+                    {movie?.duration} min
+                  </Typography>
+                </Box>
               </Grid>
-            </Box>
+              
+              <Grid item xs={6} sm={3}>
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ fontWeight: 'medium', mb: 0.5 }}
+                  >
+                    Genre
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ fontWeight: 'bold', color: 'text.primary' }}
+                  >
+                    {movie?.genre}
+                  </Typography>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={6} sm={3}>
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ fontWeight: 'medium', mb: 0.5 }}
+                  >
+                    Language
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ fontWeight: 'bold', color: 'text.primary' }}
+                  >
+                    {movie?.language}
+                  </Typography>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={6} sm={3}>
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ fontWeight: 'medium', mb: 0.5 }}
+                  >
+                    From
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ fontWeight: 'bold', color: 'success.main' }}
+                  >
+                    ${movie?.price}
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
 
             {/* Synopsis Section */}
-            <Paper 
-              elevation={1} 
-              sx={{ 
-                p: 3, 
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                flex: 1,
-                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
-              }}
-            >
+            <Box sx={{ flex: 1 }}>
               <Typography 
                 variant="h6" 
                 sx={{ 
@@ -327,12 +332,13 @@ const MovieDetailsPage = () => {
                 sx={{ 
                   lineHeight: 1.8,
                   fontSize: { xs: '0.95rem', md: '1rem' },
-                  textAlign: 'justify'
+                  textAlign: 'justify',
+                  mb: 4
                 }}
               >
                 {movie?.description || 'No description available for this movie.'}
               </Typography>
-            </Paper>
+            </Box>
 
           </Box>
         </Grid>

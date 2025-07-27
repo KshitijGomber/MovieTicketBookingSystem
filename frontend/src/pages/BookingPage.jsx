@@ -313,12 +313,13 @@ const BookingPage = () => {
                       <motion.div whileHover={{ scale: 1.05 }}>
                         <Chip 
                           icon={<AccessTime />} 
-                          label={showtime.showTime}
+                          label={typeof showtime === 'string' ? showtime : showtime?.showTime || 'Time TBD'}
                           sx={{
                             background: alpha(theme.palette.success.main, 0.1),
                             color: theme.palette.success.main,
                             border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
-                            fontWeight: 'medium'
+                            fontWeight: 'medium',
+                            fontSize: '0.9rem'
                           }}
                         />
                       </motion.div>
