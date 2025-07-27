@@ -206,9 +206,14 @@ const MovieDetailsPage = () => {
                   borderRadius: 4, 
                   overflow: 'hidden',
                   position: 'relative',
-                  height: { xs: 500, md: 700 },
+                  aspectRatio: '2 / 3', // Maintain poster aspect ratio
+                  maxHeight: { xs: 500, md: 700 },
+                  backgroundColor: '#000', // Black background for contrast
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   transition: 'all 0.3s ease-in-out',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   '&:hover': {
                     transform: 'scale(1.02)',
                     boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
@@ -222,7 +227,7 @@ const MovieDetailsPage = () => {
                     style={{ 
                       width: '100%', 
                       height: '100%',
-                      objectFit: 'cover'
+                      objectFit: 'contain' // Changed from cover to contain
                     }}
                   />
                 ) : (
