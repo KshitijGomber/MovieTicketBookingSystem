@@ -99,16 +99,25 @@ const TheaterSelection = ({
           // Extract showtimes - handle both array of strings and array of objects
           let rawShowTimes = theaterData.showTimes || theaterData.showtimes || theater.showTimes || theater.showtimes || [];
           
+          // Ensure rawShowTimes is an array
+          if (!Array.isArray(rawShowTimes)) {
+            rawShowTimes = [];
+          }
+          
           // Convert showtime objects to strings if needed
           const showTimes = rawShowTimes.map(st => {
             if (typeof st === 'string') {
               return st; // Already a string
-            } else if (st && st.showTime) {
+            } else if (st && typeof st === 'object' && st.showTime) {
               return st.showTime; // Extract showTime from object
+            } else if (st && typeof st === 'object') {
+              // Handle any other object structure - convert to string representation
+              console.warn('Unexpected showtime object structure:', st);
+              return st.time || st.showtime || String(st);
             } else {
               return String(st); // Convert to string as fallback
             }
-          });
+          }).filter(st => st && typeof st === 'string'); // Filter out any non-strings
           
           const availableSeats = theaterData.availableSeats;
           
@@ -237,49 +246,54 @@ const TheaterSelection = ({
                     Debug: Found {showTimes.length} showtimes | Using {displayShowTimes.length} display times
                   </Typography>
                   <Grid container spacing={1.5}>
-                    {displayShowTimes.map((showtime, index) => (
-                      <Grid item key={index}>
-                        <Paper
-                          elevation={selectedShowtime === showtime ? 4 : 1}
-                          sx={{
-                            p: 2,
-                            minWidth: 100,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            borderRadius: 2,
-                            border: selectedShowtime === showtime ? 2 : 1,
-                            borderColor: selectedShowtime === showtime ? 'primary.main' : 'divider',
-                            bgcolor: selectedShowtime === showtime ? 'primary.50' : 'background.paper',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              bgcolor: 'primary.50',
-                              transform: 'translateY(-1px)',
-                              boxShadow: 3
-                            }
-                          }}
-                          onClick={() => {
-                            onTheaterSelect(theater);
-                            onShowtimeSelect && onShowtimeSelect(showtime);
-                          }}
-                        >
-                          <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
-                              fontWeight: 'bold',
-                              color: selectedShowtime === showtime ? 'primary.main' : 'text.primary'
+                    {displayShowTimes.map((showtime, index) => {
+                      // Ensure showtime is a string
+                      const safeShowtime = typeof showtime === 'string' ? showtime : String(showtime);
+                      
+                      return (
+                        <Grid item key={index}>
+                          <Paper
+                            elevation={selectedShowtime === safeShowtime ? 4 : 1}
+                            sx={{
+                              p: 2,
+                              minWidth: 100,
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              borderRadius: 2,
+                              border: selectedShowtime === safeShowtime ? 2 : 1,
+                              borderColor: selectedShowtime === safeShowtime ? 'primary.main' : 'divider',
+                              bgcolor: selectedShowtime === safeShowtime ? 'primary.50' : 'background.paper',
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                bgcolor: 'primary.50',
+                                transform: 'translateY(-1px)',
+                                boxShadow: 3
+                              }
+                            }}
+                            onClick={() => {
+                              onTheaterSelect(theater);
+                              onShowtimeSelect && onShowtimeSelect(safeShowtime);
                             }}
                           >
-                            {showtime}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5 }}>
-                            <EventSeat sx={{ fontSize: '0.9rem', mr: 0.5, color: 'text.secondary' }} />
-                            <Typography variant="caption" color="text.secondary">
-                              {availableSeats || '150'}
+                            <Typography 
+                              variant="subtitle2" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: selectedShowtime === safeShowtime ? 'primary.main' : 'text.primary'
+                              }}
+                            >
+                              {safeShowtime}
                             </Typography>
-                          </Box>
-                        </Paper>
-                      </Grid>
-                    ))}
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5 }}>
+                              <EventSeat sx={{ fontSize: '0.9rem', mr: 0.5, color: 'text.secondary' }} />
+                              <Typography variant="caption" color="text.secondary">
+                                {availableSeats || '150'}
+                              </Typography>
+                            </Box>
+                          </Paper>
+                        </Grid>
+                      );
+                    })}
                   </Grid>
                 </Box>
 

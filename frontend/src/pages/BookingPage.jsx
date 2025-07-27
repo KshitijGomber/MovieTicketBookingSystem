@@ -74,7 +74,18 @@ const BookingPage = () => {
   });
 
   const handleSeatSelection = (seats) => {
+    console.log('Seats selected:', seats);
     setSelectedSeats(seats);
+  };
+
+  const handleProceedToPayment = async () => {
+    if (selectedSeats.length === 0) {
+      alert('Please select at least one seat');
+      return;
+    }
+
+    console.log('Proceeding to payment with seats:', selectedSeats);
+    setShowPaymentModal(true);
   };
 
   const calculateTotal = () => {
@@ -91,12 +102,8 @@ const BookingPage = () => {
   };
 
   const handleBooking = async () => {
-    if (selectedSeats.length === 0) {
-      alert('Please select at least one seat');
-      return;
-    }
-
-    setShowPaymentModal(true);
+    console.log('Direct booking button clicked');
+    handleProceedToPayment();
   };
 
   const handlePaymentSuccess = async (paymentResult) => {
@@ -387,9 +394,11 @@ const BookingPage = () => {
                   <SeatSelectionSkeleton />
                 ) : (
                   <SeatSelection
-                    totalSeats={30} // Fixed 30 seats per showtime
-                    bookedSeats={bookedSeats}
-                    onSeatSelection={handleSeatSelection}
+                    showId={showId}
+                    showTime={showtime?.showTime}
+                    theaterId={theater?._id}
+                    onSelectSeats={handleSeatSelection}
+                    onSeatsSelected={handleProceedToPayment}
                     selectedSeats={selectedSeats}
                   />
                 )}
