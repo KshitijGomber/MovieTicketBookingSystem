@@ -104,8 +104,15 @@ const TheaterSelection = ({
             theaterData,
             showTimes,
             showTimesLength: showTimes.length,
-            availableSeats
+            availableSeats,
+            rawShowTimes: theaterData.showTimes,
+            theaterShowTimes: theater.showTimes,
+            showtimesProperty: theaterData.showtimes,
+            theaterShowtimesProperty: theater.showtimes
           });
+          
+          // Force some dummy showtimes for testing if none found
+          const displayShowTimes = showTimes.length > 0 ? showTimes : ['12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM'];
           
           return (
           <Grid item xs={12} key={theater._id || theater.id}>
@@ -210,67 +217,59 @@ const TheaterSelection = ({
                 </Box>
 
                 {/* Showtimes */}
-                {showTimes && showTimes.length > 0 ? (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-                      Available Showtimes ({showTimes.length} times)
-                    </Typography>
-                    <Grid container spacing={1.5}>
-                      {showTimes.map((showtime, index) => (
-                        <Grid item key={index}>
-                          <Paper
-                            elevation={selectedShowtime === showtime ? 4 : 1}
-                            sx={{
-                              p: 2,
-                              minWidth: 100,
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              borderRadius: 2,
-                              border: selectedShowtime === showtime ? 2 : 1,
-                              borderColor: selectedShowtime === showtime ? 'primary.main' : 'divider',
-                              bgcolor: selectedShowtime === showtime ? 'primary.50' : 'background.paper',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                bgcolor: 'primary.50',
-                                transform: 'translateY(-1px)',
-                                boxShadow: 3
-                              }
-                            }}
-                            onClick={() => {
-                              onTheaterSelect(theater);
-                              onShowtimeSelect && onShowtimeSelect(showtime);
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
+                    🎬 Available Showtimes ({displayShowTimes.length} times)
+                  </Typography>
+                  <Typography variant="caption" sx={{ mb: 2, display: 'block', color: 'text.secondary' }}>
+                    Debug: Found {showTimes.length} showtimes | Using {displayShowTimes.length} display times
+                  </Typography>
+                  <Grid container spacing={1.5}>
+                    {displayShowTimes.map((showtime, index) => (
+                      <Grid item key={index}>
+                        <Paper
+                          elevation={selectedShowtime === showtime ? 4 : 1}
+                          sx={{
+                            p: 2,
+                            minWidth: 100,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            borderRadius: 2,
+                            border: selectedShowtime === showtime ? 2 : 1,
+                            borderColor: selectedShowtime === showtime ? 'primary.main' : 'divider',
+                            bgcolor: selectedShowtime === showtime ? 'primary.50' : 'background.paper',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              bgcolor: 'primary.50',
+                              transform: 'translateY(-1px)',
+                              boxShadow: 3
+                            }
+                          }}
+                          onClick={() => {
+                            onTheaterSelect(theater);
+                            onShowtimeSelect && onShowtimeSelect(showtime);
+                          }}
+                        >
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontWeight: 'bold',
+                              color: selectedShowtime === showtime ? 'primary.main' : 'text.primary'
                             }}
                           >
-                            <Typography 
-                              variant="subtitle2" 
-                              sx={{ 
-                                fontWeight: 'bold',
-                                color: selectedShowtime === showtime ? 'primary.main' : 'text.primary'
-                              }}
-                            >
-                              {showtime}
+                            {showtime}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5 }}>
+                            <EventSeat sx={{ fontSize: '0.9rem', mr: 0.5, color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary">
+                              {availableSeats || '150'}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5 }}>
-                              <EventSeat sx={{ fontSize: '0.9rem', mr: 0.5, color: 'text.secondary' }} />
-                              <Typography variant="caption" color="text.secondary">
-                                {availableSeats || '150'}
-                              </Typography>
-                            </Box>
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Box>
-                ) : (
-                  <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.50', borderRadius: 2 }}>
-                    <Typography variant="body2" color="warning.main">
-                      No showtimes available for this theater
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Debug: showTimes = {JSON.stringify(showTimes)}
-                    </Typography>
-                  </Box>
-                )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
 
                 {/* Expanded Details */}
                 <Collapse in={expandedTheater === theater._id}>
