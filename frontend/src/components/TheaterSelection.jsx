@@ -95,8 +95,17 @@ const TheaterSelection = ({
         {theaters.map((theaterData) => {
           // Handle both direct theater objects and nested theater.theater structure
           const theater = theaterData.theater || theaterData;
-          const showTimes = theaterData.showTimes || theaterData.showTimes || [];
+          const showTimes = theaterData.showTimes || theaterData.showtimes || theater.showTimes || theater.showtimes || [];
           const availableSeats = theaterData.availableSeats;
+          
+          // Debug logging for each theater
+          console.log('Processing theater:', {
+            theaterName: theater.name,
+            theaterData,
+            showTimes,
+            showTimesLength: showTimes.length,
+            availableSeats
+          });
           
           return (
           <Grid item xs={12} key={theater._id || theater.id}>
@@ -201,10 +210,10 @@ const TheaterSelection = ({
                 </Box>
 
                 {/* Showtimes */}
-                {showTimes && showTimes.length > 0 && (
+                {showTimes && showTimes.length > 0 ? (
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-                      Available Showtimes
+                      Available Showtimes ({showTimes.length} times)
                     </Typography>
                     <Grid container spacing={1.5}>
                       {showTimes.map((showtime, index) => (
@@ -251,6 +260,15 @@ const TheaterSelection = ({
                         </Grid>
                       ))}
                     </Grid>
+                  </Box>
+                ) : (
+                  <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.50', borderRadius: 2 }}>
+                    <Typography variant="body2" color="warning.main">
+                      No showtimes available for this theater
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Debug: showTimes = {JSON.stringify(showTimes)}
+                    </Typography>
                   </Box>
                 )}
 
