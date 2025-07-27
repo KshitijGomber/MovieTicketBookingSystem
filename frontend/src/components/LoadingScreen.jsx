@@ -103,12 +103,12 @@ const LoadingScreen = ({ isVisible = true, message = "Loading...", onFinish, dur
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 120,
-                  height: 120,
-                  borderRadius: 4,
+                  width: 60,
+                  height: 60,
+                  borderRadius: 3,
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  mb: 4,
-                  boxShadow: '0 20px 40px rgba(102, 126, 234, 0.3)',
+                  mb: 3,
+                  boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
                   position: 'relative',
                   overflow: 'hidden'
                 }}
@@ -142,7 +142,7 @@ const LoadingScreen = ({ isVisible = true, message = "Loading...", onFinish, dur
                     ease: "linear"
                   }}
                 >
-                  <LocalMovies sx={{ fontSize: '4rem', color: 'white', position: 'relative', zIndex: 1 }} />
+                  <LocalMovies sx={{ fontSize: '2rem', color: 'white', position: 'relative', zIndex: 1 }} />
                 </motion.div>
               </Box>
             </motion.div>

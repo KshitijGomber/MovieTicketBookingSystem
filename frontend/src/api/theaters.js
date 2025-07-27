@@ -1,42 +1,72 @@
 const API_URL = import.meta.env.VITE_API_URL || 'https://movieticketbookingsystem-7suc.onrender.com/api';
 
-// Mock theater data for fallback
+// Mock theater data for fallback - structured to match API response
 const mockTheaters = [
   {
-    id: '1',
-    name: 'Cineplex Downtown',
-    location: '123 Main St, Downtown',
-    distance: '2.1 km',
-    rating: 4.5,
-    amenities: ['Parking', 'Food Court', 'IMAX', 'Recliner Seats'],
-    showtimes: ['10:00 AM', '1:00 PM', '4:00 PM', '7:00 PM', '10:00 PM'],
-    contact: '+1 (555) 123-4567',
-    screens: 12,
-    features: ['Dolby Atmos', '4DX', 'Premium Seating']
+    theater: {
+      _id: '68750a5d92525e896adc216a',
+      name: 'Cineplex Downtown',
+      location: {
+        address: '123 Main St',
+        city: 'Downtown',
+        state: 'NY',
+        zipCode: '10001',
+        fullAddress: '123 Main St, Downtown, NY 10001'
+      },
+      rating: 4.5,
+      amenities: ['Parking', 'Food Court', 'IMAX', 'Recliner Seats'],
+      contactInfo: {
+        phone: '+1 (555) 123-4567'
+      },
+      screens: 12,
+      features: ['Dolby Atmos', '4DX', 'Premium Seating']
+    },
+    showTimes: ['10:00 AM', '1:00 PM', '4:00 PM', '7:00 PM', '10:00 PM'],
+    availableSeats: 150
   },
   {
-    id: '2',
-    name: 'Regal Cinema Plaza',
-    location: '456 Oak Ave, Midtown',
-    distance: '3.5 km',
-    rating: 4.2,
-    amenities: ['Parking', 'Concessions', 'Digital', 'Stadium Seating'],
-    showtimes: ['11:00 AM', '2:00 PM', '5:00 PM', '8:00 PM'],
-    contact: '+1 (555) 987-6543',
-    screens: 8,
-    features: ['Digital Projection', 'Surround Sound']
+    theater: {
+      _id: '68750a5d92525e896adc216b',
+      name: 'Regal Cinema Plaza',
+      location: {
+        address: '456 Oak Ave',
+        city: 'Midtown',
+        state: 'NY',
+        zipCode: '10002',
+        fullAddress: '456 Oak Ave, Midtown, NY 10002'
+      },
+      rating: 4.2,
+      amenities: ['Parking', 'Concessions', 'Digital', 'Stadium Seating'],
+      contactInfo: {
+        phone: '+1 (555) 987-6543'
+      },
+      screens: 8,
+      features: ['Digital Projection', 'Surround Sound']
+    },
+    showTimes: ['11:00 AM', '2:00 PM', '5:00 PM', '8:00 PM'],
+    availableSeats: 120
   },
   {
-    id: '3',
-    name: 'AMC Northgate',
-    location: '789 Pine St, Northside',
-    distance: '5.2 km',
-    rating: 4.7,
-    amenities: ['Parking', 'Restaurant', 'IMAX', 'Luxury Loungers'],
-    showtimes: ['9:30 AM', '12:30 PM', '3:30 PM', '6:30 PM', '9:30 PM'],
-    contact: '+1 (555) 456-7890',
-    screens: 16,
-    features: ['IMAX', 'Dolby Cinema', 'Reclining Seats']
+    theater: {
+      _id: '68750a5d92525e896adc216c',
+      name: 'AMC Northgate',
+      location: {
+        address: '789 Pine St',
+        city: 'Northside',
+        state: 'NY',
+        zipCode: '10003',
+        fullAddress: '789 Pine St, Northside, NY 10003'
+      },
+      rating: 4.7,
+      amenities: ['Parking', 'Restaurant', 'IMAX', 'Luxury Loungers'],
+      contactInfo: {
+        phone: '+1 (555) 456-7890'
+      },
+      screens: 16,
+      features: ['IMAX', 'Dolby Cinema', 'Reclining Seats']
+    },
+    showTimes: ['9:30 AM', '12:30 PM', '3:30 PM', '6:30 PM', '9:30 PM'],
+    availableSeats: 200
   }
 ];
 

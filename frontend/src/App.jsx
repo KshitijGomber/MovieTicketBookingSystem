@@ -39,7 +39,7 @@ function App() {
   useEffect(() => {
     const safetyTimer = setTimeout(() => {
       setIsLoading(false);
-    }, 3000); // Max 3 seconds loading time
+    }, 1500); // Max 1.5 seconds loading time
 
     return () => clearTimeout(safetyTimer);
   }, []);
@@ -75,7 +75,7 @@ function App() {
       
       {/* Floating elements - Always visible on main site */}
       {!isLoading && (
-        <div className="fixed bottom-4 right-4 z-30 w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32">
+        <div className="fixed bottom-4 right-4 z-30 w-10 h-10 md:w-12 md:h-12">
           <motion.img 
             src="/logo.png" 
             alt="BookYourMovie Logo" 
