@@ -46,6 +46,14 @@ const TheaterSelection = ({
 }) => {
   const [expandedTheater, setExpandedTheater] = useState(null);
 
+  // Debug logging
+  console.log('TheaterSelection received props:', {
+    theaters: theaters ? `${theaters.length} theaters` : 'No theaters',
+    theatersData: theaters,
+    selectedTheater: selectedTheater ? selectedTheater.name : 'None',
+    selectedShowtime
+  });
+
   const handleTheaterExpand = (theaterId) => {
     setExpandedTheater(expandedTheater === theaterId ? null : theaterId);
   };
@@ -65,6 +73,11 @@ const TheaterSelection = ({
   };
 
   if (!theaters || theaters.length === 0) {
+    console.log('TheaterSelection: No theaters condition triggered', {
+      theaters,
+      theatersLength: theaters?.length,
+      theatersType: typeof theaters
+    });
     return (
       <Box textAlign="center" py={4}>
         <Typography variant="h6" color="text.secondary">
@@ -73,6 +86,8 @@ const TheaterSelection = ({
       </Box>
     );
   }
+
+  console.log('TheaterSelection: Rendering theaters', theaters.length);
 
   return (
     <Box>
