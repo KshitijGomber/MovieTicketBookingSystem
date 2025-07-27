@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { fetchShow } from '../api/shows';
 import { getBookedSeats, createBooking } from '../api/bookings';
 import { 
@@ -13,7 +14,9 @@ import {
   Paper,
   Grid,
   Chip,
-  Divider
+  Divider,
+  useTheme,
+  alpha
 } from '@mui/material';
 import { ArrowBack, EventSeat, AccessTime, LocationOn } from '@mui/icons-material';
 import SeatSelection from '../components/SeatSelection';
@@ -26,6 +29,7 @@ const BookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, token } = useAuth();
+  const theme = useTheme();
   
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -153,161 +157,382 @@ const BookingPage = () => {
   const pricing = calculateTotal();
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Button 
-          startIcon={<ArrowBack />} 
-          onClick={() => navigate(`/movies/${showId}`)}
-          sx={{ mb: 2 }}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        pt: 12
+      }}
+    >
+      {/* Background decorative elements */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: '10%',
+          right: '5%',
+          width: 300,
+          height: 300,
+          background: 'radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(80px)',
+          zIndex: 0
+        }}
+      />
+
+      <Container maxWidth="lg" sx={{ py: 6, position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
         >
-          Back to Movie Details
-        </Button>
-        
-        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-          Book Your Seats
-        </Typography>
-        
-        {/* Movie & Theater Info */}
-        <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={3}>
-              <img 
-                src={movie.image} 
-                alt={movie.title}
-                style={{ 
-                  width: '100%', 
-                  maxWidth: '150px',
-                  height: 'auto',
-                  borderRadius: '8px'
+          <Box sx={{ mb: 6 }}>
+            <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                startIcon={<ArrowBack />} 
+                onClick={() => navigate(`/movies/${showId}`)}
+                sx={{ 
+                  mb: 3,
+                  color: theme.palette.primary.main,
+                  fontWeight: 'medium',
+                  '&:hover': {
+                    background: alpha(theme.palette.primary.main, 0.1)
+                  }
                 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={9}>
-              <Typography variant="h5" gutterBottom>{movie.title}</Typography>
-              <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
-                <Chip icon={<LocationOn />} label={theater.name} />
-                <Chip icon={<AccessTime />} label={showtime.showTime} />
-                <Chip 
-                  label={`${movie.duration} min`} 
-                  variant="outlined" 
-                />
-                <Chip 
-                  label={movie.language} 
-                  variant="outlined" 
-                />
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {theater.location?.address}, {theater.location?.city}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Box>
-
-      <Grid container spacing={4}>
-        {/* Seat Selection */}
-        <Grid item xs={12} lg={8}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EventSeat /> Select Your Seats
-            </Typography>
+              >
+                Back to Movie Details
+              </Button>
+            </motion.div>
             
-            {isLoadingSeats ? (
-              <SeatSelectionSkeleton />
-            ) : (
-              <SeatSelection
-                totalSeats={30} // Fixed 30 seats per showtime
-                bookedSeats={bookedSeats}
-                onSeatSelection={handleSeatSelection}
-                selectedSeats={selectedSeats}
-              />
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Booking Summary */}
-        <Grid item xs={12} lg={4}>
-          <Paper elevation={2} sx={{ p: 3, position: 'sticky', top: 100 }}>
-            <Typography variant="h6" gutterBottom>
-              Booking Summary
-            </Typography>
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary">Selected Seats:</Typography>
-              <Typography variant="body1" fontWeight="bold">
-                {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
-              </Typography>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ mb: 2 }}>
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2">
-                  {pricing.seatCount} seat(s) × ${pricing.pricePerSeat}
-                </Typography>
-                <Typography variant="body2">${pricing.subtotal}</Typography>
-              </Box>
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2">Tax (10%)</Typography>
-                <Typography variant="body2">${pricing.tax}</Typography>
-              </Box>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box display="flex" justifyContent="space-between" mb={3}>
-              <Typography variant="h6" fontWeight="bold">Total</Typography>
-              <Typography variant="h6" fontWeight="bold" color="primary">
-                ${pricing.total}
-              </Typography>
-            </Box>
-
-            <Button
-              variant="contained"
-              fullWidth
-              size="large"
-              onClick={handleBooking}
-              disabled={selectedSeats.length === 0 || isProcessing}
+            <Typography 
+              variant="h3" 
+              component="h1" 
               sx={{
-                py: 2,
-                fontSize: '1.1rem',
-                background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #5a6fd8 30%, #6a4190 90%)',
-                }
+                fontWeight: 'bold',
+                mb: 2,
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(45deg, #ffffff 30%, #f0f0f0 90%)'
+                  : 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
               }}
             >
-              {isProcessing ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                `Book ${selectedSeats.length} Seat${selectedSeats.length !== 1 ? 's' : ''}`
-              )}
-            </Button>
+              Book Your Seats
+            </Typography>
+            
+            {/* Movie & Theater Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4,
+                  background: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  borderRadius: 3,
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <Grid container spacing={4} alignItems="center">
+                  <Grid item xs={12} md={3}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          borderRadius: 3,
+                          overflow: 'hidden',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+                          maxWidth: 200,
+                          mx: { xs: 'auto', md: 0 }
+                        }}
+                      >
+                        <img 
+                          src={movie.image} 
+                          alt={movie.title}
+                          style={{ 
+                            width: '100%',
+                            height: 'auto',
+                            display: 'block'
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(45deg, transparent 30%, rgba(102, 126, 234, 0.1) 100%)'
+                          }}
+                        />
+                      </Box>
+                    </motion.div>
+                  </Grid>
+                  <Grid item xs={12} md={9}>
+                    <Typography 
+                      variant="h4" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        mb: 3,
+                        color: theme.palette.text.primary
+                      }}
+                    >
+                      {movie.title}
+                    </Typography>
+                    <Box display="flex" flexWrap="wrap" gap={2} mb={3}>
+                      <motion.div whileHover={{ scale: 1.05 }}>
+                        <Chip 
+                          icon={<LocationOn />} 
+                          label={theater.name}
+                          sx={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            fontWeight: 'medium',
+                            '& .MuiChip-icon': { color: 'white' }
+                          }}
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.05 }}>
+                        <Chip 
+                          icon={<AccessTime />} 
+                          label={showtime.showTime}
+                          sx={{
+                            background: alpha(theme.palette.success.main, 0.1),
+                            color: theme.palette.success.main,
+                            border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
+                            fontWeight: 'medium'
+                          }}
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.05 }}>
+                        <Chip 
+                          label={`${movie.duration} min`}
+                          sx={{
+                            background: alpha(theme.palette.info.main, 0.1),
+                            color: theme.palette.info.main,
+                            border: `1px solid ${alpha(theme.palette.info.main, 0.3)}`,
+                            fontWeight: 'medium'
+                          }}
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.05 }}>
+                        <Chip 
+                          label={movie.language}
+                          sx={{
+                            background: alpha(theme.palette.warning.main, 0.1),
+                            color: theme.palette.warning.main,
+                            border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}`,
+                            fontWeight: 'medium'
+                          }}
+                        />
+                      </motion.div>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                      {theater.location?.address}, {theater.location?.city}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </motion.div>
+          </Box>
+        </motion.div>
 
-            {selectedSeats.length === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                Please select at least one seat to continue.
-              </Alert>
-            )}
-          </Paper>
-        </Grid>
-      </Grid>
+        {/* Seat Selection and Booking Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <Grid container spacing={4}>
+            {/* Seat Selection */}
+            <Grid item xs={12} lg={8}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4,
+                  background: alpha(theme.palette.background.paper, 0.8),
+                  backdropFilter: 'blur(20px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  borderRadius: 3,
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2, 
+                    mb: 3,
+                    fontWeight: 'bold',
+                    color: theme.palette.text.primary
+                  }}
+                >
+                  <EventSeat sx={{ color: theme.palette.primary.main }} />
+                  Select Your Seats
+                </Typography>
+                
+                {isLoadingSeats ? (
+                  <SeatSelectionSkeleton />
+                ) : (
+                  <SeatSelection
+                    totalSeats={30} // Fixed 30 seats per showtime
+                    bookedSeats={bookedSeats}
+                    onSeatSelection={handleSeatSelection}
+                    selectedSeats={selectedSeats}
+                  />
+                )}
+              </Paper>
+            </Grid>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        open={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onPaymentSuccess={handlePaymentSuccess}
-        bookingDetails={{
-          movieTitle: movie?.title,
-          seats: selectedSeats,
-          totalAmount: parseFloat(pricing.total)
-        }}
-        isProcessing={isProcessing}
-      />
-    </Container>
+            {/* Booking Summary */}
+            <Grid item xs={12} lg={4}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  position: 'sticky', 
+                  top: 120,
+                  background: alpha(theme.palette.background.paper, 0.9),
+                  backdropFilter: 'blur(20px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  borderRadius: 3,
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    mb: 3,
+                    fontWeight: 'bold',
+                    color: theme.palette.text.primary
+                  }}
+                >
+                  Booking Summary
+                </Typography>
+                
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Selected Seats:
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold" color={theme.palette.primary.main}>
+                    {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Box sx={{ mb: 3 }}>
+                  <Box display="flex" justifyContent="space-between" mb={2}>
+                    <Typography variant="body1">
+                      {pricing.seatCount} seat(s) × ${pricing.pricePerSeat}
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      ${pricing.subtotal}
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" mb={2}>
+                    <Typography variant="body1">Tax (10%)</Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      ${pricing.tax}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Box display="flex" justifyContent="space-between" mb={4}>
+                  <Typography variant="h5" fontWeight="bold">
+                    Total
+                  </Typography>
+                  <Typography variant="h5" fontWeight="bold" color="primary">
+                    ${pricing.total}
+                  </Typography>
+                </Box>
+
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    onClick={handleBooking}
+                    disabled={selectedSeats.length === 0 || isProcessing}
+                    sx={{
+                      py: 2.5,
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      borderRadius: 3,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)',
+                        transform: 'translateY(-2px)'
+                      },
+                      '&:disabled': {
+                        background: alpha(theme.palette.action.disabled, 0.12),
+                        color: theme.palette.action.disabled
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {isProcessing ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      `Book ${selectedSeats.length} Seat${selectedSeats.length !== 1 ? 's' : ''}`
+                    )}
+                  </Button>
+                </motion.div>
+
+                {selectedSeats.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Alert 
+                      severity="info" 
+                      sx={{ 
+                        mt: 3,
+                        borderRadius: 2,
+                        background: alpha(theme.palette.info.main, 0.1),
+                        border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
+                      }}
+                    >
+                      Please select at least one seat to continue.
+                    </Alert>
+                  </motion.div>
+                )}
+              </Paper>
+            </Grid>
+          </Grid>
+        </motion.div>
+
+        {/* Payment Modal */}
+        <PaymentModal
+          open={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          bookingDetails={{
+            movieTitle: movie?.title,
+            seats: selectedSeats,
+            totalAmount: parseFloat(pricing.total)
+          }}
+          isProcessing={isProcessing}
+        />
+      </Container>
+    </Box>
   );
 };
 
