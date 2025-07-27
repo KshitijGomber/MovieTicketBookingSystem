@@ -58,12 +58,14 @@ const MovieDetailsPage = () => {
   // Debug logging
   console.log('MovieDetailsPage Debug:', {
     id,
-    movie,
+    movie: movie ? { title: movie.title, _id: movie._id } : null,
     isLoadingMovie,
-    movieError,
-    theaters,
+    movieError: movieError?.message,
+    theaters: theaters ? `${theaters.length} theaters found` : 'No theaters',
     isLoadingTheaters,
-    theatersError
+    theatersError: theatersError?.message,
+    selectedTheater: selectedTheater ? selectedTheater.name : null,
+    selectedShowtime
   });
 
   // Component for movie info cards
@@ -227,7 +229,7 @@ const MovieDetailsPage = () => {
                   color: 'white'
                 }}
               >
-                <MovieIcon sx={{ fontSize: '4rem' }} />
+                <MovieIcon sx={{ fontSize: '1.5rem' }} />
               </Box>
             )}
           </Paper>

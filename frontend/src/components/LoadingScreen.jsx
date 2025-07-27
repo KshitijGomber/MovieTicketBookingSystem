@@ -142,7 +142,7 @@ const LoadingScreen = ({ isVisible = true, message = "Loading...", onFinish, dur
                     ease: "linear"
                   }}
                 >
-                  <LocalMovies sx={{ fontSize: '2rem', color: 'white', position: 'relative', zIndex: 1 }} />
+                  <LocalMovies sx={{ fontSize: '1.5rem', color: 'white', position: 'relative', zIndex: 1 }} />
                 </motion.div>
               </Box>
             </motion.div>

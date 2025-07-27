@@ -180,6 +180,7 @@ export async function getTheatersForMovie(movieId, params = {}) {
     return data;
   } catch (error) {
     console.warn('Failed to fetch theaters from API, using fallback data:', error.message);
+    console.log('Returning mock theater data:', mockTheaters);
     
     // Return mock theaters data as fallback
     return mockTheaters;

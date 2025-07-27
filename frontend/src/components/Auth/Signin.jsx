@@ -203,7 +203,7 @@ const Signin = () => {
                     boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
                   }}
                 >
-                  <MovieIcon sx={{ fontSize: '2.5rem', color: 'white' }} />
+                  <MovieIcon sx={{ fontSize: '2rem', color: 'white' }} />
                 </Box>
               </motion.div>
 

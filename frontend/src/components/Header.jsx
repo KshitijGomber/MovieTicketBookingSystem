@@ -90,6 +90,10 @@ const Header = () => {
                     justifyContent: 'center',
                     width: 32,
                     height: 32,
+                    maxWidth: 32,
+                    maxHeight: 32,
+                    minWidth: 32,
+                    minHeight: 32,
                     borderRadius: 2,
                     background: theme.palette.mode === 'dark'
                       ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
@@ -99,7 +103,7 @@ const Header = () => {
                     boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
                   }}
                 >
-                  <MovieIcon sx={{ color: 'white', fontSize: '1.2rem' }} />
+                  <MovieIcon sx={{ color: 'white', fontSize: '1.2rem', maxWidth: '1.2rem', maxHeight: '1.2rem' }} />
                 </Box>
                 <Typography 
                   variant="h6" 
