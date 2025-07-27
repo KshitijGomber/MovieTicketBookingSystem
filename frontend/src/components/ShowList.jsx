@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Box, CircularProgress, Typography, Container } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import MovieGrid from './MovieGrid';
 import { fetchShows } from '../api/shows';
 
@@ -12,8 +12,8 @@ const ShowList = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress size={60} />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+        <CircularProgress size={50} />
       </Box>
     );
   }
@@ -26,11 +26,7 @@ const ShowList = () => {
     );
   }
 
-  return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <MovieGrid movies={movies || []} loading={isLoading} />
-    </Container>
-  );
+  return <MovieGrid movies={movies || []} loading={isLoading} />;
 };
 
 export default ShowList; 

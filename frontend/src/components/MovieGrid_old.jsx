@@ -8,11 +8,15 @@ import {
   CardMedia,
   Typography,
   Box,
+  Chip,
+  Rating,
   IconButton,
+  Paper,
   Stack
 } from '@mui/material';
-import { PlayArrow, Star } from '@mui/icons-material';
+import { PlayArrow, Star, AccessTime, LocalMovies } from '@mui/icons-material';
 import { MovieCardSkeleton } from './LoadingSkeleton';
+import AnimatedCard from './AnimatedCard';
 
 const MovieGrid = ({ movies, loading }) => {
   if (loading) {
@@ -22,7 +26,7 @@ const MovieGrid = ({ movies, loading }) => {
   }
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 4 }}>
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -33,13 +37,13 @@ const MovieGrid = ({ movies, loading }) => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          mb: 3
+          mb: 4 
         }}>
           <Typography 
-            variant="h5" 
+            variant="h4" 
             sx={{ 
-              fontWeight: 700,
-              fontSize: { xs: '1.5rem', md: '1.75rem' },
+              fontWeight: 800,
+              fontSize: { xs: '1.75rem', md: '2.125rem' },
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -78,7 +82,7 @@ const MovieGrid = ({ movies, loading }) => {
             opacity: 1,
             transition: {
               staggerChildren: 0.1,
-              delayChildren: 0.2
+              delayChildren: 0.3
             }
           }
         }}
@@ -88,20 +92,20 @@ const MovieGrid = ({ movies, loading }) => {
             <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={movie._id}>
               <motion.div
                 variants={{
-                  hidden: { opacity: 0, y: 40, scale: 0.95 },
+                  hidden: { opacity: 0, y: 60, scale: 0.9 },
                   visible: { 
                     opacity: 1, 
                     y: 0, 
                     scale: 1,
                     transition: {
-                      duration: 0.5,
+                      duration: 0.6,
                       ease: "easeOut"
                     }
                   }
                 }}
                 style={{ height: '100%' }}
               >
-                <Card
+                <Paper
                   elevation={0}
                   sx={{
                     height: '100%',
@@ -119,6 +123,9 @@ const MovieGrid = ({ movies, loading }) => {
                       },
                       '& .movie-image': {
                         transform: 'scale(1.05)',
+                      },
+                      '& .movie-content': {
+                        transform: 'translateY(-2px)',
                       }
                     }
                   }}
@@ -138,14 +145,8 @@ const MovieGrid = ({ movies, loading }) => {
                       }}
                     />
 
-                    {/* Overlay */}
-                    <Box
-                      className="movie-overlay"
-                      sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.4)',
-                        opacity: 0,
+                    {/* Simple overlay */}
+                    opacity: 0,
                         transition: 'opacity 0.3s ease',
                         display: 'flex',
                         alignItems: 'center',
@@ -170,7 +171,7 @@ const MovieGrid = ({ movies, loading }) => {
                       </IconButton>
                     </Box>
 
-                    {/* Rating Badge */}
+                    {/* Simple Rating Badge */}
                     <Box
                       sx={{
                         position: 'absolute',
@@ -185,15 +186,43 @@ const MovieGrid = ({ movies, loading }) => {
                     >
                       <Stack direction="row" alignItems="center" spacing={0.25}>
                         <Star sx={{ fontSize: 12, color: '#ffd700' }} />
-                        <Typography
+                        <Typography 
                           variant="caption" 
                           sx={{ 
                             color: 'white', 
                             fontWeight: 600,
-                            fontSize: '0.7rem'
+                            fontSize: '0.75rem'
                           }}
                         >
                           {movie.rating || '8.5'}
+                        </Typography>
+                      </Stack>
+                    </Box>
+
+                    {/* Duration Badge */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        left: 12,
+                        background: 'rgba(255,255,255,0.95)',
+                        borderRadius: 2,
+                        px: 1.5,
+                        py: 0.5,
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <AccessTime sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: 'text.primary', 
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          {movie.duration || '2h 30m'}
                         </Typography>
                       </Stack>
                     </Box>
@@ -201,28 +230,31 @@ const MovieGrid = ({ movies, loading }) => {
 
                   {/* Card Content */}
                   <CardContent 
+                    className="movie-content"
                     sx={{ 
-                      p: 2,
-                      paddingBottom: '16px !important'
+                      p: 3,
+                      transition: 'transform 0.3s ease'
                     }}
                   >
                     <Typography
-                      variant="subtitle1"
+                      variant="h6"
                       component={Link}
                       to={`/movies/${movie._id}`}
                       sx={{
-                        fontWeight: 600,
-                        fontSize: '0.95rem',
+                        fontWeight: 700,
+                        fontSize: '1.125rem',
                         color: 'text.primary',
                         textDecoration: 'none',
-                        mb: 0.5,
+                        mb: 1,
                         display: '-webkit-box',
-                        WebkitLineClamp: 1,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
+                        lineHeight: 1.3,
                         '&:hover': {
-                          color: 'primary.main'
-                        }
+                          color: 'primary.main',
+                        },
+                        transition: 'color 0.2s ease'
                       }}
                     >
                       {movie.title}
@@ -232,24 +264,70 @@ const MovieGrid = ({ movies, loading }) => {
                       variant="body2"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '0.8rem',
-                        mb: 1
+                        mb: 2,
+                        fontSize: '0.875rem',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: 1.5
                       }}
                     >
-                      {movie.genre?.join(', ') || 'Action, Drama'}
+                      {movie.description || 'An amazing cinematic experience awaits you with this incredible story.'}
                     </Typography>
 
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'text.secondary',
-                        fontSize: '0.75rem'
-                      }}
+                    {/* Genre Tags */}
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                      {(movie.genre || 'Action,Drama').split(',').slice(0, 2).map((genre, idx) => (
+                        <Chip
+                          key={idx}
+                          label={genre.trim()}
+                          size="small"
+                          sx={{
+                            background: 'linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1))',
+                            color: 'primary.main',
+                            border: '1px solid rgba(102,126,234,0.2)',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2))',
+                            }
+                          }}
+                        />
+                      ))}
+                    </Box>
+
+                    {/* Book Now Button */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {movie.duration || '2h 30m'}
-                    </Typography>
+                      <Box
+                        component={Link}
+                        to={`/movies/${movie._id}`}
+                        sx={{
+                          display: 'block',
+                          width: '100%',
+                          py: 1.5,
+                          textAlign: 'center',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          borderRadius: 2,
+                          textDecoration: 'none',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-1px)',
+                            boxShadow: '0 8px 25px rgba(102,126,234,0.4)',
+                          }
+                        }}
+                      >
+                        Book Tickets
+                      </Box>
+                    </motion.div>
                   </CardContent>
-                </Card>
+                </Paper>
               </motion.div>
             </Grid>
           ))}

@@ -88,21 +88,21 @@ const Header = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 48,
-                    height: 48,
+                    width: 32,
+                    height: 32,
                     borderRadius: 2,
                     background: theme.palette.mode === 'dark'
                       ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                       : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    mr: 2,
+                    mr: 1.5,
                     transition: 'transform 0.6s ease',
-                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
                   }}
                 >
-                  <MovieIcon sx={{ color: 'white', fontSize: '1.8rem' }} />
+                  <MovieIcon sx={{ color: 'white', fontSize: '1.2rem' }} />
                 </Box>
                 <Typography 
-                  variant="h5" 
+                  variant="h6" 
                   sx={{ 
                     fontWeight: 'bold',
                     background: theme.palette.mode === 'dark'
@@ -111,7 +111,8 @@ const Header = () => {
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    letterSpacing: '-0.5px'
+                    letterSpacing: '-0.3px',
+                    fontSize: '1.1rem'
                   }}
                 >
                   BookYourMovie
