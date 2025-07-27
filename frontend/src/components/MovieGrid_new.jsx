@@ -243,7 +243,7 @@ const MovieGrid = ({ movies, loading }) => {
                       variant="caption"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '0.65rem'
+                        fontSize: '0.75rem'
                       }}
                     >
                       {movie.duration || '2h 30m'}
